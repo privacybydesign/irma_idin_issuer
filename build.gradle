@@ -1,0 +1,47 @@
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'org.akhikhl.gretty'
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+        maven { url 'http://repo.javalite.io' }
+    }
+    dependencies {
+        classpath 'org.akhikhl.gretty:gretty:1.4.0'
+        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12-SNAPSHOT"
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url "https://credentials.github.io/repos/maven2/"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.glassfish.jersey.core:jersey-server:2.19'
+    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.19'
+
+    compile 'ch.qos.logback:logback-classic:1.1.7'
+
+    compile 'io.jsonwebtoken:jjwt:0.6.0'
+
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+
+    compile 'org.irmacard.api:irma_api_common:0.7.2'
+
+    testCompile "junit:junit:4.11"
+    testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'
+}
+
+gretty {
+    contextConfigFile = file('src/test/resources/jetty-env.xml')
+    scanInterval = 10
+    inplaceMode = "hard"
+    httpsEnabled = true
+}
