@@ -35,6 +35,8 @@ dependencies {
 
     compile 'org.irmacard.api:irma_api_common:0.7.2'
 
+    compile files('libs/net.bankid.merchant.library.jar')
+
     testCompile "junit:junit:4.11"
     testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'
 }
