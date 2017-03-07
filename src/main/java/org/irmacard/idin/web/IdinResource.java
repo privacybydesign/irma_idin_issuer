@@ -1,13 +1,14 @@
 package org.irmacard.idin.web;
 
 import net.bankid.merchant.library.*;
+import net.bankid.merchant.library.internal.DirectoryResponseBase;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Random;
 
 @Path("v1/idin")
@@ -21,6 +22,13 @@ public class IdinResource {
 			| ServiceIds.Name;
 
 	private static Random random = new Random();
+
+	@GET
+	@Path("/banks")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<DirectoryResponseBase.Issuer> banks() throws IOException {
+		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
+	}
 
 	@POST
 	@Path("/start")
