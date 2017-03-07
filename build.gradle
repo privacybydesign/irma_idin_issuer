@@ -7,11 +7,9 @@ buildscript {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'http://repo.javalite.io' }
     }
     dependencies {
         classpath 'org.akhikhl.gretty:gretty:1.4.0'
-        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12-SNAPSHOT"
     }
 }
 

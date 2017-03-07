@@ -1,4 +1,6 @@
 irma_configuration
 config.json
+config.xml
+iis.jks
 *.der
 *.pem
