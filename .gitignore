@@ -6,6 +6,5 @@ bin
 .settings/
 .idea/
 *.iml
-src/main/webapp
 banks.json
 logs/
