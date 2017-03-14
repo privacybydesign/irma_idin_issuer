@@ -89,10 +89,10 @@ public class IdinConfiguration {
 
 		URLConnection urlCon = url.openConnection();
 		urlCon.setUseCaches(false);
-		return convertSteamToByteArray(urlCon.getInputStream(), 2048);
+		return convertStreamToByteArray(urlCon.getInputStream(), 2048);
 	}
 
-	public static byte[] convertSteamToByteArray(InputStream stream, int size) throws IOException {
+	public static byte[] convertStreamToByteArray(InputStream stream, int size) throws IOException {
 		byte[] buffer = new byte[size];
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 
