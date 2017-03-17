@@ -14,8 +14,6 @@ public class IdinApplication extends ResourceConfig {
 	private static Logger logger = LoggerFactory.getLogger(IdinApplication.class);
 
 	public IdinApplication() throws IOException, ParserConfigurationException, SAXException {
-		// TODO find out why without this, connections to the acquirer fail
-		System.setProperty("https.protocols", "TLSv1.2");
 
 		register(GsonJerseyProvider.class);
 		register(IdinResource.class);
