@@ -17,6 +17,7 @@ public class IdinApplication extends ResourceConfig {
 		// TODO find out why without this, connections to the acquirer fail
 		System.setProperty("https.protocols", "TLSv1.2");
 
+		register(GsonJerseyProvider.class);
 		register(IdinResource.class);
 
 		logger.info("Starting IRMA iDIN server");

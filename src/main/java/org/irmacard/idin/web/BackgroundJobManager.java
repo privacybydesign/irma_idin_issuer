@@ -49,7 +49,7 @@ public class BackgroundJobManager implements ServletContextListener {
 						return;
 					}
 
-					issuers = new IdinIssuers(response.getIssuers());
+					issuers = new IdinIssuers(response.getIssuersByCountry());
 					Files.write(
 							IdinConfiguration.getInstance().getIdinIssuersPath(),
 							GsonUtil.getGson().toJson(issuers).getBytes()

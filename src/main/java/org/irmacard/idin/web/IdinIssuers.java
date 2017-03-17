@@ -3,17 +3,18 @@ package org.irmacard.idin.web;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 
 import java.util.List;
+import java.util.Map;
 
 public class IdinIssuers {
 	private long updated;
-	private List<DirectoryResponseBase.Issuer> issuers;
+	private Map<String,List<DirectoryResponseBase.Issuer>> issuers;
 
-	public IdinIssuers(List<DirectoryResponseBase.Issuer> issuers) {
+	public IdinIssuers(Map<String,List<DirectoryResponseBase.Issuer>> issuers) {
 		this.updated = System.currentTimeMillis()/1000;
 		this.issuers = issuers;
 	}
 
-	public List<DirectoryResponseBase.Issuer> getIssuers() {
+	public Map<String,List<DirectoryResponseBase.Issuer>> getIssuers() {
 		return issuers;
 	}
 

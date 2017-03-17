@@ -9,6 +9,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 @Path("v1/idin")
@@ -26,7 +27,7 @@ public class IdinResource {
 	@GET
 	@Path("/banks")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<DirectoryResponseBase.Issuer> banks() throws IOException {
+	public Map<String,List<DirectoryResponseBase.Issuer>> banks() throws IOException {
 		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
 	}
 
