@@ -11,14 +11,17 @@
 
     <title> Basis attributen laden met iDIN </title>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="jquery-3.2.0.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>-->
     <script type="text/javascript" src="iDIN.js"></script>
 </head>
 
 <body>
-<select id="bank-select">
-    <option>Choose a bank</option>
-
-</select>
+<form id='form' method="post">
+    <select form='form' id="bank-select">
+        <option value="default">Choose a bank</option>
+    </select>
+    <input type="submit" id="continue" value="Ga naar bank" disabled="true" form='form'>
+</form>
 </body>
 </html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="https://privacybydesign.foundation/tomcat/irma_api_server/client/irma.js"></script>
+    <script type="text/javascript" src="js.cookie.js"></script>
+
+    <title> Basis attributen laden met iDIN </title>
+
+    <script type="text/javascript" src="jquery-3.2.0.js"></script>
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>-->
+    <script type="text/javascript" src="iDIN-enroll.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+            <h2>Beschikbare iDIN attributen</h2>
+
+            <div id="alert_box"></div>
+
+            <p>De volgende attributen kunnen gedownload worden:</p>
+            <table class="table" id="attributeTable">
+                <tbody></tbody>
+            </table>
+
+            <p>Klik de Laad attributen knop om deze attributen in je IRMA app te laden.</p>
+            <button id="enroll" class="btn btn-primary">Laad attributen in IRMA app</button>
+
+            <hr />
+        </div>
+    </div>
+</div>
+</body>
+</html>

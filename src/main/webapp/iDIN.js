@@ -26,7 +26,32 @@ $(function() {
         console.log(jqXHR, status, error);
     }
 
-    getBanks()
+    //retrieve banks and populate drop down
+    getBanks();
+
+    //enable continue button when a bank is selected
+    $('#bank-select').on('change', function () {
+        $('#continue').prop('disabled', this.value==='default');
+    });
+
+    //set correct URL for continue button
+    $('#form').submit(function(event) {
+        console.log("submit pressed");
+        event.preventDefault();
+        var issuerID = $("#bank-select").prop("value");
+
+        $.ajax({
+            type: "POST",
+            url: server + "/start",
+            data: issuerID,
+            contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+            success: function(data){
+                console.log("redirect to: " + data);
+                window.location.replace(data);
+            },
+            error: error
+        });
+    });
 });
 
 
