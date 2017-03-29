@@ -31,7 +31,7 @@ dependencies {
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
-    compile 'org.irmacard.api:irma_api_common:0.7.2'
+    compile 'org.irmacard.api:irma_api_common:0.7.4'
 
     compile files('libs/net.bankid.merchant.library.jar')
 
