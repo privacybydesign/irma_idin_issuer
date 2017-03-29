@@ -21,6 +21,26 @@ public class IdinConfiguration {
 	private static final String filename = "config.json";
 	private static IdinConfiguration instance;
 
+	private String server_name = "IRMAiDIN_test";
+	private String human_readable_name;
+
+	private String server_url = "";
+
+	private String scheme_manager = "";
+	private String idin_issuer = "";
+	private String idin_credential = "";
+
+
+	private String initials_attribute = "";
+	private String lastname_attribute = "";
+	private String address_attribute = "";
+	private String city_attribute = "";
+	private String postalcode_attribute = "";
+	private String birthdate_attribute = "";
+	private String gender_attribute = "";
+	private String email_attribute = "";
+	private String tel_attribute = "";
+
 	private String idin_issuers_path = "banks.json";
 	private transient IdinIssuers issuers;
 
@@ -69,8 +89,12 @@ public class IdinConfiguration {
 			instance = GsonUtil.getGson().fromJson(json, IdinConfiguration.class);
 		} catch (IOException|JsonSyntaxException e) {
 			logger.warn("Could not load configuration file, using default values!");
+			e.printStackTrace();
 			instance = new IdinConfiguration();
 		}
+
+		System.out.println("Configuration:");
+		System.out.println(instance.toString());
 	}
 
 	public IdinConfiguration() {}
@@ -107,8 +131,77 @@ public class IdinConfiguration {
 		return os.toByteArray();
 	}
 
+	public String getUrl() {
+		if (server_url.endsWith("/")) return server_url + "irma_idin_server";
+		else return server_url + "/irma_idin_server";
+	}
+
+	public boolean isHttpsEnabled() {
+		return server_url.startsWith("https://");
+	}
+
+	public String getSchemeManager() {
+		return scheme_manager;
+	}
+
+	public String getIdinIssuer() {
+		return idin_issuer;
+	}
+
+	public String getIdinCredential() {
+		return idin_credential;
+	}
+
+	public String getEmailAttribute() {
+		return email_attribute;
+	}
+
+	public String getTelephoneAttribute() { return tel_attribute;}
+
+	public String getInitialsAttribute() {
+		return initials_attribute;
+	}
+
+	public String getLastnameAttribute() {
+		return lastname_attribute;
+	}
+
+	public String getAddressAttribute() {
+		return address_attribute;
+	}
+
+	public String getCityAttribute() {
+		return city_attribute;
+	}
+
+	public String getPostalcodeAttribute() {
+		return postalcode_attribute;
+	}
+
+	public String getBirthdateAttribute() {
+		return birthdate_attribute;
+	}
+
+	public String getGenderAttribute() {
+		return gender_attribute;
+	}
+
+
+	public String getServerName() {
+		return server_name;
+	}
+
+	public String getHumanReadableName() {
+		if (human_readable_name == null || human_readable_name.length() == 0)
+			return server_name;
+		else
+			return human_readable_name;
+	}
+
 	@Override
 	public String toString() {
 		return GsonUtil.getGson().toJson(this);
 	}
+
+
 }
