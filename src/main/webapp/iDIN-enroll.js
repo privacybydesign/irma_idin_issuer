@@ -1,17 +1,6 @@
 $(function() {
-    var attributes = [["stad","city"],["naam","name"]];
-
-    $.each(attributes, function(){
-        if (this !== null && this[0] !== null && this[1] !== null) {
-            var value = Cookies.get(this[1]);
-            if (value!==undefined) {
-                console.log("??"+value);
-                addTableLine(this[0], value);
-            }
-        }
-    });
-
-
+    var translTable = {"zipcode": "Postcode", "address":"Adres" , "city":"Stad", "initials":"Initialen",
+        "familyName":"Achternaam", "sex":"Geslacht", "dateOfBirth":"Geboortedatum"};
 
     function addTableLine(head, data){
         if (data !== null) {
@@ -39,6 +28,14 @@ $(function() {
             + msg + "</div>");
     };
 
+
+    function displayAttributes (attr, translator){
+        $.each(attr,function(key, value){
+            addTableLine(translator.hasOwnProperty(key)?translator[key]:key, value);
+        })
+    }
+
+    //set issuing functionality to button
     $("#enroll").on("click", function() {
         // Clear errors
         $(".form-group").removeClass("has-error");
@@ -48,9 +45,8 @@ $(function() {
         }, showWarning, showError);
     });
 
-    var token = Cookies.get("jwt");
-    console.log(token);
-    var decoded = jwt_decode(token);
-    console.log(decoded.iprequest.request.credentials[0].attributes.address);
+    //decode the issuing JWT and show the values in a table
+    var decoded = jwt_decode(Cookies.get("jwt"));
+    displayAttributes(decoded.iprequest.request.credentials[0].attributes, translTable)
 
 });
