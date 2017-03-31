@@ -117,11 +117,14 @@ public class IdinResource {
 		HashMap<String,String> attrs = new HashMap<>();
 		//attrs.put(IdinConfiguration.getInstance().getTelephoneAttribute(), attributes.get(idinSamlTelephoneKey));
 		//attrs.put(IdinConfiguration.getInstance().getEmailAttribute(), attributes.get(idinSamlEmailKey));
+		//attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
 		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
-		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),attributes.get(idinSamlLastNameKey));
+		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
+				(attributes.get(idinSamlLastnamePrefixKey)==null?"":attributes.get(idinSamlLastnamePrefixKey)+ " ")
+						+ attributes.get(idinSamlLastNameKey));
 		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(), attributes.get(idinSamlBirthdateKey));
 		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),attributes.get(idinSamlGenderKey));
-		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey));
+		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey));
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
 
