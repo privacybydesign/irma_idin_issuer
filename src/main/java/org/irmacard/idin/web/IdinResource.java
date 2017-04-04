@@ -48,7 +48,12 @@ public class IdinResource {
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
 
 	private static String returnURL = IdinConfiguration.getInstance().getUrl()+"/enroll.html";
-	private static String entranceCode = "successHIO100OIHtest";
+	private static String errorURL = IdinConfiguration.getInstance().getUrl()+"/error.html";
+
+	//private static String entranceCode = "systemUnavailabilityHIO702OIHtest";
+	private static String entranceCode = "cancelledHIO200OIHtest";
+	//private static String entranceCode = "successHIO100OIHtest";
+
 	private boolean isHttpsEnabled = false;
 
 	@GET
@@ -62,23 +67,33 @@ public class IdinResource {
 	@Path("/start")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response start (String bank){
-		logger.warn("called it!");
-		logger.warn(bank);
-
 		// Create request
 		String merchantReference = new BigInteger(130, random).toString(32);
 		//iDIN lib wants the random MerchantReference to start with a letter.
 		merchantReference = "a"+merchantReference;
-		logger.error(">>>" + merchantReference);
+
 		AuthenticationRequest request = new AuthenticationRequest(entranceCode,IDIN_ATTRIBUTES,bank,AssuranceLevel.Loa3,"nl",merchantReference);
 
 		// Execute request
 		AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
 
 		// Handle request result
-		if (response.getIsError())
-			throw new RuntimeException(response.getErrorResponse().getConsumerMessage());
+		if (response.getIsError()) {
+			logError(response.getErrorResponse());
+			throw new IdinException(response.getErrorResponse());
+		}
 		return Response.accepted(response.getIssuerAuthenticationURL()).build();
+	}
+
+	private void logError (ErrorResponse err){
+		logger.error("============ERROR getting issuer authentication URL============");
+		logger.error(err.toString());
+		logger.error(err.getConsumerMessage());
+		logger.error(err.getErrorCode());
+		logger.error(err.getErrorDetails());
+		logger.error(err.getErrorMessage());
+		logger.error(err.getSuggestedAction());
+		logger.error("===============================================================");
 	}
 
 	@GET
@@ -86,25 +101,31 @@ public class IdinResource {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID){
 		NewCookie[] cookies = new NewCookie[1];
+		String followupURL = "";
 
 		if (trxID.equals("error") ){
-			//TODO show error page
-		}
-		StatusRequest sr = new StatusRequest(trxID);
-		StatusResponse response = new Communicator().getResponse(sr);
-
-		if (response.getIsError()){
-			logger.error(response.getErrorResponse().getErrorMessage());
-			//TODO: show error page to user
-		} else if (response.getStatus().equals(StatusResponse.Success)){
-			//redirect to issuing page
-			Map<String, String> attributes = response.getSamlResponse().getAttributes();
-			String jwt = createIssueJWT(attributes);
-			cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, false, isHttpsEnabled);
+			//landing on the return page without a trxid. Something is wrong
+			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,false,isHttpsEnabled);
+			followupURL = errorURL;
+		} else {
+			StatusRequest sr = new StatusRequest(trxID);
+			StatusResponse response = new Communicator().getResponse(sr);
+			if (response.getIsError()) {
+				logError(response.getErrorResponse());
+				followupURL = errorURL;
+				cookies[0] = new NewCookie("error",response.getErrorResponse().getConsumerMessage(),"/",null,null,60,false,isHttpsEnabled);
+				throw new IdinException(response.getErrorResponse());
+			} else if (response.getStatus().equals(StatusResponse.Success)) {
+				//redirect to issuing page
+				followupURL = returnURL;
+				Map<String, String> attributes = response.getSamlResponse().getAttributes();
+				String jwt = createIssueJWT(attributes);
+				cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, false, isHttpsEnabled);
+			}
 		}
 		try {
-			URI issueURI = new URI(returnURL);
-			return Response.seeOther(issueURI).cookie(cookies).build();
+			URI followupURI = new URI(followupURL);
+			return Response.seeOther(followupURI).cookie(cookies).build();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}

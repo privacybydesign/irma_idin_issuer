@@ -17,6 +17,7 @@ public class IdinApplication extends ResourceConfig {
 
 		register(GsonJerseyProvider.class);
 		register(IdinResource.class);
+		register(IdinExceptionMapper.class);
 
 		logger.info("Starting IRMA iDIN server");
 	}

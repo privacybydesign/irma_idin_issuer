@@ -38,6 +38,11 @@ $(function() {
     $('#form').submit(function(event) {
         console.log("submit pressed");
         event.preventDefault();
+
+        //clear all errors
+        $(".form-group").removeClass("has-error");
+        $("#alert_box").empty();
+
         var issuerID = $("#bank-select").prop("value");
 
         $.ajax({
@@ -49,7 +54,11 @@ $(function() {
                 console.log("redirect to: " + data);
                 window.location.replace(data);
             },
-            error: error
+            error: function (jqXHR, status, error) {
+                console.log(jqXHR, status, error);
+                showError(jqXHR.responseJSON["description"]);
+            }
+
         });
     });
 });
