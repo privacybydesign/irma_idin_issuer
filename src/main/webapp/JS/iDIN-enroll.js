@@ -1,6 +1,6 @@
 $(function() {
     var translTable = {"zipcode": "Postcode", "address":"Adres" , "city":"Stad", "initials":"Initialen",
-        "familyName":"Achternaam", "sex":"Geslacht", "dateOfBirth":"Geboortedatum"};
+        "familyName":"Achternaam", "gender":"Geslacht", "dateOfBirth":"Geboortedatum", "country":"Land", "telephone":"Telefoonnummer", "email":"e-mailadres"};
 
     function addTableLine(head, data){
         if (data !== null) {

@@ -1,6 +1,7 @@
 package org.irmacard.idin.web;
 
 import com.google.gson.JsonSyntaxException;
+import io.jsonwebtoken.SignatureAlgorithm;
 import net.bankid.merchant.library.Configuration;
 import org.irmacard.api.common.util.GsonUtil;
 import org.slf4j.Logger;
@@ -14,6 +15,10 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal", "unused"})
 public class IdinConfiguration {
@@ -40,9 +45,15 @@ public class IdinConfiguration {
 	private String gender_attribute = "";
 	private String email_attribute = "";
 	private String tel_attribute = "";
+	private String country_attribute = "";
 
 	private String idin_issuers_path = "banks.json";
 	private transient IdinIssuers issuers;
+
+	private String jwt_privatekey = "sk.der";
+	private String jwt_publickey = "pk.der";
+	private transient PrivateKey jwtPrivateKey;
+	private transient PublicKey jwtPublicKey;
 
 	/** Path to the file from which the iDIN issier list is saved and loaded */
 	public Path getIdinIssuersPath() {
@@ -104,6 +115,32 @@ public class IdinConfiguration {
 			load();
 
 		return instance;
+	}
+
+	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {
+		try {
+			if (bytes == null || bytes.length == 0)
+				throw new KeyManagementException("Could not read public key");
+
+			X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+
+			return KeyFactory.getInstance("RSA").generatePublic(spec);
+		} catch (NoSuchAlgorithmException |InvalidKeySpecException e) {
+			throw new KeyManagementException(e);
+		}
+	}
+
+	public static PrivateKey parsePrivateKey(byte[] bytes) throws KeyManagementException {
+		try {
+			if (bytes == null || bytes.length == 0)
+				throw new KeyManagementException("Could not read private key");
+
+			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+
+			return KeyFactory.getInstance("RSA").generatePrivate(spec);
+		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
+			throw new KeyManagementException(e);
+		}
 	}
 
 	public static byte[] getResource(String filename) throws IOException {
@@ -186,6 +223,10 @@ public class IdinConfiguration {
 		return gender_attribute;
 	}
 
+	public String getCountryAttribute() {
+		return country_attribute;
+	}
+
 
 	public String getServerName() {
 		return server_name;
@@ -198,10 +239,37 @@ public class IdinConfiguration {
 			return human_readable_name;
 	}
 
+	public PublicKey getJwtPublicKey() {
+		if (jwtPublicKey == null) {
+			try {
+				jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
+			} catch (KeyManagementException|IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return jwtPublicKey;
+	}
+
+	public PrivateKey getJwtPrivateKey() {
+		if (jwtPrivateKey == null) {
+			try {
+				jwtPrivateKey = parsePrivateKey(getResource(jwt_privatekey));
+			} catch (KeyManagementException|IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		return jwtPrivateKey;
+	}
+
+	public SignatureAlgorithm getJwtAlgorithm() {
+		return SignatureAlgorithm.RS256;
+	}
+
 	@Override
 	public String toString() {
 		return GsonUtil.getGson().toJson(this);
 	}
-
 
 }

@@ -164,9 +164,6 @@ public class IdinResource {
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
 
 		HashMap<String,String> attrs = new HashMap<>();
-		//attrs.put(IdinConfiguration.getInstance().getTelephoneAttribute(), attributes.get(idinSamlTelephoneKey));
-		//attrs.put(IdinConfiguration.getInstance().getEmailAttribute(), attributes.get(idinSamlEmailKey));
-		//attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
 		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
 		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
 				(attributes.get(idinSamlLastnamePrefixKey)==null?"":attributes.get(idinSamlLastnamePrefixKey)+ " ")
@@ -176,7 +173,9 @@ public class IdinResource {
 		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey));
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
-
+		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
+		attrs.put(IdinConfiguration.getInstance().getTelephoneAttribute(), attributes.get(idinSamlTelephoneKey));
+		attrs.put(IdinConfiguration.getInstance().getEmailAttribute(), attributes.get(idinSamlEmailKey));
 
 		credentials.put(new CredentialIdentifier(
 				IdinConfiguration.getInstance().getSchemeManager(),
@@ -185,10 +184,11 @@ public class IdinResource {
 		), attrs);
 
 		return ApiClient.getIssuingJWT(credentials,
+				IdinConfiguration.getInstance().getServerName(),
 				IdinConfiguration.getInstance().getHumanReadableName(),
-				false,
-				null,
-				null
+				true,
+				IdinConfiguration.getInstance().getJwtAlgorithm(),
+				IdinConfiguration.getInstance().getJwtPrivateKey()
 		);
 
 	}
