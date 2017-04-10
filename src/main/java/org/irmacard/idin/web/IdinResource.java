@@ -47,12 +47,23 @@ public class IdinResource {
 	private static Random random = new Random();
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
 
-	private static String returnURL = IdinConfiguration.getInstance().getUrl()+"/enroll.html";
+	private static String successURL = IdinConfiguration.getInstance().getUrl()+"/enroll.html";
 	private static String errorURL = IdinConfiguration.getInstance().getUrl()+"/error.html";
 
+	//Issuer response codes
+	private static String entranceCode = "successHIO100OIHtest";
+	//private static String entranceCode = "cancelledHIO200OIHtest";
+	//private static String entranceCode = "expiredHIO300OIHtest";
+	//private static String entranceCode = "openHIO400OIHtest";
+	//private static String entranceCode = "failureHIO500OIHtest";
+
+	//Issuer error messages
 	//private static String entranceCode = "systemUnavailabilityHIO702OIHtest";
-	private static String entranceCode = "cancelledHIO200OIHtest";
-	//private static String entranceCode = "successHIO100OIHtest";
+	//private static String entranceCode = "receivedXMLNotValidHIO701OIHtest";
+	//private static String entranceCode = "invalidElectronicSignatureHIO703OIHtest";
+	//private static String entranceCode = "versionNumberInvalidHIO704OIHtest";
+	//private static String entranceCode = "productSpecificErrorHIO705OIHtest";
+
 
 	private boolean isHttpsEnabled = false;
 
@@ -101,7 +112,7 @@ public class IdinResource {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID){
 		NewCookie[] cookies = new NewCookie[1];
-		String followupURL = "";
+		String followupURL = errorURL;
 
 		if (trxID.equals("error") ){
 			//landing on the return page without a trxid. Something is wrong
@@ -111,16 +122,33 @@ public class IdinResource {
 			StatusRequest sr = new StatusRequest(trxID);
 			StatusResponse response = new Communicator().getResponse(sr);
 			if (response.getIsError()) {
-				logError(response.getErrorResponse());
-				followupURL = errorURL;
-				cookies[0] = new NewCookie("error",response.getErrorResponse().getConsumerMessage(),"/",null,null,60,false,isHttpsEnabled);
+				logger.warn("Received iDIN error: " + response.getErrorResponse().getErrorCode() + " " + response.getErrorResponse().getErrorMessage());
 				throw new IdinException(response.getErrorResponse());
-			} else if (response.getStatus().equals(StatusResponse.Success)) {
-				//redirect to issuing page
-				followupURL = returnURL;
-				Map<String, String> attributes = response.getSamlResponse().getAttributes();
-				String jwt = createIssueJWT(attributes);
-				cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, false, isHttpsEnabled);
+			} else {
+				switch (response.getStatus()) {
+					case StatusResponse.Success:
+						//redirect to issuing page
+						followupURL = successURL;
+						Map<String, String> attributes = response.getSamlResponse().getAttributes();
+						String jwt = createIssueJWT(attributes);
+						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, false, isHttpsEnabled);
+						break;
+					case StatusResponse.Cancelled:
+						followupURL = errorURL;
+						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						break;
+					case StatusResponse.Expired:
+						followupURL = errorURL;
+						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						break;
+					case StatusResponse.Open:
+					case StatusResponse.Pending:
+					case StatusResponse.Failure:
+					default:
+						followupURL = errorURL;
+						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						break;
+				}
 			}
 		}
 		try {
