@@ -6,16 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <!--link rel="icon" href="../../favicon.ico"-->
 
     <title> IRMA attributen vanuit iDIN </title>
 
     <script type="text/javascript" src="JS/jquery-3.2.0.js"></script>
-    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>-->
     <script type="text/javascript" src="JS/common.js"></script>
     <script type="text/javascript" src="JS/iDIN.js"></script>
+    <script type="text/javascript">
+        var server = "https://privacybydesign.foundation/tomcat/irma_idin_server/api/v1/idin";
+    </script>
 </head>
 
 <body>
@@ -29,7 +28,7 @@
             </a>
         </div>
         <div class="col-xs-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
-            <h2>Uw IRMA attributen vanuit uw bank, via <a>iDIN</a></h2>
+            <h2>Uw IRMA attributen vanuit uw bank, via <a href="https://www.idin.nl/" target="_blank">iDIN</a></h2>
 
             <div id="alert_box"></div>
 

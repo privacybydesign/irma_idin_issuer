@@ -1,6 +1,5 @@
 $(function() {
 
-    var server = "http://localhost:8080/irma_idin_server/api/v1/idin";
 
     function getBanks (){
         $.ajax({
