@@ -2,6 +2,8 @@ $(function() {
     var translTable = {"zipcode": "Postcode", "address":"Adres" , "city":"Stad", "initials":"Initialen",
         "familyName":"Achternaam", "gender":"Geslacht", "dateOfBirth":"Geboortedatum", "country":"Land", "telephone":"Telefoonnummer", "email":"e-mailadres"};
 
+    var doneURL = "done.html";
+
     function addTableLine(head, data){
         if (data !== null) {
             $('#attributeTable')
@@ -24,9 +26,21 @@ $(function() {
         // Clear errors
         $(".form-group").removeClass("has-error");
         $("#alert_box").empty();
-        IRMA.issue(Cookies.get("jwt"),function() {
-            showSuccess("iDIN data successfully issued");
-        }, showWarning, showError);
+        //disable enroll button
+        $("#enroll").prop('disabled',true);
+        IRMA.issue(Cookies.get("jwt"),
+            function() {
+                showSuccess("iDIN data successfully issued");
+                window.location.replace(doneURL);
+            },
+            function() {
+                $("#enroll").prop('disabled',false);
+                showWarning;
+            },
+            function() {
+                $("#enroll").prop('disabled', false);
+                showError;
+            });
     });
 
     //decode the issuing JWT and show the values in a table
