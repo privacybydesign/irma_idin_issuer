@@ -15,10 +15,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Path("v1/idin")
 public class IdinResource {
@@ -78,6 +77,9 @@ public class IdinResource {
 	@Path("/start")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response start (String bank){
+		if (!IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)){
+			throw new RuntimeException("Illegal bankcode received");
+		}
 		// Create request
 		String merchantReference = new BigInteger(130, random).toString(32);
 		//iDIN lib wants the random MerchantReference to start with a letter.
@@ -116,7 +118,7 @@ public class IdinResource {
 
 		if (trxID.equals("error") ){
 			//landing on the return page without a trxid. Something is wrong
-			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,false,isHttpsEnabled);
+			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,isHttpsEnabled);
 			followupURL = errorURL;
 		} else {
 			StatusRequest sr = new StatusRequest(trxID);
@@ -131,22 +133,22 @@ public class IdinResource {
 						followupURL = successURL;
 						Map<String, String> attributes = response.getSamlResponse().getAttributes();
 						String jwt = createIssueJWT(attributes);
-						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, false, isHttpsEnabled);
+						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, isHttpsEnabled);
 						break;
 					case StatusResponse.Cancelled:
 						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
 						break;
 					case StatusResponse.Expired:
 						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
 						break;
 					case StatusResponse.Open:
 					case StatusResponse.Pending:
 					case StatusResponse.Failure:
 					default:
 						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, false, isHttpsEnabled);
+						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
 						break;
 				}
 			}
@@ -160,6 +162,33 @@ public class IdinResource {
 		return null;
 	}
 
+	private String getGenderString(String isoCode){
+		switch (isoCode){
+			case "0":
+				return "unknown";
+			case "1":
+				return "male";
+			case "2":
+				return "female";
+			case "9":
+				return "not applicable";
+			default:
+				throw new RuntimeException("Unknown Gender value");
+		}
+	}
+
+	private String rewriteBirthdateString (String bd){
+		SimpleDateFormat idinDateFormat = new SimpleDateFormat("yyyyMMdd");
+		SimpleDateFormat ourDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+		Date dob = null;
+		try {
+			dob = idinDateFormat.parse(bd);
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
+		}
+		return ourDateFormat.format(dob);
+	}
+
 	private String createIssueJWT(Map<String, String> attributes) {
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
 
@@ -168,8 +197,9 @@ public class IdinResource {
 		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
 				(attributes.get(idinSamlLastnamePrefixKey)==null?"":attributes.get(idinSamlLastnamePrefixKey)+ " ")
 						+ attributes.get(idinSamlLastNameKey));
-		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(), attributes.get(idinSamlBirthdateKey));
-		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),attributes.get(idinSamlGenderKey));
+		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(),
+				rewriteBirthdateString(attributes.get(idinSamlBirthdateKey)));
+		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),getGenderString(attributes.get(idinSamlGenderKey)));
 		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey));
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));

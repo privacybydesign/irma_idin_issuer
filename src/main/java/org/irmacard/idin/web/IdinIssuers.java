@@ -21,4 +21,14 @@ public class IdinIssuers {
 	public boolean shouldUpdate() {
 		return System.currentTimeMillis()/1000 - updated > 60*60*24*7;
 	}
+
+	public boolean containsBankCode (String bankCode){
+		for (List<DirectoryResponseBase.Issuer> country: issuers.values()){
+			for (DirectoryResponseBase.Issuer bank: country){
+				if (bank.getIssuerID().equals(bankCode))
+					return true;
+			}
+		}
+		return false;
+	}
 }
