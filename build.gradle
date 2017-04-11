@@ -2,6 +2,9 @@ apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'org.akhikhl.gretty'
 
+targetCompatibility = '1.7'
+sourceCompatibility = '1.7'
+
 buildscript {
     repositories {
         mavenLocal()
