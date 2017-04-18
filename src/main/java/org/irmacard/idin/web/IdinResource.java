@@ -46,8 +46,8 @@ public class IdinResource {
 	private static Random random = new Random();
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
 
-	private static String successURL = IdinConfiguration.getInstance().getUrl()+"/enroll.html";
-	private static String errorURL = IdinConfiguration.getInstance().getUrl()+"/error.html";
+	private static String successURL = IdinConfiguration.getInstance().getReturnUrl()+"/enroll.html";
+	private static String errorURL = IdinConfiguration.getInstance().getReturnUrl()+"/error.html";
 
 	//Issuer response codes
 	private static String entranceCode = "successHIO100OIHtest";

@@ -29,7 +29,7 @@ public class IdinConfiguration {
 	private String server_name = "IRMAiDIN_test";
 	private String human_readable_name;
 
-	private String server_url = "";
+	private String return_url = "";
 
 	private String scheme_manager = "";
 	private String idin_issuer = "";
@@ -168,13 +168,12 @@ public class IdinConfiguration {
 		return os.toByteArray();
 	}
 
-	public String getUrl() {
-		if (server_url.endsWith("/")) return server_url + "irma_idin_server";
-		else return server_url + "/irma_idin_server";
+	public String getReturnUrl() {
+		return return_url;
 	}
 
 	public boolean isHttpsEnabled() {
-		return server_url.startsWith("https://");
+		return return_url.startsWith("https://");
 	}
 
 	public String getSchemeManager() {
