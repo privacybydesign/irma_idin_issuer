@@ -34,6 +34,7 @@ public class IdinConfiguration {
 	private String scheme_manager = "";
 	private String idin_issuer = "";
 	private String idin_credential = "";
+	private String age_limits_credential = "";
 
 
 	private String initials_attribute = "";
@@ -271,4 +272,12 @@ public class IdinConfiguration {
 		return GsonUtil.getGson().toJson(this);
 	}
 
+	public String getAgeLimitsIssuer() {
+		//currently the same issuer
+		return idin_issuer;
+	}
+
+	public String getAgeLimitsCredential() {
+		return age_limits_credential;
+	}
 }

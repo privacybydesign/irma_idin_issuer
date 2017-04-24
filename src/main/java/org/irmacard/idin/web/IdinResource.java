@@ -3,6 +3,10 @@ package org.irmacard.idin.web;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.irmacard.api.common.ApiClient;
+import org.irmacard.api.common.CredentialRequest;
+import org.irmacard.api.common.issuing.IdentityProviderRequest;
+import org.irmacard.api.common.issuing.IssuingRequest;
+import org.irmacard.credentials.Attributes;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -185,47 +189,83 @@ public class IdinResource {
 		}
 	}
 
-	private String rewriteBirthdateString (String bd){
-		SimpleDateFormat idinDateFormat = new SimpleDateFormat("yyyyMMdd");
+	private String getDobString (Date dob){
 		SimpleDateFormat ourDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+		return ourDateFormat.format(dob);
+	}
+
+	private Date getDobObject (String bd){
+		SimpleDateFormat idinDateFormat = new SimpleDateFormat("yyyyMMdd");
 		Date dob = null;
 		try {
 			dob = idinDateFormat.parse(bd);
 		} catch (ParseException e) {
 			throw new RuntimeException(e);
 		}
-		return ourDateFormat.format(dob);
+		return dob;
+	}
+
+	public HashMap<String, String> ageAttributes(int[] ages, Date dob) {
+		HashMap<String, String> attrs = new HashMap<>();
+
+		for (int age : ages) {
+			Calendar c = Calendar.getInstance();
+			c.add(Calendar.YEAR, -1 * age);
+			Date ageDate = c.getTime();
+
+			String attrValue;
+			attrValue = dob.before(ageDate) ? "yes" : "no";
+			attrs.put("over" + age, attrValue);
+		}
+
+		return attrs;
 	}
 
 	private String createIssueJWT(Map<String, String> attributes) {
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
+		Date dob = getDobObject(attributes.get(idinSamlBirthdateKey));
 
+		//get iDIN data credential
 		HashMap<String,String> attrs = new HashMap<>();
 		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
 		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
 				(attributes.get(idinSamlLastnamePrefixKey)==null?"":attributes.get(idinSamlLastnamePrefixKey)+ " ")
 						+ attributes.get(idinSamlLastNameKey));
 		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(),
-				rewriteBirthdateString(attributes.get(idinSamlBirthdateKey)));
+				getDobString(dob));
 		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),getGenderString(attributes.get(idinSamlGenderKey)));
 		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey));
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
 		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
 
+		//add iDIN data credential
 		credentials.put(new CredentialIdentifier(
 				IdinConfiguration.getInstance().getSchemeManager(),
 				IdinConfiguration.getInstance().getIdinIssuer(),
 				IdinConfiguration.getInstance().getIdinCredential()
 		), attrs);
 
-		return ApiClient.getIssuingJWT(credentials,
+		//add age limits credential
+		int[] ages = {12,16,18,21,65};
+		credentials.put(new CredentialIdentifier(
+				IdinConfiguration.getInstance().getSchemeManager(),
+				IdinConfiguration.getInstance().getAgeLimitsIssuer(),
+				IdinConfiguration.getInstance().getAgeLimitsCredential()
+		), ageAttributes(ages, dob));
+
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.YEAR, 1);
+
+		IdentityProviderRequest iprequest = ApiClient.getIdentityProviderRequest(credentials, calendar.getTimeInMillis()/1000);
+
+		return ApiClient.getSignedIssuingJWT(iprequest,
 				IdinConfiguration.getInstance().getServerName(),
 				IdinConfiguration.getInstance().getHumanReadableName(),
-				true,
 				IdinConfiguration.getInstance().getJwtAlgorithm(),
 				IdinConfiguration.getInstance().getJwtPrivateKey()
 		);
 
 	}
+
 }
