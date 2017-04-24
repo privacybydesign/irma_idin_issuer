@@ -141,7 +141,7 @@ public class IdinResource {
 						Map<String, String> attributes = response.getSamlResponse().getAttributes();
 						logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
 						String jwt = createIssueJWT(attributes);
-						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, isHttpsEnabled);
+						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
 						break;
 					case StatusResponse.Cancelled:
 						followupURL = errorURL;
