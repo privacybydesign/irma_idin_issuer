@@ -27,6 +27,7 @@ public class IdinResource {
 			| ServiceIds.Gender
 			| ServiceIds.Name;
 
+	private static final String idinSamlBinKey = "urn:nl:bvn:bankid:1.0:consumer.bin";
 	private static final String idinSamlCityKey = "urn:nl:bvn:bankid:1.0:consumer.city";
 	private static final String idinSamlLastnamePrefixKey = "urn:nl:bvn:bankid:1.0:consumer.legallastnameprefix";
 	private static final String idinSamlLastNameKey = "urn:nl:bvn:bankid:1.0:consumer.legallastname";
@@ -66,6 +67,7 @@ public class IdinResource {
 	@Path("/banks")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Map<String,List<DirectoryResponseBase.Issuer>> banks() throws IOException {
+		logger.info("Bank list requested");
 		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
 	}
 
@@ -83,6 +85,8 @@ public class IdinResource {
 
 		AuthenticationRequest request = new AuthenticationRequest(entranceCode,IDIN_ATTRIBUTES,bank,AssuranceLevel.Loa3,"nl",merchantReference);
 
+		logger.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
+
 		// Execute request
 		AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
 
@@ -91,11 +95,14 @@ public class IdinResource {
 			logError(response.getErrorResponse());
 			throw new IdinException(response.getErrorResponse());
 		}
+		logger.info("trxid {}: session created at bank, redirecting to {}",
+				response.getTransactionID(),
+				response.getIssuerAuthenticationURL());
 		return Response.accepted(response.getIssuerAuthenticationURL()).build();
 	}
 
 	private void logError (ErrorResponse err){
-		logger.error("============ERROR getting issuer authentication URL============");
+		logger.error("============================ ERROR ============================");
 		logger.error(err.toString());
 		logger.error(err.getConsumerMessage());
 		logger.error(err.getErrorCode());
@@ -118,17 +125,21 @@ public class IdinResource {
 			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,isHttpsEnabled);
 			followupURL = errorURL;
 		} else {
+			logger.info("trxid {}: return url called", trxID);
+
 			StatusRequest sr = new StatusRequest(trxID);
 			StatusResponse response = new Communicator().getResponse(sr);
 			if (response.getIsError()) {
-				logger.warn("Received iDIN error: " + response.getErrorResponse().getErrorCode() + " " + response.getErrorResponse().getErrorMessage());
+				logError(response.getErrorResponse());
 				throw new IdinException(response.getErrorResponse());
 			} else {
+				logger.info("trxid {}: response status {}", trxID, response.getStatus());
 				switch (response.getStatus()) {
 					case StatusResponse.Success:
 						//redirect to issuing page
 						followupURL = successURL;
 						Map<String, String> attributes = response.getSamlResponse().getAttributes();
+						logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
 						String jwt = createIssueJWT(attributes);
 						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 60, isHttpsEnabled);
 						break;
