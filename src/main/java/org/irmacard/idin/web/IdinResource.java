@@ -140,12 +140,17 @@ public class IdinResource {
 				logger.info("trxid {}: response status {}", trxID, response.getStatus());
 				switch (response.getStatus()) {
 					case StatusResponse.Success:
-						//redirect to issuing page
-						followupURL = successURL;
 						Map<String, String> attributes = response.getSamlResponse().getAttributes();
 						logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
-						String jwt = createIssueJWT(attributes);
-						cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
+						if (nullOrEmptyAttributes(attributes,trxID)){
+							cookies[0] = new NewCookie("error","De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen","/",null,null,60,isHttpsEnabled);
+							followupURL = errorURL;
+						}else {
+							//redirect to issuing page
+							followupURL = successURL;
+							String jwt = createIssueJWT(attributes);
+							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
+						}
 						break;
 					case StatusResponse.Cancelled:
 						followupURL = errorURL;
@@ -219,6 +224,54 @@ public class IdinResource {
 		}
 
 		return attrs;
+	}
+
+	private boolean isNullOrEmpty(String val){
+		return val == null || val.length()==0;
+	}
+	private boolean nullOrEmptyAttributes (Map<String,String> attributes, String trxId){
+		boolean valueMissing = false;
+		if (isNullOrEmpty(attributes.get(idinSamlBirthdateKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing birthdate value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlInitialsKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing initials value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlLastNameKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing lastname value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlGenderKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing gender value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlStreetKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing street value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlHouseNoKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing house no value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlCityKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing city value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlPostalCodeKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing postal code value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlCountryKey))){
+			valueMissing = true;
+			logger.error("trxid {}: saml is missing country value", trxId);
+		}
+		if (isNullOrEmpty(attributes.get(idinSamlBinKey))){
+			//not aborting for missing bin, but it is recorded in the logs
+			logger.error("trxid {}: saml is missing bin value", trxId);
+		}
+		return valueMissing;
 	}
 
 	private String createIssueJWT(Map<String, String> attributes) {
