@@ -62,8 +62,6 @@ public class IdinResource {
 	//private static String entranceCode = "productSpecificErrorHIO705OIHtest";
 
 
-	private boolean isHttpsEnabled = false;
-
 	@GET
 	@Path("/banks")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -114,6 +112,7 @@ public class IdinResource {
 		NewCookie[] cookies = new NewCookie[1];
 		String followupURL = errorURL;
 
+		boolean isHttpsEnabled = IdinConfiguration.getInstance().isHttpsEnabled();
 		if (trxID.equals("error") ){
 			//landing on the return page without a trxid. Something is wrong
 			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,isHttpsEnabled);
