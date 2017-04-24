@@ -24,9 +24,7 @@ public class IdinResource {
 	public final static int IDIN_ATTRIBUTES = ServiceIds.Address
 			| ServiceIds.ConsumerBin
 			| ServiceIds.DateOfBirth
-			| ServiceIds.Email
 			| ServiceIds.Gender
-			| ServiceIds.Telephone
 			| ServiceIds.Name;
 
 	private static final String idinSamlCityKey = "urn:nl:bvn:bankid:1.0:consumer.city";
@@ -204,8 +202,6 @@ public class IdinResource {
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
 		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
-		attrs.put(IdinConfiguration.getInstance().getTelephoneAttribute(), attributes.get(idinSamlTelephoneKey));
-		attrs.put(IdinConfiguration.getInstance().getEmailAttribute(), attributes.get(idinSamlEmailKey));
 
 		credentials.put(new CredentialIdentifier(
 				IdinConfiguration.getInstance().getSchemeManager(),
