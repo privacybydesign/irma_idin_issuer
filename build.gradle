@@ -1,6 +1,7 @@
 apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'org.akhikhl.gretty'
+apply plugin: 'org.javalite.activejdbc'
 
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
@@ -10,9 +11,11 @@ buildscript {
         mavenLocal()
         jcenter()
         mavenCentral()
+        maven { url 'http://repo.javalite.io' }
     }
     dependencies {
         classpath 'org.akhikhl.gretty:gretty:1.4.0'
+        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12-SNAPSHOT"
     }
 }
 
@@ -37,6 +40,11 @@ dependencies {
     compile 'org.irmacard.api:irma_api_common:0.7.7'
 
     compile files('libs/net.bankid.merchant.library.jar')
+
+    gretty 'commons-dbcp:commons-dbcp:1.4'
+    compile 'org.javalite:activejdbc:1.4.11'
+    compile 'net.glxn:qrgen:1.4'
+    compile 'mysql:mysql-connector-java:5.1.27'
 
     testCompile "junit:junit:4.11"
     testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'

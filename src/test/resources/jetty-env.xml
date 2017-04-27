@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configure class="org.eclipse.jetty.webapp.WebAppContext">
+    <New id="jdbc/irma_idin" class="org.eclipse.jetty.plus.jndi.Resource">
+        <Arg>jdbc/irma_idin</Arg>
+        <Arg>
+            <New class="org.apache.commons.dbcp.BasicDataSource">
+                <Set name="url">jdbc:mysql://localhost:3306/irmadatabase</Set>
+                <Set name="driverClassName">com.mysql.jdbc.Driver</Set>
+                <Set name="username">irma</Set>
+                <Set name="password"></Set>
+            </New>
+        </Arg>
+    </New>
     <!-- Disable scanning of jars, this can mess stuff up bigtime, but
          it makes booting a whole lot faster, see:
          https://wiki.eclipse.org/Jetty/Howto/Avoid_slow_deployment -->

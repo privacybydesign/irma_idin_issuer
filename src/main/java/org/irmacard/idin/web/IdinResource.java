@@ -3,10 +3,7 @@ package org.irmacard.idin.web;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.irmacard.api.common.ApiClient;
-import org.irmacard.api.common.CredentialRequest;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
-import org.irmacard.api.common.issuing.IssuingRequest;
-import org.irmacard.credentials.Attributes;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,6 +145,7 @@ public class IdinResource {
 						}else {
 							//redirect to issuing page
 							followupURL = successURL;
+							IdinRecord.New(attributes.get(idinSamlBinKey));
 							String jwt = createIssueJWT(attributes);
 							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
 						}
