@@ -90,6 +90,13 @@ public class IdinResource {
 		);
 	}
 
+	@GET
+	@Path("/openTransactions")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String openTransactions (){
+		return OpenTransactions.getOpenTransactions();
+	}
+
 	private AttributeIdentifier getIdinBdAttributeIdentifier() {
 		IdinConfiguration conf = IdinConfiguration.getInstance();
 		return new AttributeIdentifier(
@@ -189,6 +196,8 @@ public class IdinResource {
 						break;
 					case StatusResponse.Open:
 					case StatusResponse.Pending:
+						OpenTransactions.addTransaction(trxID);
+						break;
 					case StatusResponse.Failure:
 					default:
 						followupURL = errorURL;
