@@ -75,6 +75,32 @@ public class IdinResource {
 		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
 	}
 
+	@GET
+	@Path("/verify")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getVerificationJWT () {
+		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
+		list.add(new AttributeDisjunction("E-mail address", getIdinBdAttributeIdentifier()));
+		return ApiClient.getDisclosureJWT(
+				list,
+				IdinConfiguration.getInstance().getServerName(),
+				IdinConfiguration.getInstance().getHumanReadableName(),
+				IdinConfiguration.getInstance().getJwtAlgorithm(),
+				IdinConfiguration.getInstance().getJwtPrivateKey()
+		);
+	}
+
+	private AttributeIdentifier getIdinBdAttributeIdentifier() {
+		IdinConfiguration conf = IdinConfiguration.getInstance();
+		return new AttributeIdentifier(
+				new CredentialIdentifier(
+						conf.getSchemeManager(),
+						conf.getIdinIssuer(),
+						conf.getIdinCredential()),
+				conf.getBirthdateAttribute()
+		);
+	}
+
 	@POST
 	@Path("/start")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
