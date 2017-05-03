@@ -3,7 +3,10 @@ package org.irmacard.idin.web;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.irmacard.api.common.ApiClient;
+import org.irmacard.api.common.AttributeDisjunction;
+import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
+import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,7 +155,7 @@ public class IdinResource {
 						break;
 					case StatusResponse.Cancelled:
 						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
+						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.", "/", null, null, 60, isHttpsEnabled);
 						break;
 					case StatusResponse.Expired:
 						followupURL = errorURL;
