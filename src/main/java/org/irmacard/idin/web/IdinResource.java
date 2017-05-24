@@ -80,7 +80,7 @@ public class IdinResource {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getVerificationJWT () {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
-		list.add(new AttributeDisjunction("E-mail address", getIdinBdAttributeIdentifier()));
+		list.add(new AttributeDisjunction("Geboortedatum", getIdinBdAttributeIdentifier()));
 		return ApiClient.getDisclosureJWT(
 				list,
 				IdinConfiguration.getInstance().getServerName(),
