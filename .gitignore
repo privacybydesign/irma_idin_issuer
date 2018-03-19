@@ -1,0 +1,15 @@
+.gradle
+build
+bin
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+banks.json
+ideal-banks.json
+idin-banks.json
+logs/
+out/
+src/main/webapp/*
+!src/main/webapp/WEB-INF/web.xml
