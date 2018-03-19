@@ -32,7 +32,7 @@ dependencies {
     compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.19'
 
     compile 'ch.qos.logback:logback-classic:1.2.3'
-    compile 'org.slf4j:log4j-over-slf4j:1.8.0-beta1'
+    compile 'org.slf4j:log4j-over-slf4j:1.7.25'
 
     compile 'io.jsonwebtoken:jjwt:0.6.0'
 
