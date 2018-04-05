@@ -93,12 +93,7 @@ public class BackgroundJobManager implements ServletContextListener {
 			);
 		} catch (IdealException ie){
 			logger.error("Retrieving iDEAL issuer list failed!");
-			logger.error(ie.getMessage());
-			logger.error(ie.getErrorMessage());
-			logger.error(ie.getErrorCode());
-			logger.error(ie.getConsumerMessage());
-			logger.error(ie.getErrorDetail());
-			logger.error(ie.getSuggestedAction());
+			ie.printStackTrace();
 		} catch (Exception e) {
 			logger.error("Failed to run ideal issuer fetching cron task");
 			e.printStackTrace();
