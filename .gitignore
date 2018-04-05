@@ -11,5 +11,3 @@ ideal-banks.json
 idin-banks.json
 logs/
 out/
-src/main/webapp/*
-!src/main/webapp/WEB-INF/web.xml
