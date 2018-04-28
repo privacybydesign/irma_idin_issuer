@@ -3,3 +3,8 @@ body {
 	margin: 0 auto;
 	max-width: 800px;
 }
+
+#form-start:not(.part2) .form-iban,
+#form-start:not(.part2) .form-submit {
+	display: none;
+}
