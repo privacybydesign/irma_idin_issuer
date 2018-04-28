@@ -1,6 +1,6 @@
 'use strict';
 
-var API = '/tomcat/irma_ideal_server/api/';
+var API = '/tomcat/irma_ideal_server/api/v1/ideal/';
 
 function onsubmit() {
     // TODO
