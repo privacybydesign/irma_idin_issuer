@@ -2,6 +2,8 @@ package org.irmacard.ideal.web;
 
 import com.ing.ideal.connector.Issuer;
 import org.irmacard.api.common.ApiClient;
+import org.irmacard.api.common.AttributeDisjunction;
+import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.CredentialIdentifier;
 import org.slf4j.Logger;
@@ -28,6 +30,23 @@ public class IdealResource {
 	public Map<String,List<Issuer>> banks() throws IOException {
 		logger.info("Bank list requested");
 		return IdealConfiguration.getInstance().getIdealIssuers().getIssuers();
+	}
+
+	@GET
+	@Path("/create-email-disclosure-req")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getDiscloseEmailRequest() throws IOException {
+		IdealConfiguration conf = IdealConfiguration.getInstance();
+
+		// Request an email address.
+		// TODO: use more email address sources.
+		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(1);
+		requestAttrs.add(new AttributeDisjunction("Email", "pbdf.pbdf.email.email"));
+		return ApiClient.getDisclosureJWT(requestAttrs,
+				conf.getServerName(),
+				conf.getHumanReadableName(),
+				conf.getJwtAlgorithm(),
+				conf.getJwtPrivateKey());
 	}
 
 	//TODO
