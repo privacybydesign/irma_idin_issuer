@@ -47,8 +47,16 @@ function insertBanks(data) {
     }
 }
 
-function onsubmit() {
-    // TODO
+function onsubmit(e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: API + 'request',
+    }).done(function(data) {
+        console.log('request:', data);
+    }).fail(function(xhr) {
+        console.error('request:', xhr.responseText);
+    });
 }
 
 function requestEmail(e) {
