@@ -4,7 +4,7 @@ body {
 	max-width: 800px;
 }
 
-#form-start:not(.part2) .form-iban,
-#form-start:not(.part2) .form-submit {
+#form-start:not(.phase2) .form-iban,
+#form-start:not(.phase2) .form-submit {
 	display: none;
 }

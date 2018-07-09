@@ -2,6 +2,51 @@
 
 var API = '/tomcat/irma_ideal_server/api/v1/ideal/';
 
+function loadBanks() {
+    $.ajax({
+        url: API + 'banks',
+    }).done(function(data) {
+        insertBanks(data);
+    }).fail(function() {
+        // TODO: show error on top? i18n?
+        var select = $('#input-bank');
+        select.empty();
+        select.append($('<option selected disabled hidden>Failed to load bank list</option>'));
+    });
+}
+
+function insertBanks(data) {
+    // clear existing data ('Loading...')
+    var select = $('#input-bank');
+    select.empty();
+    select.append($('<option selected disabled hidden>'));
+
+    // create a list of countries
+    var countries = [];
+    for (var country in data) {
+        countries.push(country);
+    }
+    countries.sort();
+    if (countries.indexOf('Nederland') >= 0) {
+        // set Nederland as first country
+        countries.splice(countries.indexOf('Nederland'), 1);
+        countries.unshift('Nederland');
+    }
+
+    // insert each country with it's banks
+    for (var country of countries) {
+        var optgroup = $('<optgroup>');
+        optgroup.attr('label', country);
+        select.append(optgroup);
+        for (var bank of data[country]) {
+            var option = $('<option>');
+            option.text(bank.issuerName);
+            option.val(bank.issuerID);
+            optgroup.append(option);
+        }
+    }
+}
+
 function onsubmit() {
     // TODO
 }
@@ -50,6 +95,7 @@ function requestEnd(result, message, errormsg) {
 }
 
 function onload() {
+    loadBanks();
     var form = document.querySelector('#form-start');
     form.onsubmit = onsubmit;
 
