@@ -1,5 +1,9 @@
 
 body {
-	margin: 0 auto;
-	max-width: 800px;
+    margin: 0 auto;
+    max-width: 800px;
+}
+
+body:not(.phase1) #form-start {
+    display: none;
 }

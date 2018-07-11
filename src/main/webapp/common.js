@@ -2,6 +2,19 @@
 
 var API = '/tomcat/irma_ideal_server/api/v1/ideal/';
 
+var emailJWT = null;
+
+// https://stackoverflow.com/a/8486188/559350
+function parseURLParams() {
+  var query = location.search.substr(1);
+  var result = {};
+  query.split("&").forEach(function(part) {
+    var item = part.split("=");
+    result[item[0]] = decodeURIComponent(item[1]);
+  });
+  return result;
+}
+
 function loadBanks() {
     $.ajax({
         url: API + 'banks',
@@ -50,10 +63,15 @@ function insertBanks(data) {
 function onsubmit(e) {
     e.preventDefault();
 
+    var data = {
+        bank: $('#input-bank').val(),
+    };
     $.ajax({
-        url: API + 'request',
+        method: 'POST',
+        url:    API + 'start',
+        data:   data,
     }).done(function(data) {
-        console.log('request:', data);
+        location.href = data;
     }).fail(function(xhr) {
         console.error('request:', xhr.responseText);
     });
@@ -103,11 +121,30 @@ function requestEnd(result, message, errormsg) {
 }
 
 function onload() {
-    loadBanks();
-    var form = document.querySelector('#form-start');
-    form.onsubmit = onsubmit;
-
-    form.querySelector('#input-pick-email').onclick = requestEmail;
+    var params = parseURLParams();
+    if (!('trxid' in params)) {
+        // phase 1: request email + bank
+        $(document.body).addClass('phase1')
+        loadBanks();
+        var form = document.querySelector('#form-start');
+        form.onsubmit = onsubmit;
+        form.querySelector('#input-pick-email').onclick = requestEmail;
+    } else {
+        // phase 2: get the result and issue the credential
+        $(document.body).addClass('phase2')
+        $.ajax({
+            method: 'POST',
+            url: API + 'return',
+            data: {
+                trxid: params.trxid,
+                ec:    params.ec,
+            },
+        }).done(function(data) {
+            console.log('request:', data);
+        }).fail(function(xhr) {
+            console.error('request:', xhr.responseText);
+        });
+    }
 }
 
 onload(); // script is deferred so DOM has been built
