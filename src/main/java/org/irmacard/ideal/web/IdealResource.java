@@ -128,7 +128,7 @@ public class IdealResource {
 
 		// Build the attributes.
 		HashMap<String, String> attributes = new HashMap<>(3);
-		attributes.put("name", response.getConsumerName());
+		attributes.put("fullname", response.getConsumerName());
 		attributes.put("iban", response.getConsumerIBAN());
 		attributes.put("bic", response.getConsumerBIC());
 
