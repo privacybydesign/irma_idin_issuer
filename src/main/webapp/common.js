@@ -139,8 +139,15 @@ function onload() {
                 trxid: params.trxid,
                 ec:    params.ec,
             },
-        }).done(function(data) {
-            console.log('request:', data);
+        }).done(function(jwt) {
+            console.log('issuing JWT:', jwt);
+            IRMA.issue(jwt, function(e) {
+                console.log('iDeal credential issued:', e);
+            }, function(e) {
+                console.warn('cancelled:', e);
+            }, function(e) {
+                console.error('issue failed:', e);
+            });
         }).fail(function(xhr) {
             console.error('request:', xhr.responseText);
         });

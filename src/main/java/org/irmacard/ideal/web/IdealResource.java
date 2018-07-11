@@ -103,51 +103,48 @@ public class IdealResource {
 
 	@POST
 	@Path("/return")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response authenticated(@DefaultValue("error") @FormParam("trxid") String trxID){
+		Transaction response;
 		try {
 			IdealConnector connector = new IdealConnector();
-			Transaction response = connector.requestTransactionStatus(trxID);
-			if (response.isSuccess()) {
-			    System.out.println(response.getConsumerBIC());
-				System.out.println(response.getConsumerIBAN());
-				System.out.println(response.getConsumerName());
-			} else {
-				System.out.println("error");
-			}
+			response = connector.requestTransactionStatus(trxID);
 		} catch (IdealException e) {
 			e.printStackTrace();
-			return Response.status(Response.Status.BAD_GATEWAY).entity(e.getConsumerMessage()).build();
+			return Response.status(Response.Status.BAD_GATEWAY).entity("consumermsg:" + e.getConsumerMessage()).build();
 		}
-		return null;
-	}
 
-	private String createIssueJWT(Map<String, String> attributes) {
+		// The response we received was valid, but it may be something other
+		// than "Success". Not sure when that happens though...
+		if (!response.isSuccess()) {
+			logger.error("Unexpected non-success status: " + response.getStatus());
+			return Response.status(Response.Status.BAD_GATEWAY).entity("status:" + response.getStatus()).build();
+		}
+
+		// Build the attributes.
+		HashMap<String, String> attributes = new HashMap<>(3);
+		attributes.put("name", response.getConsumerName());
+		attributes.put("iban", response.getConsumerIBAN());
+		attributes.put("bic", response.getConsumerBIC());
+
+		// Build the credential.
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
-
-		//get iDIN data credential
-		HashMap<String,String> attrs = new HashMap<>();
-		//attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
-
-		//add iDIN data credential
 		credentials.put(new CredentialIdentifier(
 				IdealConfiguration.getInstance().getSchemeManager(),
 				IdealConfiguration.getInstance().getIdealIssuer(),
 				IdealConfiguration.getInstance().getIbanCredential()
-		), attrs);
-
+		), attributes);
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.YEAR, 1);
-
 		IdentityProviderRequest iprequest = ApiClient.getIdentityProviderRequest(credentials, calendar.getTimeInMillis()/1000);
 
-		return ApiClient.getSignedIssuingJWT(iprequest,
+		// Build a JWT to request this credential.
+		String jwt = ApiClient.getSignedIssuingJWT(iprequest,
 				IdealConfiguration.getInstance().getServerName(),
 				IdealConfiguration.getInstance().getHumanReadableName(),
 				IdealConfiguration.getInstance().getJwtAlgorithm(),
 				IdealConfiguration.getInstance().getJwtPrivateKey()
 		);
 
+		return Response.status(Response.Status.OK).entity(jwt).build();
 	}
-
 }
