@@ -116,7 +116,13 @@ public class IdealResource {
 		// The response we received was valid, but it may be something other
 		// than "Success". Not sure when that happens though...
 		if (!response.isSuccess()) {
-			logger.error("Unexpected non-success status: " + response.getStatus());
+			switch (response.getStatus()) {
+				case "Cancelled":
+				case "Expired":
+					break;
+				default:
+					logger.error("Unexpected non-success status: " + response.getStatus());
+			}
 			return Response.status(Response.Status.BAD_GATEWAY).entity("status:" + response.getStatus()).build();
 		}
 

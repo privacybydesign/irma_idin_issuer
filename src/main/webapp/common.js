@@ -16,25 +16,7 @@ function init() {
     } else {
         // phase 2: get the result and issue the credential
         $(document.body).addClass('phase2')
-        $.ajax({
-            method: 'POST',
-            url: API + 'return',
-            data: {
-                trxid: params.trxid,
-                ec:    params.ec,
-            },
-        }).done(function(jwt) {
-            console.log('issuing JWT:', jwt);
-            IRMA.issue(jwt, function(e) {
-                console.log('iDeal credential issued:', e);
-            }, function(e) {
-                console.warn('cancelled:', e);
-            }, function(e) {
-                console.error('issue failed:', e);
-            });
-        }).fail(function(xhr) {
-            console.error('request:', xhr.responseText);
-        });
+        finishTransaction(params);
     }
 }
 
@@ -109,7 +91,9 @@ function requestEmail(e) {
 // With the name and email, start a transaction.
 function startTransaction(e) {
     e.preventDefault();
+    setStatus('info', MESSAGES['start-transaction']);
     $('#btn-request').prop('disabled', true);
+    $('#result-alert').addClass('hidden');
 
     var data = {
         bank: $('#input-bank').val(),
@@ -119,16 +103,63 @@ function startTransaction(e) {
         url:    API + 'start',
         data:   data,
     }).done(function(data) {
+        setStatus('info', MESSAGES['redirect-to-bank']);
         location.href = data;
     }).fail(function(xhr) {
+        setStatus('danger', MESSAGES['api-fail'], xhr);
         $('#btn-request').prop('disabled', false);
-        console.error('request:', xhr.responseText);
+    });
+}
+
+function finishTransaction(params) {
+    setStatus('info', MESSAGES['loading-return']);
+    $.ajax({
+        method: 'POST',
+        url: API + 'return',
+        data: {
+            trxid: params.trxid,
+            ec:    params.ec,
+        },
+    }).done(function(jwt) {
+        setStatus('info', MESSAGES['issuing-credential']);
+        console.log('issuing JWT:', jwt);
+        IRMA.issue(jwt, function(e) {
+            console.log('iDeal credential issued:', e);
+            setStatus('success', MESSAGES['issue-success']);
+        }, function(e) {
+            console.warn('cancelled:', e);
+            setStatus('cancel');
+        }, function(e) {
+            console.error('issue failed:', e);
+            setStatus('danger', MESSAGES['failed-to-issue'], e);
+        });
+    }).fail(function(xhr) {
+        if (xhr.status == 502 && xhr.responseText.substr(0, 7) == 'status:') {
+            if (xhr.responseText in MESSAGES) {
+                if (xhr.responseText == 'status:Cancelled') {
+                    setStatus('warning', MESSAGES[xhr.responseText]);
+                } else {
+                    setStatus('danger', MESSAGES[xhr.responseText]);
+                }
+            } else {
+                setStatus('danger', MESSAGES['status:other'], xhr.responseText);
+            }
+        } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
+            setStatus('danger', MESSAGES['status:consumermsg'], xhr.responseText.substr(12));
+        } else {
+            setStatus('danger', MESSAGES['failed-to-verify'], xhr);
+            console.error('failed to finish transaction:', xhr.responseText);
+        }
     });
 }
 
 // Show progress in the alert box.
 function setStatus(alertType, message, errormsg) {
     console.log('user message: ' + alertType + ': ' + message);
+    message = message || '???'; // make sure it's not undefined
+    if (errormsg && errormsg.statusText) { // is this an XMLHttpRequest?
+        errormsg = errormsg.status + ' ' + errormsg.statusText;
+    }
 
     var alert = $('#result-alert')
     alert.removeClass('alert-success'); // remove all 4 alert types
