@@ -4,22 +4,45 @@ var API = '/tomcat/irma_ideal_server/api/v1/ideal/';
 
 var emailJWT = null;
 
-// https://stackoverflow.com/a/8486188/559350
-function parseURLParams() {
-  var query = location.search.substr(1);
-  var result = {};
-  query.split("&").forEach(function(part) {
-    var item = part.split("=");
-    result[item[0]] = decodeURIComponent(item[1]);
-  });
-  return result;
+function init() {
+    var params = parseURLParams();
+    if (!('trxid' in params)) {
+        // phase 1: request email + bank
+        $(document.body).addClass('phase1')
+        loadBanks();
+        var form = document.querySelector('#form-start');
+        form.onsubmit = startTransaction;
+        form.querySelector('#input-pick-email').onclick = requestEmail;
+    } else {
+        // phase 2: get the result and issue the credential
+        $(document.body).addClass('phase2')
+        $.ajax({
+            method: 'POST',
+            url: API + 'return',
+            data: {
+                trxid: params.trxid,
+                ec:    params.ec,
+            },
+        }).done(function(jwt) {
+            console.log('issuing JWT:', jwt);
+            IRMA.issue(jwt, function(e) {
+                console.log('iDeal credential issued:', e);
+            }, function(e) {
+                console.warn('cancelled:', e);
+            }, function(e) {
+                console.error('issue failed:', e);
+            });
+        }).fail(function(xhr) {
+            console.error('request:', xhr.responseText);
+        });
+    }
 }
 
 function loadBanks() {
     $.ajax({
         url: API + 'banks',
     }).done(function(data) {
-        insertBanks(data);
+        insertBanksIntoForm(data);
     }).fail(function() {
         // TODO: show error on top? i18n?
         var select = $('#input-bank');
@@ -28,7 +51,7 @@ function loadBanks() {
     });
 }
 
-function insertBanks(data) {
+function insertBanksIntoForm(data) {
     // clear existing data ('Loading...')
     var select = $('#input-bank');
     select.empty();
@@ -60,23 +83,6 @@ function insertBanks(data) {
     }
 }
 
-function onsubmit(e) {
-    e.preventDefault();
-
-    var data = {
-        bank: $('#input-bank').val(),
-    };
-    $.ajax({
-        method: 'POST',
-        url:    API + 'start',
-        data:   data,
-    }).done(function(data) {
-        location.href = data;
-    }).fail(function(xhr) {
-        console.error('request:', xhr.responseText);
-    });
-}
-
 function requestEmail(e) {
     $('#result-alert').addClass('hidden');
     e.preventDefault();
@@ -90,68 +96,63 @@ function requestEmail(e) {
             }, function(message) { // cancel
                 // The user explicitly cancelled the request, so do nothing.
                 console.warn('user cancelled disclosure');
-                requestEnd('cancel');
+                setStatus('cancel');
             }, function(errormsg) { // error
                 console.error('could not disclose email attribute:', errormsg);
-                requestEnd('danger', MESSAGES['disclosure-error'], errormsg);
+                setStatus('danger', MESSAGES['disclosure-error'], errormsg);
             });
     }).fail(function(data) {
-        requestEnd('danger', MESSAGES['api-fail']);
+        setStatus('danger', MESSAGES['api-fail']);
     });
 }
 
-// Copied from BIG server.
-function requestEnd(result, message, errormsg) {
-    console.log('user message: ' + result + ': ' + message);
-    //$('#btn-request').prop('disabled', false);
-    $('#progress').text('');
+// With the name and email, start a transaction.
+function startTransaction(e) {
+    e.preventDefault();
+    $('#btn-request').prop('disabled', true);
 
-    if (result !== 'cancel') {
-        $('#result-alert')
-            .removeClass('alert-success') // remove all 4 alert types
-            .removeClass('alert-info')
-            .removeClass('alert-warning')
-            .removeClass('alert-danger')
-            .addClass('alert-' + result)
-            .text(message)
-            .removeClass('hidden')
-            .append('<br>')
-            .append($('<small></small>').text(errormsg))
+    var data = {
+        bank: $('#input-bank').val(),
+    };
+    $.ajax({
+        method: 'POST',
+        url:    API + 'start',
+        data:   data,
+    }).done(function(data) {
+        location.href = data;
+    }).fail(function(xhr) {
+        $('#btn-request').prop('disabled', false);
+        console.error('request:', xhr.responseText);
+    });
+}
+
+// Show progress in the alert box.
+function setStatus(alertType, message, errormsg) {
+    console.log('user message: ' + alertType + ': ' + message);
+
+    var alert = $('#result-alert')
+    alert.removeClass('alert-success'); // remove all 4 alert types
+    alert.removeClass('alert-info');
+    alert.removeClass('alert-warning');
+    alert.removeClass('alert-danger');
+    alert.addClass('alert-' + alertType);
+    alert.text(message);
+    alert.removeClass('hidden');
+    if (errormsg) {
+        alert.append('<br>');
+        alert.append($('<small></small>').text(errormsg));
     }
 }
 
-function onload() {
-    var params = parseURLParams();
-    if (!('trxid' in params)) {
-        // phase 1: request email + bank
-        $(document.body).addClass('phase1')
-        loadBanks();
-        var form = document.querySelector('#form-start');
-        form.onsubmit = onsubmit;
-        form.querySelector('#input-pick-email').onclick = requestEmail;
-    } else {
-        // phase 2: get the result and issue the credential
-        $(document.body).addClass('phase2')
-        $.ajax({
-            method: 'POST',
-            url: API + 'return',
-            data: {
-                trxid: params.trxid,
-                ec:    params.ec,
-            },
-        }).done(function(jwt) {
-            console.log('issuing JWT:', jwt);
-            IRMA.issue(jwt, function(e) {
-                console.log('iDeal credential issued:', e);
-            }, function(e) {
-                console.warn('cancelled:', e);
-            }, function(e) {
-                console.error('issue failed:', e);
-            });
-        }).fail(function(xhr) {
-            console.error('request:', xhr.responseText);
-        });
-    }
+// https://stackoverflow.com/a/8486188/559350
+function parseURLParams() {
+  var query = location.search.substr(1);
+  var result = {};
+  query.split("&").forEach(function(part) {
+    var item = part.split("=");
+    result[item[0]] = decodeURIComponent(item[1]);
+  });
+  return result;
 }
 
-onload(); // script is deferred so DOM has been built
+init(); // script is deferred so DOM has been built

@@ -7,3 +7,7 @@ body {
 body:not(.phase1) #form-start {
     display: none;
 }
+
+body:not(.phase2) #form-issuance {
+    display: none;
+}
