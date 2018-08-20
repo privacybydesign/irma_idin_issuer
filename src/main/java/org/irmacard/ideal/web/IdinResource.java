@@ -2,26 +2,34 @@ package org.irmacard.ideal.web;
 
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
+import org.bouncycastle.util.encoders.Hex;
 import org.irmacard.api.common.ApiClient;
 import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
+import org.javalite.common.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.Mac;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Arrays;
 
 @Path("v1/idin")
 public class IdinResource {
@@ -45,12 +53,10 @@ public class IdinResource {
 	private static final String idinSamlHouseNoKey = "urn:nl:bvn:bankid:1.0:consumer.houseno";
 	private static final String idinSamlPostalCodeKey = "urn:nl:bvn:bankid:1.0:consumer.postalcode";
 
+	private static final String HMAC_ALGORITHM = "HmacSHA512";
 
 	private static Random random = new Random();
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
-
-	private static String successURL = IdinConfiguration.getInstance().getReturnUrl()+"/enroll.html";
-	private static String errorURL = IdinConfiguration.getInstance().getReturnUrl()+"/error.html";
 
 	//Issuer response codes
 	private static String entranceCode = "successHIO100OIHtest";
@@ -111,10 +117,17 @@ public class IdinResource {
 	@POST
 	@Path("/start")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response start (String bank){
+	public Response start (@FormParam("bank") String bank, @FormParam("token") String token){
 		if (!IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)){
-			throw new RuntimeException("Illegal bankcode received");
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-bank").build();
 		}
+		if (token == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:missing-params").build();
+		}
+		if (loadTokenRecord(token) == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-token").build();
+		}
+
 		// Create request
 		String merchantReference = new BigInteger(130, random).toString(32);
 		//iDIN lib wants the random MerchantReference to start with a letter.
@@ -149,70 +162,43 @@ public class IdinResource {
 		logger.error("===============================================================");
 	}
 
-	@GET
+	@POST
 	@Path("/return")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID){
-		NewCookie[] cookies = new NewCookie[1];
-		String followupURL = errorURL;
-
-		boolean isHttpsEnabled = IdinConfiguration.getInstance().isHttpsEnabled();
-		if (trxID.equals("error") ){
-			//landing on the return page without a trxid. Something is wrong
-			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,isHttpsEnabled);
-			followupURL = errorURL;
-		} else {
-			logger.info("trxid {}: return url called", trxID);
-
-			StatusRequest sr = new StatusRequest(trxID);
-			StatusResponse response = new Communicator().getResponse(sr);
-			if (response.getIsError()) {
-				logError(response.getErrorResponse());
-				throw new IdinException(response.getErrorResponse());
-			} else {
-				logger.info("trxid {}: response status {}", trxID, response.getStatus());
-				switch (response.getStatus()) {
-					case StatusResponse.Success:
-						Map<String, String> attributes = response.getSamlResponse().getAttributes();
-						logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
-						if (nullOrEmptyAttributes(attributes,trxID)){
-							cookies[0] = new NewCookie("error","De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen","/",null,null,60,isHttpsEnabled);
-							followupURL = errorURL;
-						}else {
-							//redirect to issuing page
-							followupURL = successURL;
-							//IdinRecord.New(attributes.get(idinSamlBinKey));
-							String jwt = createIssueJWT(attributes);
-							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
-						}
-						break;
-					case StatusResponse.Cancelled:
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.", "/", null, null, 60, isHttpsEnabled);
-						break;
-					case StatusResponse.Expired:
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
-						break;
-					case StatusResponse.Open:
-					case StatusResponse.Pending:
-						OpenTransactions.addTransaction(trxID);
-						break;
-					case StatusResponse.Failure:
-					default:
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
-						break;
+	public Response authenticated(@FormParam("trxid") String trxID, @FormParam("token") String token) {
+		IdinToken record = loadTokenRecord(token);
+		if (record == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-token").build();
+		}
+		StatusRequest sr = new StatusRequest(trxID);
+		StatusResponse response = new Communicator().getResponse(sr);
+		if (response.getIsError()) {
+			logError(response.getErrorResponse());
+			throw new IdinException(response.getErrorResponse());
+		}
+		logger.info("trxid {}: response status {}", trxID, response.getStatus());
+		switch (response.getStatus()) {
+			case StatusResponse.Success:
+				Map<String, String> attributes = response.getSamlResponse().getAttributes();
+				logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
+				if (nullOrEmptyAttributes(attributes,trxID)) {
+					return Response.status(Response.Status.BAD_GATEWAY).entity("error:missing-idin-attributes").build();
 				}
-			}
+				String jwt = createIssueJWT(attributes);
+				// This is a used token.
+				record.delete();
+				return Response.status(Response.Status.OK).entity(jwt).build();
+			case StatusResponse.Cancelled:
+				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:Cancelled").build();
+			case StatusResponse.Expired:
+				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:Expired").build();
+			case StatusResponse.Open:
+			case StatusResponse.Pending:
+				OpenTransactions.addTransaction(trxID);
+				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:Open").build();
+			case StatusResponse.Failure:
+			default:
+				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:other").build();
 		}
-		try {
-			URI followupURI = new URI(followupURL);
-			return Response.seeOther(followupURI).cookie(cookies).build();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return null;
 	}
 
 	private String getGenderString(String isoCode){
@@ -357,4 +343,106 @@ public class IdinResource {
 
 	}
 
+	/**
+	 * Load the token record from the database, or abort when anything at all
+	 * seems fishy about it. It returns null when the token is invalid, not
+	 * signed correctly, or does not occur in the database.
+	 */
+	private IdinToken loadTokenRecord(String token) {
+		if (token == null) {
+			logger.error("token == null");
+			return null;
+		}
+		String[] parts = token.split(":");
+		if (parts.length != 2) {
+			logger.error("token: parts.length != 2");
+			return null;
+		}
+		try {
+			byte[] rawToken = Base64.getUrlDecoder().decode(parts[0]);
+			byte[] rawSignature = Base64.getUrlDecoder().decode(parts[1]);
+			byte[] rawComputedSignature = signToken(rawToken);
+			if (!org.bouncycastle.util.Arrays.constantTimeAreEqual(rawSignature, rawComputedSignature)) {
+				// The signature on the token was not valid.
+				logger.error("token: signature mismatch");
+				return null;
+			}
+			// TODO: validate the parameter in the database.
+			IdealApplication.openDatabase();
+			return IdinToken.findFirst("hashedToken = ?", hashToken(rawToken));
+		} catch (IllegalArgumentException e) {
+			logger.error("token: not found");
+			// invalid base64
+			return null;
+		}
+	}
+
+	/**
+	 * Anonymize the BIC and IBAN numbers by hashing them using PBKDF2.
+	 * The goal is to treat the IBAN/BIC like a regular low-entropy password so
+	 * that trying all possible IBAN numbers is really difficult. Think of banks
+	 * that issue very predictable (low entropy) IBAN numbers for which it is
+	 * feasible to compute lower numbers.
+	 * Sadly we can't really use a salt as we need to index the token in a
+	 * database and we don't have the equivalent of a username.
+	 */
+	public static byte[] makeToken(String bic, String iban) {
+		String input = bic + "-" + iban;
+		String salt = IdinConfiguration.getInstance().getStaticSalt();
+		if (salt.length() == 0) {
+			// Make sure we have a salt configured - just in case.
+			throw new IllegalStateException("no static salt configured");
+		}
+		PBEKeySpec spec = new PBEKeySpec(input.toCharArray(), salt.getBytes(), 10000, 32 * 8);
+		try {
+			SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
+			return skf.generateSecret(spec).getEncoded();
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			// should not happen
+			throw new RuntimeException("no support for PBKDF2-HMAC-SHA512?", e);
+		}
+	}
+
+	/**
+	 * Hash a token to be stored in the database.
+	 * The reason a hash is applied first is to avoid timing attacks while
+	 * retrieving a token. When looking up a token the database compares the
+	 * user-supplied token to tokens in the database in a way that's certainly
+	 * not constant-time. Hashing it first makes timing attacks impossible.
+	 */
+	public static String hashToken(byte[] token) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA-512");
+			md.update(token);
+			byte[] digest = Arrays.copyOf(md.digest(), 32); // SHA512/256
+			return Hex.toHexString(digest);
+		} catch (NoSuchAlgorithmException e) {
+			// very unlikely
+			throw new RuntimeException("could not instantiate SHA512 hash", e);
+		}
+	}
+
+	/**
+	 * Sign a token for the happy flow from iDeal to iDIN, without pause.
+	 * Because it is signed we can be sure
+	 * @return the HMAC signature
+	 */
+	public static byte[] signToken(byte[] token) {
+		String key = IdinConfiguration.getInstance().getHMACKey();
+		if (key.length() == 0) {
+			// Make sure we have a salt configured - just in case.
+			throw new IllegalStateException("no HMAC key configured");
+		}
+		try {
+			SecretKeySpec spec = new SecretKeySpec(key.getBytes(), HMAC_ALGORITHM);
+			Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+			mac.init(spec);
+			byte[] signature = mac.doFinal(token);
+			// 32 bytes (256 bits) is long enough.
+			return Arrays.copyOf(signature, 32);
+		} catch (NoSuchAlgorithmException | InvalidKeyException e) {
+			// should not happen
+			throw new RuntimeException("unexpected missing algorithm", e);
+		}
+	}
 }

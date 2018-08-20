@@ -4,10 +4,10 @@ body {
     max-width: 800px;
 }
 
-body:not(.phase1) #form-start {
+body:not(.phase1) #form-ideal {
     display: none;
 }
 
-body:not(.phase2) #form-issuance {
+body:not(.phase2) #form-idin {
     display: none;
 }

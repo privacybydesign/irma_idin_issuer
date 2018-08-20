@@ -45,6 +45,7 @@ dependencies {
 
     gretty 'commons-dbcp:commons-dbcp:1.4'
     compile 'org.javalite:activejdbc:1.4.11'
+    compile 'org.xerial:sqlite-jdbc:3.23.1'
     compile 'net.glxn:qrgen:1.4'
     compile 'mysql:mysql-connector-java:5.1.27'
 

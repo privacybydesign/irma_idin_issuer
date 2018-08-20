@@ -1,41 +1,59 @@
 'use strict';
 
-var API = '/tomcat/irma_ideal_server/api/v1/ideal/';
+var API = '/tomcat/irma_ideal_server/api/v1/';
 
 var emailJWT = null;
 
 function init() {
+    document.querySelector('#form-ideal').onsubmit = startIDealTransaction;
+    document.querySelector('#input-pick-email').onclick = requestEmail;
+    document.querySelector('#form-idin').onsubmit = startIDINTransaction;
+
     var params = parseURLParams();
-    if (!('trxid' in params)) {
+    if (params.trxid && params.ec == 'ideal') {
+        // phase 2: get the result and issue the iDeal credential
+        $(document.body).addClass('phase2')
+        finishIDealTransaction(params);
+        loadIDINBanks();
+    } else if (params.trxid) {
+        // phase 3: get the result and issue the iDIN credential
+        $(document.body).addClass('phase3')
+        finishIDINTransaction(params);
+    } else {
         // phase 1: request email + bank
         $(document.body).addClass('phase1')
-        loadBanks();
-        var form = document.querySelector('#form-start');
-        form.onsubmit = startTransaction;
-        form.querySelector('#input-pick-email').onclick = requestEmail;
-    } else {
-        // phase 2: get the result and issue the credential
-        $(document.body).addClass('phase2')
-        finishTransaction(params);
+        loadIDealBanks();
     }
 }
 
-function loadBanks() {
+function loadIDealBanks() {
+    var select = $('#input-ideal-bank');
     $.ajax({
-        url: API + 'banks',
+        url: API + 'ideal/banks',
     }).done(function(data) {
-        insertBanksIntoForm(data);
+        insertBanksIntoForm(data, select);
     }).fail(function() {
         // TODO: show error on top? i18n?
-        var select = $('#input-bank');
         select.empty();
         select.append($('<option selected disabled hidden>Failed to load bank list</option>'));
     });
 }
 
-function insertBanksIntoForm(data) {
+function loadIDINBanks() {
+    var select = $('#input-idin-bank');
+    $.ajax({
+        url: API + 'idin/banks',
+    }).done(function(data) {
+        insertBanksIntoForm(data, select);
+    }).fail(function() {
+        // TODO: show error on top? i18n?
+        select.empty();
+        select.append($('<option selected disabled hidden>Failed to load bank list</option>'));
+    });
+}
+
+function insertBanksIntoForm(data, select) {
     // clear existing data ('Loading...')
-    var select = $('#input-bank');
     select.empty();
     select.append($('<option selected disabled hidden>'));
 
@@ -63,18 +81,21 @@ function insertBanksIntoForm(data) {
             optgroup.append(option);
         }
     }
+
+    select.val(sessionStorage.idx_selectedBank);
 }
 
 function requestEmail(e) {
     $('#result-alert').addClass('hidden');
     e.preventDefault();
     $.ajax({
-        url: API + 'create-email-disclosure-req',
+        url: API + 'ideal/create-email-disclosure-req',
     }).done(function(jwt) {
         //showProgress('Creating email disclosure request...');
         IRMA.verify(jwt,
             function(disclosureJWT) { // success
                 console.log('disclosure JWT:', disclosureJWT)
+                emailJWT = disclosureJWT;
             }, function(message) { // cancel
                 // The user explicitly cancelled the request, so do nothing.
                 console.warn('user cancelled disclosure');
@@ -89,41 +110,44 @@ function requestEmail(e) {
 }
 
 // With the name and email, start a transaction.
-function startTransaction(e) {
+function startIDealTransaction(e) {
     e.preventDefault();
-    setStatus('info', MESSAGES['start-transaction']);
-    $('#btn-request').prop('disabled', true);
+    setStatus('info', MESSAGES['start-ideal-transaction']);
+    $('#btn-ideal-request').prop('disabled', true);
     $('#result-alert').addClass('hidden');
 
+    var selectedBank = $('#input-ideal-bank').val();
+    sessionStorage.idx_selectedBank = selectedBank;
     var data = {
-        bank: $('#input-bank').val(),
+        bank: selectedBank,
     };
     $.ajax({
         method: 'POST',
-        url:    API + 'start',
+        url:    API + 'ideal/start',
         data:   data,
     }).done(function(data) {
-        setStatus('info', MESSAGES['redirect-to-bank']);
+        setStatus('info', MESSAGES['redirect-to-ideal-bank']);
         location.href = data;
     }).fail(function(xhr) {
         setStatus('danger', MESSAGES['api-fail'], xhr);
-        $('#btn-request').prop('disabled', false);
+        $('#btn-ideal-request').prop('disabled', false);
     });
 }
 
-function finishTransaction(params) {
+function finishIDealTransaction(params) {
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
-        url: API + 'return',
+        url: API + 'ideal/return',
         data: {
             trxid: params.trxid,
             ec:    params.ec,
         },
-    }).done(function(jwt) {
-        setStatus('info', MESSAGES['issuing-credential']);
-        console.log('issuing JWT:', jwt);
-        IRMA.issue(jwt, function(e) {
+    }).done(function(response) {
+        setStatus('info', MESSAGES['issuing-ideal-credential']);
+        console.log('issuing JWT:', response.jwt);
+        localStorage.idx_token = response.token;
+        IRMA.issue(response.jwt, function(e) {
             console.log('iDeal credential issued:', e);
             setStatus('success', MESSAGES['issue-success']);
         }, function(e) {
@@ -131,24 +155,93 @@ function finishTransaction(params) {
             setStatus('cancel');
         }, function(e) {
             console.error('issue failed:', e);
-            setStatus('danger', MESSAGES['failed-to-issue'], e);
+            setStatus('danger', MESSAGES['failed-to-issue-ideal'], e);
         });
     }).fail(function(xhr) {
-        if (xhr.status == 502 && xhr.responseText.substr(0, 7) == 'status:') {
+        if (xhr.status == 502 && xhr.responseText.substr(0, 13) == 'ideal-status:') {
             if (xhr.responseText in MESSAGES) {
-                if (xhr.responseText == 'status:Cancelled') {
+                if (xhr.responseText == 'ideal-status:Cancelled') {
                     setStatus('warning', MESSAGES[xhr.responseText]);
                 } else {
                     setStatus('danger', MESSAGES[xhr.responseText]);
                 }
             } else {
-                setStatus('danger', MESSAGES['status:other'], xhr.responseText);
+                setStatus('danger', MESSAGES['ideal-status:other'], xhr.responseText);
             }
         } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
-            setStatus('danger', MESSAGES['status:consumermsg'], xhr.responseText.substr(12));
+            setStatus('danger', MESSAGES['ideal-status:consumermsg'], xhr.responseText.substr(12));
         } else {
             setStatus('danger', MESSAGES['failed-to-verify'], xhr);
-            console.error('failed to finish transaction:', xhr.responseText);
+            console.error('failed to finish iDeal transaction:', xhr.responseText);
+        }
+    });
+}
+
+function startIDINTransaction(e) {
+    e.preventDefault();
+    setStatus('info', MESSAGES['start-idin-transaction']);
+    $('#btn-ideal-request').prop('disabled', true);
+    $('#result-alert').addClass('hidden');
+
+    var selectedBank = $('#input-idin-bank').val();
+    sessionStorage.idx_selectedBank = selectedBank;
+    var data = {
+        bank: selectedBank,
+        token: localStorage.idx_token,
+    };
+    $.ajax({
+        method: 'POST',
+        url:    API + 'idin/start',
+        data:   data,
+    }).done(function(data) {
+        setStatus('info', MESSAGES['redirect-to-idin-bank']);
+        location.href = data;
+    }).fail(function(xhr) {
+        setStatus('danger', MESSAGES['api-fail'], xhr);
+        $('#btn-idin-request').prop('disabled', false);
+    });
+}
+
+function finishIDINTransaction(params) {
+    setStatus('info', MESSAGES['loading-return']);
+    $.ajax({
+        method: 'POST',
+        url: API + 'idin/return',
+        data: {
+            trxid: params.trxid,
+            ec:    params.ec,
+            token: localStorage.idx_token,
+        },
+    }).done(function(response) {
+        delete localStorage.idx_token; // removed on the server
+        setStatus('info', MESSAGES['issuing-idin-credential']);
+        console.log('issuing JWT:', response.jwt);
+        IRMA.issue(response.jwt, function(e) {
+            console.log('iDeal credential issued:', e);
+            setStatus('success', MESSAGES['issue-success']);
+        }, function(e) {
+            console.warn('cancelled:', e);
+            setStatus('cancel');
+        }, function(e) {
+            console.error('issue failed:', e);
+            setStatus('danger', MESSAGES['failed-to-issue-idin'], e);
+        });
+    }).fail(function(xhr) {
+        if (xhr.status == 502 && xhr.responseText.substr(0, 7) == 'idin-status:') {
+            if (xhr.responseText in MESSAGES) {
+                if (xhr.responseText == 'idin-status:Cancelled') {
+                    setStatus('warning', MESSAGES[xhr.responseText]);
+                } else {
+                    setStatus('danger', MESSAGES[xhr.responseText]);
+                }
+            } else {
+                setStatus('danger', MESSAGES['idin-status:other'], xhr.responseText);
+            }
+        } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
+            setStatus('danger', MESSAGES['idin-status:consumermsg'], xhr.responseText.substr(12));
+        } else {
+            setStatus('danger', MESSAGES['failed-to-verify-idin'], xhr);
+            console.error('failed to finish iDIN transaction:', xhr.responseText);
         }
     });
 }
@@ -156,7 +249,7 @@ function finishTransaction(params) {
 // Show progress in the alert box.
 function setStatus(alertType, message, errormsg) {
     console.log('user message: ' + alertType + ': ' + message);
-    message = message || '???'; // make sure it's not undefined
+    message = message || MESSAGES['unknown-error']; // make sure it's not undefined
     if (errormsg && errormsg.statusText) { // is this an XMLHttpRequest?
         errormsg = errormsg.status + ' ' + errormsg.statusText;
     }

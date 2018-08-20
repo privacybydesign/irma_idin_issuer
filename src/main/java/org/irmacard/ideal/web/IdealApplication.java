@@ -22,20 +22,18 @@ public class IdealApplication extends ResourceConfig {
 
 		logger.info("Starting IRMA iDeal server");
 
-		//TODO
-		//openDatabase();
-		//closeDatabase();
+		openDatabase();
+		closeDatabase();
 	}
 
 	public static void openDatabase() {
 		if(!Base.hasConnection()) {
-			logger.warn("Opening database connection");
-			Base.open("java:comp/env/jdbc/irma_idin");
+			// TODO: make configurable
+			Base.open("org.sqlite.JDBC", "jdbc:sqlite:irma_idx.sqlite3", "", "");
 		}
 	}
 
 	public static void closeDatabase() {
-		logger.warn("Closing database connection");
 		Base.close();
 	}
 }

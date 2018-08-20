@@ -41,9 +41,6 @@ public class IdealConfiguration extends Configuration{
             e.printStackTrace();
             instance = new IdealConfiguration();
         }
-
-        System.out.println("Configuration:");
-        System.out.println(instance.toString());
     }
 
 

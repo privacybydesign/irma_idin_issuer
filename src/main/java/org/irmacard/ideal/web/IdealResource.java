@@ -9,6 +9,7 @@ import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.CredentialIdentifier;
+import org.javalite.common.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,30 +50,6 @@ public class IdealResource {
 				conf.getJwtPrivateKey());
 	}
 
-	//TODO
-/*	@GET
-	@Path("/verify-iDEAL")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getVerificationJWT () {
-		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
-		list.add(new AttributeDisjunction("IBAN", getIdealIBANAttributeIdentifier()));
-		return ApiClient.getDisclosureJWT(
-				list,
-				IdealConfiguration.getInstance().getServerName(),
-				IdealConfiguration.getInstance().getHumanReadableName(),
-				IdealConfiguration.getInstance().getJwtAlgorithm(),
-				IdealConfiguration.getInstance().getJwtPrivateKey()
-		);
-	}
-
-	@GET
-	@Path("/openTransactions-iDEAL")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String openTransactions (){
-		return OpenTransactions.getOpenTransactions();
-	}
-
-*/
 	@POST
 	@Path("/start")
 	@Produces(MediaType.TEXT_PLAIN)
@@ -83,7 +60,7 @@ public class IdealResource {
 		try {
 			Transaction transaction = new Transaction();
 			transaction.setAmount(new BigDecimal("1.00"));
-			transaction.setEntranceCode("test");
+			transaction.setEntranceCode("ideal"); // code to resume the session
 			transaction.setIssuerID(bank);
 			transaction.setPurchaseID("1");
 			transaction.setDescription("iDeal transactie ter authenticate");
@@ -123,7 +100,7 @@ public class IdealResource {
 				default:
 					logger.error("Unexpected non-success status: " + response.getStatus());
 			}
-			return Response.status(Response.Status.BAD_GATEWAY).entity("status:" + response.getStatus()).build();
+			return Response.status(Response.Status.BAD_GATEWAY).entity("ideal-status:" + response.getStatus()).build();
 		}
 
 		// Build the attributes.
@@ -151,6 +128,21 @@ public class IdealResource {
 				IdealConfiguration.getInstance().getJwtPrivateKey()
 		);
 
-		return Response.status(Response.Status.OK).entity(jwt).build();
+		byte[] rawToken = IdinResource.makeToken(response.getConsumerBIC(), response.getConsumerIBAN());
+		String token = Base64.getUrlEncoder().withoutPadding().encodeToString(rawToken);
+
+		IdealApplication.openDatabase();
+		IdinToken rec = new IdinToken();
+		rec.set("hashedToken", IdinResource.hashToken(rawToken));
+		rec.saveIt();
+
+		byte[] rawSignature = IdinResource.signToken(rawToken);
+		String signature = Base64.getUrlEncoder().withoutPadding().encodeToString(rawSignature);
+		String signedToken = token + ":" + signature;
+
+		IdealSuccessResponse entity = new IdealSuccessResponse();
+		entity.jwt = jwt;
+		entity.token = signedToken;
+		return Response.status(Response.Status.OK).entity(entity).build();
 	}
 }

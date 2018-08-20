@@ -27,6 +27,7 @@ public class BackgroundJobManager implements ServletContextListener {
 		// same goes for the iDEAL Connector
 		IdealConfiguration.load();
 		IdinConfiguration.load();
+		IdinConfiguration.loadIdinConfiguration();
 	}
 
 	@Override

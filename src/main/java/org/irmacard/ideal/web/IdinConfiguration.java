@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,9 +30,11 @@ public class IdinConfiguration extends Configuration{
     private String birthdate_attribute = "";
     private String gender_attribute = "";
     private String country_attribute = "";
+    private String static_salt = "";
 
     private String idin_issuers_path = "idin-banks.json";
     private transient IdinIssuers iDinIssuers;
+    private String hmac_key = "";
 
     public static IdinConfiguration getInstance() {
         if (instance == null) {
@@ -56,6 +59,19 @@ public class IdinConfiguration extends Configuration{
 
         System.out.println("Configuration:");
         System.out.println(instance.toString());
+    }
+
+    public static void loadIdinConfiguration() {
+        try {
+            URL config = IdinConfiguration.class.getClassLoader().getResource("config.xml");
+            if (config == null)
+                throw new Exception("Could not load config.xml");
+            net.bankid.merchant.library.Configuration.defaultInstance().Load(config.openStream());
+        } catch (Exception e) {
+            logger.error("Could not load iDIN configuration");
+            logger.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -137,4 +153,11 @@ public class IdinConfiguration extends Configuration{
         return age_limits_credential;
     }
 
+    public String getStaticSalt() {
+        return static_salt;
+    }
+
+    public String getHMACKey() {
+        return hmac_key;
+    }
 }

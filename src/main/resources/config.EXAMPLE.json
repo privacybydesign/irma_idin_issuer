@@ -18,6 +18,8 @@
     "birthdate_attribute": "dateOfBirth",
     "gender_attribute": "sex",
     "tel_attribute": "telephone",
-    "email_attribute": "email"
+    "email_attribute": "email",
 
+    "static_salt": "",
+    "hmac_key": ""
 }
