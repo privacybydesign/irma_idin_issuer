@@ -9,7 +9,7 @@ var emailJWT = null;
 function init() {
     $('#btn-ideal-request').click(startIDealTransaction);
     //document.querySelector('#input-pick-email').onclick = requestEmail;
-    $('#form-idin').submit(startIDINTransaction);
+    $('#btn-idin-request').click(startIDINTransaction);
     $('#btn-ideal-issue').click(finishIDealTransaction);
     $('#btn-ideal-skip').click(skipIDealTransaction);
     window.onpopstate = updatePhase;
@@ -19,15 +19,18 @@ function init() {
 
 function updatePhase() {
     var params = parseURLParams();
-    if (params.trxid && params.ec == 'ideal') {
+    if (params.ec == 'ideal') {
         // phase 2: get the result and issue the iDeal credential
-        localStorage.idx_ideal_trxid = params.trxid;
-        loadIDINBanks();
         setPhase(2);
+        if (params.trxid) {
+            localStorage.idx_ideal_trxid = params.trxid;
+        }
+        finishIDealTransaction();
+        loadIDINBanks(); // preload
     } else if (params.ec == 'ideal-phase3') {
         // phase 3: input iDIN to redirect to it
-        loadIDINBanks();
         setPhase(3);
+        loadIDINBanks();
     } else if (params.trxid) {
         // phase 4: get the result and issue the iDIN credential
         setPhase(4);
@@ -36,11 +39,15 @@ function updatePhase() {
         // phase 1: input iDeal bank to redirect to it
         setPhase(1);
         loadIDealBanks();
-        $('#continue-alert').addClass('hidden'); // set default back
-        if (localStorage.idx_ideal_trxid) {
+        $('#transaction-alert').addClass('hidden'); // set default back
+        $('#token-alert').addClass('hidden'); // set default back
+        if (localStorage.idx_token) {
+            // A previous session wasn't complete.
+            $('#token-alert').removeClass('hidden');
+        } else if (localStorage.idx_ideal_trxid) {
             // A session is in progress, offer to issue.
-            $('#continue-alert').removeClass('hidden');
-            $('#continue-alert a').attr('href', '?trxid=' + localStorage.idx_ideal_trxid + '&ec=ideal');
+            $('#transaction-alert').removeClass('hidden');
+            $('#transaction-alert a').attr('href', '?trxid=' + localStorage.idx_ideal_trxid + '&ec=ideal');
         }
     }
 }

@@ -27,9 +27,16 @@
 
             <div id="result-alert" class="alert hidden"></div>
 
-            <div id="continue-alert" class="alert alert-warning hidden">
+            <div id="transaction-alert" class="alert alert-warning hidden">
                 <strong>You already have a transaction in progress.</strong>
                 Continue the transaction <a href="">where you left</a>.
+            </div>
+
+            <div id="token-alert" class="alert alert-warning hidden">
+                <strong>You already requested iDeal attributes.</strong>
+                Jump ahead to request <a href="?ec=ideal-phase3" class="idin">iDIN attributes</a>
+                or load <a href="?ec=ideal" class="ideal">iDeal attributes</a>
+                in your IRMA app, if you haven't already done so.
             </div>
 
             <div id="pane-ideal">
