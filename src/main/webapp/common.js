@@ -7,7 +7,7 @@ var iDINBanksLoaded = false;
 var emailJWT = null;
 
 function init() {
-    $('#form-ideal').submit(startIDealTransaction);
+    $('#btn-ideal-request').click(startIDealTransaction);
     //document.querySelector('#input-pick-email').onclick = requestEmail;
     $('#form-idin').submit(startIDINTransaction);
     $('#btn-ideal-issue').click(finishIDealTransaction);
