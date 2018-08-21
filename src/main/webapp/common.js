@@ -2,31 +2,53 @@
 
 var API = '/tomcat/irma_ideal_server/api/v1/';
 
+var iDealBanksLoaded = false;
+var iDINBanksLoaded = false;
 var emailJWT = null;
 
 function init() {
-    document.querySelector('#form-ideal').onsubmit = startIDealTransaction;
-    document.querySelector('#input-pick-email').onclick = requestEmail;
-    document.querySelector('#form-idin').onsubmit = startIDINTransaction;
+    $('#form-ideal').submit(startIDealTransaction);
+    //document.querySelector('#input-pick-email').onclick = requestEmail;
+    $('#form-idin').submit(startIDINTransaction);
+    $('#btn-ideal-issue').click(finishIDealTransaction);
+    $('#btn-ideal-skip').click(skipIDealTransaction);
+    window.onpopstate = updatePhase;
 
+    updatePhase();
+}
+
+function updatePhase() {
     var params = parseURLParams();
     if (params.trxid && params.ec == 'ideal') {
         // phase 2: get the result and issue the iDeal credential
-        $(document.body).addClass('phase2')
-        finishIDealTransaction(params);
         loadIDINBanks();
+        setPhase(2);
+    } else if (params.ec == 'ideal-phase3') {
+        // phase 3: input iDIN to redirect to it
+        loadIDINBanks();
+        setPhase(3);
     } else if (params.trxid) {
-        // phase 3: get the result and issue the iDIN credential
-        $(document.body).addClass('phase3')
+        // phase 4: get the result and issue the iDIN credential
+        setPhase(4);
         finishIDINTransaction(params);
     } else {
-        // phase 1: request email + bank
-        $(document.body).addClass('phase1')
+        // phase 1: input iDeal bank to redirect to it
+        setPhase(1);
         loadIDealBanks();
     }
 }
 
+function setPhase(num) {
+    $(document.body).attr('class', 'phase' + num);
+    $('.steps > .step').removeClass('active');
+    $($('.steps > .step')[num-1]).addClass('active');
+}
+
 function loadIDealBanks() {
+    if (iDealBanksLoaded) {
+        return;
+    }
+    iDealBanksLoaded = true;
     var select = $('#input-ideal-bank');
     $.ajax({
         url: API + 'ideal/banks',
@@ -40,6 +62,10 @@ function loadIDealBanks() {
 }
 
 function loadIDINBanks() {
+    if (iDINBanksLoaded) {
+        return;
+    }
+    iDINBanksLoaded = true;
     var select = $('#input-idin-bank');
     $.ajax({
         url: API + 'idin/banks',
@@ -134,7 +160,17 @@ function startIDealTransaction(e) {
     });
 }
 
-function finishIDealTransaction(params) {
+function skipIDealTransaction() {
+    if (confirm(MESSAGES['ideal-skip-confirm'])) {
+        $('#result-alert').addClass('hidden');
+        setPhase(3);
+        var params = parseURLParams();
+        history.pushState(null, '', '?trxid=' + params.trxid + '&ec=ideal-phase3');
+    }
+}
+
+function finishIDealTransaction() {
+    var params = parseURLParams();
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
@@ -150,6 +186,7 @@ function finishIDealTransaction(params) {
         IRMA.issue(response.jwt, function(e) {
             console.log('iDeal credential issued:', e);
             setStatus('success', MESSAGES['issue-success']);
+            setPhase(3);
         }, function(e) {
             console.warn('cancelled:', e);
             setStatus('cancel');
@@ -255,13 +292,8 @@ function setStatus(alertType, message, errormsg) {
     }
 
     var alert = $('#result-alert')
-    alert.removeClass('alert-success'); // remove all 4 alert types
-    alert.removeClass('alert-info');
-    alert.removeClass('alert-warning');
-    alert.removeClass('alert-danger');
-    alert.addClass('alert-' + alertType);
+    alert.attr('class', 'alert alert-' + alertType);
     alert.text(message);
-    alert.removeClass('hidden');
     if (errormsg) {
         alert.append('<br>');
         alert.append($('<small></small>').text(errormsg));
