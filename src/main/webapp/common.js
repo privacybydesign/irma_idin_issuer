@@ -21,6 +21,7 @@ function updatePhase() {
     var params = parseURLParams();
     if (params.trxid && params.ec == 'ideal') {
         // phase 2: get the result and issue the iDeal credential
+        localStorage.idx_ideal_trxid = params.trxid;
         loadIDINBanks();
         setPhase(2);
     } else if (params.ec == 'ideal-phase3') {
@@ -35,6 +36,12 @@ function updatePhase() {
         // phase 1: input iDeal bank to redirect to it
         setPhase(1);
         loadIDealBanks();
+        $('#continue-alert').addClass('hidden'); // set default back
+        if (localStorage.idx_ideal_trxid) {
+            // A session is in progress, offer to issue.
+            $('#continue-alert').removeClass('hidden');
+            $('#continue-alert a').attr('href', '?trxid=' + localStorage.idx_ideal_trxid + '&ec=ideal');
+        }
     }
 }
 
@@ -164,26 +171,24 @@ function skipIDealTransaction() {
     if (confirm(MESSAGES['ideal-skip-confirm'])) {
         $('#result-alert').addClass('hidden');
         setPhase(3);
-        var params = parseURLParams();
-        history.pushState(null, '', '?trxid=' + params.trxid + '&ec=ideal-phase3');
+        history.pushState(null, '', '?ec=ideal-phase3');
     }
 }
 
 function finishIDealTransaction() {
-    var params = parseURLParams();
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
         url: API + 'ideal/return',
         data: {
-            trxid: params.trxid,
-            ec:    params.ec,
+            trxid: localStorage.idx_ideal_trxid,
         },
     }).done(function(response) {
         setStatus('info', MESSAGES['issuing-ideal-credential']);
         console.log('issuing JWT:', response.jwt);
         localStorage.idx_token = response.token;
         IRMA.issue(response.jwt, function(e) {
+            delete localStorage.idx_ideal_trxid; // no longer needed
             console.log('iDeal credential issued:', e);
             setStatus('success', MESSAGES['issue-success']);
             setPhase(3);
@@ -251,6 +256,7 @@ function finishIDINTransaction(params) {
         },
     }).done(function(response) {
         delete localStorage.idx_token; // removed on the server
+        delete localStorage.idx_ideal_trxid; // no longer needed
         setStatus('info', MESSAGES['issuing-idin-credential']);
         console.log('issuing JWT:', response.jwt);
         IRMA.issue(response.jwt, function(e) {
