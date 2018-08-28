@@ -52,15 +52,17 @@
                     </div>
                 </div>
                 -->
-                <div class="form-group form-bank">
-                    <label for="input-ideal-bank">iDeal Bank</label>
-                    <select id="input-ideal-bank" class="form-control" required>
-                        <option disabled value="">Loading...</option>
-                    </select>
-                </div>
-                <div class="form-group form-submit text-right">
-                    <button id="btn-ideal-request" class="btn btn-primary">Request iDeal attributes</button>
-                </div>
+                <form id="form-ideal-request" onsubmit="return false;">
+                    <div class="form-group form-bank">
+                        <label for="input-ideal-bank">iDeal Bank</label>
+                        <select id="input-ideal-bank" class="form-control" required>
+                            <option disabled value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-submit text-right">
+                        <input type="submit" id="btn-ideal-request" class="btn btn-primary" value="Request iDeal attributes"/>
+                    </div>
+                </form>
 
                 <p>
                     When you've received your iDeal attributes but did not
@@ -84,15 +86,17 @@
 
             <div id="pane-idin">
                 <p>After receiving these initial attributes, you can get more attributes with iDIN:</p>
-                <div class="form-group form-bank">
-                    <label for="input-idin-bank">iDIN Bank</label>
-                    <select id="input-idin-bank" class="form-control" required>
-                        <option disabled value="">Loading...</option>
-                    </select>
-                </div>
-                <div class="form-group form-submit text-right">
-                    <button id="btn-idin-request" class="btn btn-primary">Request iDIN attributes</button>
-                </div>
+                <form id="form-idin-request" onsubmit="return false;">
+                    <div class="form-group form-bank">
+                        <label for="input-idin-bank">iDIN Bank</label>
+                        <select id="input-idin-bank" class="form-control" required>
+                            <option disabled value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-submit text-right">
+                        <input type="submit" id="btn-idin-request" class="btn btn-primary" value="Request iDIN attributes"/>
+                    </div>
+                </form>
             </div>
 
             <div id="pane-idin-result">
