@@ -18,6 +18,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -76,9 +77,12 @@ public class IdinResource {
 	@GET
 	@Path("/banks")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String,List<DirectoryResponseBase.Issuer>> banks() throws IOException {
+	public Response banks() throws IOException {
 		logger.info("Bank list requested");
-		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
+		CacheControl cc = new CacheControl();
+		cc.setMaxAge(86400); // 1 day
+		Map<String,List<DirectoryResponseBase.Issuer>> issuers = IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
+		return Response.status(200).entity(issuers).cacheControl(cc).build();
 	}
 
 	@GET

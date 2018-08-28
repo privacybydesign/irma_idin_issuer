@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -28,9 +29,12 @@ public class IdealResource {
 	@GET
 	@Path("/banks")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String,List<Issuer>> banks() throws IOException {
+	public Response banks() throws IOException {
 		logger.info("Bank list requested");
-		return IdealConfiguration.getInstance().getIdealIssuers().getIssuers();
+		CacheControl cc = new CacheControl();
+		cc.setMaxAge(86400); // 1 day
+		Map<String, List<Issuer>> issuers = IdealConfiguration.getInstance().getIdealIssuers().getIssuers();
+		return Response.status(200).entity(issuers).cacheControl(cc).build();
 	}
 
 	@GET
