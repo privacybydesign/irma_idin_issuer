@@ -38,9 +38,11 @@ public class BackgroundJobManager implements ServletContextListener {
 		scheduler.scheduleAtFixedRate(new Runnable() {
 			@Override public void run() {
 				//attempting to close old sessions with status Open or Pending
-				OpenTransactions.requestStates();
+				IdinOpenTransactions.getIdinOpenTransactions().requestStates();
+				IdealOpenTransactions.getIdealOpenTransactions().requestStates();
 				//Swapping to a new list for this day, so that we only request a state once per day.
-				OpenTransactions.newDay();
+				IdinOpenTransactions.getIdinOpenTransactions().newDay();
+				IdealOpenTransactions.getIdealOpenTransactions().newDay();
 				//refresh Issuerlists
 				refreshIdinIssuerList();
 				refreshIdealIssuerList();

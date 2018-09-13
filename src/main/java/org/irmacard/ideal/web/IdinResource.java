@@ -152,6 +152,7 @@ public class IdinResource {
 		logger.info("trxid {}: session created at bank, redirecting to {}",
 				response.getTransactionID(),
 				response.getIssuerAuthenticationURL());
+		IdinOpenTransactions.getIdinOpenTransactions().addTransaction(response.getTransactionID());
 		return Response.accepted(response.getIssuerAuthenticationURL()).build();
 	}
 
@@ -181,6 +182,15 @@ public class IdinResource {
 		}
 		logger.info("trxid {}: response status {}", trxID, response.getStatus());
 		switch (response.getStatus()) {
+			case StatusResponse.Open:
+			case StatusResponse.Pending:
+				// do not remove transaction
+				break;
+			default:
+				IdinOpenTransactions.getIdinOpenTransactions().removeTransaction(trxID);
+				break;
+		}
+		switch (response.getStatus()) {
 			case StatusResponse.Success:
 				Map<String, String> attributes = response.getSamlResponse().getAttributes();
 				logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
@@ -197,7 +207,6 @@ public class IdinResource {
 				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:Expired").build();
 			case StatusResponse.Open:
 			case StatusResponse.Pending:
-				OpenTransactions.addTransaction(trxID);
 				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:Open").build();
 			case StatusResponse.Failure:
 			default:

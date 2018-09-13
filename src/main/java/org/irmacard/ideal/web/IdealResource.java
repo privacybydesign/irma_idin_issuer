@@ -75,6 +75,7 @@ public class IdealResource {
 			logger.info("trxid {}: session created at bank, redirecting to {}",
 					transaction.getTransactionID(),
 					transaction.getIssuerAuthenticationURL());
+			IdealOpenTransactions.getIdealOpenTransactions().addTransaction(transaction.getTransactionID());
 			return Response.status(Response.Status.OK).entity(url).build();
 		} catch (IdealException e) {
 			e.printStackTrace(); // TODO
@@ -92,6 +93,16 @@ public class IdealResource {
 		} catch (IdealException e) {
 			e.printStackTrace();
 			return Response.status(Response.Status.BAD_GATEWAY).entity("consumermsg:" + e.getConsumerMessage()).build();
+		}
+
+		switch (response.getStatus()) {
+			case "Open":
+			case "Pending":
+				// do not remove transaction
+				break;
+			default:
+				IdealOpenTransactions.getIdealOpenTransactions().removeTransaction(trxID);
+				break;
 		}
 
 		// The response we received was valid, but it may be something other
