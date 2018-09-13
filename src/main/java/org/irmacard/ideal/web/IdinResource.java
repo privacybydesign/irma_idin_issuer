@@ -147,7 +147,7 @@ public class IdinResource {
 		// Handle request result
 		if (response.getIsError()) {
 			logError(response.getErrorResponse());
-			throw new IdinException(response.getErrorResponse());
+			return Response.status(Response.Status.BAD_GATEWAY).entity("error:" + response.getErrorResponse().getConsumerMessage()).build();
 		}
 		logger.info("trxid {}: session created at bank, redirecting to {}",
 				response.getTransactionID(),

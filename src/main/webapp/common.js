@@ -246,7 +246,11 @@ function startIDINTransaction(e) {
         setStatus('info', MESSAGES['redirect-to-idin-bank']);
         location.href = data;
     }).fail(function(xhr) {
-        setStatus('danger', MESSAGES['api-fail'], xhr);
+        if (xhr.status == 502 && xhr.responseText.substr(0, 6) == 'error:') {
+            setStatus('danger', xhr.responseText.substr(6));
+        } else {
+            setStatus('danger', MESSAGES['api-fail'], xhr);
+        }
         $('#btn-idin-request').prop('disabled', false);
     });
 }
