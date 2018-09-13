@@ -3,13 +3,13 @@ package org.irmacard.ideal.web;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.bouncycastle.util.encoders.Hex;
+import org.apache.commons.codec.binary.Base64;
 import org.irmacard.api.common.ApiClient;
 import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
-import org.javalite.common.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -363,8 +363,8 @@ public class IdinResource {
 			return null;
 		}
 		try {
-			byte[] rawToken = Base64.getUrlDecoder().decode(parts[0]);
-			byte[] rawSignature = Base64.getUrlDecoder().decode(parts[1]);
+			byte[] rawToken = Base64.decodeBase64(parts[0]);
+			byte[] rawSignature = Base64.decodeBase64(parts[1]);
 			byte[] rawComputedSignature = signToken(rawToken);
 			if (!org.bouncycastle.util.Arrays.constantTimeAreEqual(rawSignature, rawComputedSignature)) {
 				// The signature on the token was not valid.

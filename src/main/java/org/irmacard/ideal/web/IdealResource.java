@@ -4,12 +4,12 @@ import com.ing.ideal.connector.IdealConnector;
 import com.ing.ideal.connector.IdealException;
 import com.ing.ideal.connector.Issuer;
 import com.ing.ideal.connector.Transaction;
+import org.apache.commons.codec.binary.Base64;
 import org.irmacard.api.common.ApiClient;
 import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.CredentialIdentifier;
-import org.javalite.common.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,7 +133,7 @@ public class IdealResource {
 		);
 
 		byte[] rawToken = IdinResource.makeToken(response.getConsumerBIC(), response.getConsumerIBAN());
-		String token = Base64.getUrlEncoder().withoutPadding().encodeToString(rawToken);
+		String token = Base64.encodeBase64URLSafeString(rawToken);
 
 		IdealApplication.openDatabase();
 		IdinToken rec = new IdinToken();
@@ -141,7 +141,7 @@ public class IdealResource {
 		rec.saveIt();
 
 		byte[] rawSignature = IdinResource.signToken(rawToken);
-		String signature = Base64.getUrlEncoder().withoutPadding().encodeToString(rawSignature);
+		String signature = Base64.encodeBase64URLSafeString(rawSignature);
 		String signedToken = token + ":" + signature;
 
 		IdealSuccessResponse entity = new IdealSuccessResponse();
