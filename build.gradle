@@ -11,11 +11,10 @@ buildscript {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'http://repo.javalite.io' }
     }
     dependencies {
         classpath 'org.akhikhl.gretty:gretty:1.4.0'
-        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12-SNAPSHOT"
+        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12"
     }
 }
 
@@ -44,7 +43,7 @@ dependencies {
     compile files('libs/iDEAL_Advanced_Java_code-3.3.2.jar')
 
     gretty 'commons-dbcp:commons-dbcp:1.4'
-    compile 'org.javalite:activejdbc:1.4.11'
+    compile 'org.javalite:activejdbc:1.4.12'
     compile 'org.xerial:sqlite-jdbc:3.23.1'
     compile 'net.glxn:qrgen:1.4'
     compile 'mysql:mysql-connector-java:5.1.27'
