@@ -277,7 +277,7 @@ function finishIDINTransaction(params) {
             setStatus('danger', MESSAGES['failed-to-issue-idin'], e);
         });
     }).fail(function(xhr) {
-        if (xhr.status == 502 && xhr.responseText.substr(0, 7) == 'idin-status:') {
+        if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'idin-status:') {
             if (xhr.responseText in MESSAGES) {
                 if (xhr.responseText == 'idin-status:Cancelled') {
                     setStatus('warning', MESSAGES[xhr.responseText]);
