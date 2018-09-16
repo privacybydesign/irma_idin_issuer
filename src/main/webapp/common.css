@@ -8,7 +8,11 @@ body:not(.phase1) #pane-ideal {
     display: none;
 }
 
-body:not(.phase2) #pane-ideal-result {
+body:not(.phase2) #pane-ideal-result-ok {
+    display: none;
+}
+
+body:not(.phase2) #pane-ideal-result-fail {
     display: none;
 }
 

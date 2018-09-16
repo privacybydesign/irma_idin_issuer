@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <div id="pane-ideal-result">
+            <div id="pane-ideal-result-ok" class="hidden">
                 <p>
                     The iDeal transaction was completed. You can issue iDeal
                     attributes here, or decide to skip this step.
@@ -82,6 +82,12 @@
                     <button id="btn-ideal-skip" class="btn btn-default">Skip this step</button>
                     <button id="btn-ideal-issue" class="btn btn-primary">Issue</button>
                 </div>
+            </div>
+
+            <div id="pane-ideal-result-fail" class="hidden">
+                <p>
+                    <button id="btn-ideal-retry" class="btn btn-primary">Retry</button>
+                </p>
             </div>
 
             <div id="pane-idin">

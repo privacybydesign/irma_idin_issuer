@@ -12,6 +12,7 @@ function init() {
     $('#form-idin-request').submit(startIDINTransaction);
     $('#btn-ideal-issue').click(finishIDealTransaction);
     $('#btn-ideal-skip').click(skipIDealTransaction);
+    $('#btn-ideal-retry').click(retryIDealTransaction);
     window.onpopstate = updatePhase;
 
     updatePhase();
@@ -53,6 +54,8 @@ function updatePhase() {
 }
 
 function setPhase(num) {
+    $('#pane-ideal-result-ok').addClass('hidden');
+    $('#pane-ideal-result-fail').addClass('hidden');
     $(document.body).attr('class', 'phase' + num);
     $('.steps > .step').removeClass('active');
     $($('.steps > .step')[num-1]).addClass('active');
@@ -191,6 +194,7 @@ function finishIDealTransaction() {
             trxid: localStorage.idx_ideal_trxid,
         },
     }).done(function(response) {
+        $('#pane-ideal-result-ok').removeClass('hidden');
         setStatus('info', MESSAGES['issuing-ideal-credential']);
         console.log('issuing JWT:', response.jwt);
         localStorage.idx_token = response.token;
@@ -207,6 +211,7 @@ function finishIDealTransaction() {
             setStatus('danger', MESSAGES['failed-to-issue-ideal'], e);
         });
     }).fail(function(xhr) {
+        $('#pane-ideal-result-fail').removeClass('hidden');
         if (xhr.status == 502 && xhr.responseText.substr(0, 13) == 'ideal-status:') {
             if (xhr.responseText in MESSAGES) {
                 if (xhr.responseText == 'ideal-status:Cancelled') {
@@ -224,6 +229,14 @@ function finishIDealTransaction() {
             console.error('failed to finish iDeal transaction:', xhr.responseText);
         }
     });
+}
+
+function retryIDealTransaction() {
+    loadIDealBanks();
+    $('#result-alert').addClass('hidden');
+    setPhase(1);
+    delete localStorage.idx_ideal_trxid;
+    history.pushState(null, '', '?');
 }
 
 function startIDINTransaction(e) {
