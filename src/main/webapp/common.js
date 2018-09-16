@@ -25,6 +25,8 @@ function updatePhase() {
         setPhase(2);
         if (params.trxid) {
             localStorage.idx_ideal_trxid = params.trxid;
+            // trxid is now saved, drop it from the URL
+            history.replaceState(null, '', '?ec=ideal');
         }
         finishIDealTransaction();
         loadIDINBanks(); // preload
@@ -212,6 +214,7 @@ function finishIDealTransaction() {
         });
     }).fail(function(xhr) {
         $('#pane-ideal-result-fail').removeClass('hidden');
+        delete localStorage.idx_ideal_trxid; // not valid anymore
         if (xhr.status == 502 && xhr.responseText.substr(0, 13) == 'ideal-status:') {
             if (xhr.responseText in MESSAGES) {
                 if (xhr.responseText == 'ideal-status:Cancelled') {
