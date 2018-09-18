@@ -7,6 +7,7 @@ var MESSAGES = {
     'redirect-to-ideal-bank': 'Redirecting to iDeal bank...',
     'redirect-to-idin-bank': 'Redirecting to iDIN bank...',
     'loading-return': 'Communicating with the bank...',
+    'ideal-no-transaction': 'No transaction in progress.',
     'ideal-skip-confirm': 'Are you sure you want to skip this step?\nIt means that you may need to start from the beginning (costing you money) when the iDIN transaction fails!',
     'issuing-ideal-credential': 'Issuing iDeal credential...',
     'issuing-idin-credential': 'Issuing iDIN credential...',

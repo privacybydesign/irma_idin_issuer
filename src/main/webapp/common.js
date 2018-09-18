@@ -188,6 +188,11 @@ function skipIDealTransaction() {
 }
 
 function finishIDealTransaction() {
+    if (!('idx_ideal_trxid' in localStorage)) {
+        setStatus('warning', MESSAGES['ideal-no-transaction'])
+        $('#pane-ideal-result-fail').removeClass('hidden');
+        return;
+    }
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
