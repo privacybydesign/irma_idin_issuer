@@ -23,24 +23,26 @@ function updatePhase() {
     if (params.ec == 'ideal') {
         // phase 2: get the result and issue the iDeal credential
         setPhase(2);
-        if (params.trxid) {
-            localStorage.idx_ideal_trxid = params.trxid;
-            // trxid is now saved, drop it from the URL
-            history.replaceState(null, '', '?ec=ideal');
-        }
-        finishIDealTransaction();
-        loadIDINBanks(); // preload
     } else if (params.ec == 'ideal-phase3') {
         // phase 3: input iDIN to redirect to it
         setPhase(3);
-        loadIDINBanks();
     } else if (params.trxid) {
         // phase 4: get the result and issue the iDIN credential
         setPhase(4);
-        finishIDINTransaction(params);
     } else {
         // phase 1: input iDeal bank to redirect to it
         setPhase(1);
+    }
+}
+
+function setPhase(num) {
+    $('#pane-ideal-result-ok').addClass('hidden');
+    $('#pane-ideal-result-fail').addClass('hidden');
+    $(document.body).attr('class', 'phase' + num);
+    $('.steps > .step').removeClass('active');
+    $($('.steps > .step')[num-1]).addClass('active');
+    var params = parseURLParams();
+    if (num == 1) {
         loadIDealBanks();
         $('#transaction-alert').addClass('hidden'); // set default back
         $('#token-alert').addClass('hidden'); // set default back
@@ -52,15 +54,19 @@ function updatePhase() {
             $('#transaction-alert').removeClass('hidden');
             $('#transaction-alert a').attr('href', '?trxid=' + localStorage.idx_ideal_trxid + '&ec=ideal');
         }
+    } else if (num == 2) {
+        if (params.trxid) {
+            localStorage.idx_ideal_trxid = params.trxid;
+            // trxid is now saved, drop it from the URL
+            history.replaceState(null, '', '?ec=ideal');
+        }
+        finishIDealTransaction();
+        loadIDINBanks(); // preload
+    } else if (num == 3) {
+        loadIDINBanks();
+    } else if (num == 4) {
+        finishIDINTransaction(params);
     }
-}
-
-function setPhase(num) {
-    $('#pane-ideal-result-ok').addClass('hidden');
-    $('#pane-ideal-result-fail').addClass('hidden');
-    $(document.body).attr('class', 'phase' + num);
-    $('.steps > .step').removeClass('active');
-    $($('.steps > .step')[num-1]).addClass('active');
 }
 
 function loadIDealBanks() {
@@ -209,6 +215,7 @@ function finishIDealTransaction() {
             delete localStorage.idx_ideal_trxid; // no longer needed
             console.log('iDeal credential issued:', e);
             setStatus('success', MESSAGES['issue-success']);
+            history.pushState(null, '', '?ec=ideal-phase3')
             setPhase(3);
         }, function(e) {
             console.warn('cancelled:', e);
@@ -330,6 +337,10 @@ function setStatus(alertType, message, errormsg) {
     }
 
     var alert = $('#result-alert')
+    if (alertType == 'cancel') {
+        alert.attr('class', 'hidden');
+        return;
+    }
     alert.attr('class', 'alert alert-' + alertType);
     alert.text(message);
     if (errormsg) {
