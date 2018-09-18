@@ -5,6 +5,7 @@ var API = '/tomcat/irma_ideal_server/api/v1/';
 var iDealBanksLoaded = false;
 var iDINBanksLoaded = false;
 var emailJWT = null;
+var ibanJWT = null;
 
 function init() {
     $('#form-ideal-request').submit(startIDealTransaction);
@@ -13,6 +14,8 @@ function init() {
     $('#btn-ideal-issue').click(finishIDealTransaction);
     $('#btn-ideal-skip').click(skipIDealTransaction);
     $('#btn-ideal-retry').click(retryIDealTransaction);
+    $('#btn-disclose-iban').click(requestIBAN);
+    $('#btn-ideal-onwards').click(idealContinue);
     window.onpopstate = updatePhase;
 
     updatePhase();
@@ -252,6 +255,37 @@ function retryIDealTransaction() {
     setPhase(1);
     delete localStorage.idx_ideal_trxid;
     history.pushState(null, '', '?');
+}
+
+function idealContinue(e) {
+    if ('idx_token' in localStorage) {
+        startIDINTransaction(e);
+    } else {
+        requestIBAN(e);
+    }
+}
+
+function requestIBAN(e) {
+    $('#result-alert').addClass('hidden');
+    e.preventDefault();
+    $.ajax({
+        url: API + 'idin/create-iban-disclosure-req',
+    }).done(function(jwt) {
+        IRMA.verify(jwt,
+            function(disclosureJWT) { // success
+                console.log('disclosure JWT:', disclosureJWT)
+                ibanJWT = disclosureJWT;
+            }, function(message) { // cancel
+                // The user explicitly cancelled the request, so do nothing.
+                console.warn('user cancelled disclosure');
+                setStatus('cancel');
+            }, function(errormsg) { // error
+                console.error('could not disclose iban attribute:', errormsg);
+                setStatus('danger', MESSAGES['disclosure-error-iban'], errormsg);
+            });
+    }).fail(function(data) {
+        setStatus('danger', MESSAGES['api-fail']);
+    });
 }
 
 function startIDINTransaction(e) {

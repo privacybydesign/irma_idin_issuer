@@ -2,6 +2,7 @@ var MESSAGES = {
     'api-fail': 'Can\'t connect to the backend server',
     'unknown-error': 'Unknown error',
     'disclosure-error': 'Failed to disclose email attribute',
+    'disclosure-error-iban': 'Failed to disclose IBAN attribute',
     'start-ideal-transaction': 'Starting iDeal transaction...',
     'start-idin-transaction': 'Starting iDIN transaction...',
     'redirect-to-ideal-bank': 'Redirecting to iDeal bank...',

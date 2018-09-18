@@ -86,6 +86,22 @@ public class IdinResource {
 	}
 
 	@GET
+	@Path("/create-iban-disclosure-req")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getDiscloseEmailRequest() throws IOException {
+		IdealConfiguration conf = IdealConfiguration.getInstance();
+
+		// Request an email address.
+		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(1);
+		requestAttrs.add(new AttributeDisjunction("IBAN", "pbdf.pbdf.ideal.iban"));
+		return ApiClient.getDisclosureJWT(requestAttrs,
+				conf.getServerName(),
+				conf.getHumanReadableName(),
+				conf.getJwtAlgorithm(),
+				conf.getJwtPrivateKey());
+	}
+
+	@GET
 	@Path("/verify")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getVerificationJWT () {
