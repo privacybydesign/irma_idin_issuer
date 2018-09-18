@@ -100,12 +100,6 @@ public class IdinResource {
 		);
 	}
 
-	@GET
-	@Path("/openTransactions")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String openTransactions (){
-		return OpenTransactions.getOpenTransactions();
-	}
 
 	private AttributeIdentifier getIdinBdAttributeIdentifier() {
 		IdinConfiguration conf = IdinConfiguration.getInstance();
