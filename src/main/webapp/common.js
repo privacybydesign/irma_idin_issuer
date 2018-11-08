@@ -1,6 +1,7 @@
 'use strict';
 
-var API = '/tomcat/irma_ideal_server/api/v1/';
+var IDEAL_API = '/tomcat/irma_ideal_server/api/v1/ideal/';
+var IDIN_API = '/tomcat/irma_ideal_server/api/v1/idin/';
 
 var iDealBanksLoaded = false;
 var iDINBanksLoaded = false;
@@ -79,7 +80,7 @@ function loadIDealBanks() {
     iDealBanksLoaded = true;
     var select = $('#input-ideal-bank');
     $.ajax({
-        url: API + 'ideal/banks',
+        url: IDEAL_API + 'banks',
     }).done(function(data) {
         insertBanksIntoForm(data, select);
     }).fail(function() {
@@ -96,7 +97,7 @@ function loadIDINBanks() {
     iDINBanksLoaded = true;
     var select = $('#input-idin-bank');
     $.ajax({
-        url: API + 'idin/banks',
+        url: IDIN_API + 'banks',
     }).done(function(data) {
         insertBanksIntoForm(data, select);
     }).fail(function() {
@@ -143,7 +144,7 @@ function requestEmail(e) {
     $('#result-alert').addClass('hidden');
     e.preventDefault();
     $.ajax({
-        url: API + 'ideal/create-email-disclosure-req',
+        url: IDEAL_API + 'create-email-disclosure-req',
     }).done(function(jwt) {
         //showProgress('Creating email disclosure request...');
         IRMA.verify(jwt,
@@ -177,7 +178,7 @@ function startIDealTransaction(e) {
     };
     $.ajax({
         method: 'POST',
-        url:    API + 'ideal/start',
+        url:    IDEAL_API + 'start',
         data:   data,
     }).done(function(data) {
         setStatus('info', MESSAGES['redirect-to-ideal-bank']);
@@ -205,7 +206,7 @@ function finishIDealTransaction() {
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
-        url: API + 'ideal/return',
+        url: IDEAL_API + 'return',
         data: {
             trxid: localStorage.idx_ideal_trxid,
         },
@@ -269,7 +270,7 @@ function requestIBAN(e) {
     $('#result-alert').addClass('hidden');
     e.preventDefault();
     $.ajax({
-        url: API + 'idin/create-iban-disclosure-req',
+        url: IDIN_API + 'create-iban-disclosure-req',
     }).done(function(jwt) {
         IRMA.verify(jwt,
             function(disclosureJWT) { // success
@@ -302,7 +303,7 @@ function startIDINTransaction(e) {
     };
     $.ajax({
         method: 'POST',
-        url:    API + 'idin/start',
+        url:    IDIN_API + 'start',
         data:   data,
     }).done(function(data) {
         setStatus('info', MESSAGES['redirect-to-idin-bank']);
@@ -321,7 +322,7 @@ function finishIDINTransaction(params) {
     setStatus('info', MESSAGES['loading-return']);
     $.ajax({
         method: 'POST',
-        url: API + 'idin/return',
+        url: IDIN_API + 'return',
         data: {
             trxid: params.trxid,
             ec:    params.ec,
