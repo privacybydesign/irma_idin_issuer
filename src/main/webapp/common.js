@@ -8,14 +8,34 @@ var iDINBanksLoaded = false;
 var emailJWT = null;
 var ibanJWT = null;
 
+// Hack to get the clicked button, with browser-based form validation.
+// Apparently there is no way to get the clicked button that also works on OS X
+// (Safari and Firefox).
+// https://stackoverflow.com/questions/5721724/jquery-how-to-get-which-button-was-clicked-upon-form-submission
+var clickedButton = null;
+
 function init() {
-    $('#form-ideal-request').submit(startIDealTransaction);
+    $('#form-ideal-request').submit(function(e) {
+        if (clickedButton.id == 'btn-disclose-iban') {
+            requestIBAN(e);
+        } else {
+            startIDealTransaction(e);
+        }
+    });
     //document.querySelector('#input-pick-email').onclick = requestEmail;
-    $('#form-idin-request').submit(startIDINTransaction);
+    $('#form-idin-request').submit(function(e) {
+        var selectedBank = $('#input-idin-bank').val();
+        startIDINTransaction(e, selectedBank);
+    });
+    $('#btn-ideal-request').click(function(e) {
+        clickedButton = e.target;
+    });
+    $('#btn-disclose-iban').click(function(e) {
+        clickedButton = e.target;
+    });
     $('#btn-ideal-issue').click(finishIDealTransaction);
     $('#btn-ideal-skip').click(skipIDealTransaction);
     $('#btn-ideal-retry').click(retryIDealTransaction);
-    $('#btn-disclose-iban').click(requestIBAN);
     $('#btn-ideal-onwards').click(idealContinue);
     window.onpopstate = updatePhase;
 
