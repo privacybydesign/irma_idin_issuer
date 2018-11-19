@@ -6,7 +6,6 @@ var IDIN_API = '/tomcat/irma_ideal_server/api/v1/idin/';
 var iDealBanksLoaded = false;
 var iDINBanksLoaded = false;
 var emailJWT = null;
-var ibanJWT = null;
 
 // Hack to get the clicked button, with browser-based form validation.
 // Apparently there is no way to get the clicked button that also works on OS X
@@ -280,22 +279,38 @@ function retryIDealTransaction() {
 
 function idealContinue(e) {
     if ('idx_token' in localStorage) {
-        startIDINTransaction(e);
+        var selectedBank = $('#input-idin-bank').val();
+        startIDINTransaction(e, selectedBank);
     } else {
         requestIBAN(e);
     }
 }
 
+// Event when the user clicks the "Continue after iDeal" button.
 function requestIBAN(e) {
     $('#result-alert').addClass('hidden');
     e.preventDefault();
+    setStatus('info', MESSAGES['start-iban-disclosure']);
     $.ajax({
         url: IDIN_API + 'create-iban-disclosure-req',
     }).done(function(jwt) {
         IRMA.verify(jwt,
             function(disclosureJWT) { // success
                 console.log('disclosure JWT:', disclosureJWT)
-                ibanJWT = disclosureJWT;
+                setStatus('info', MESSAGES['fetch-iban-token']);
+                $.ajax({
+                    method: 'POST',
+                    url: IDIN_API + 'get-token',
+                    data: {
+                        jwt: disclosureJWT,
+                    },
+                }).done(function(token) {
+                    localStorage.idx_token = token;
+                    var selectedBank = $('#input-ideal-bank').val();
+                    startIDINTransaction(null, selectedBank);
+                }).fail(function() {
+                    setStatus('danger', MESSAGES['api-fail']);
+                })
             }, function(message) { // cancel
                 // The user explicitly cancelled the request, so do nothing.
                 console.warn('user cancelled disclosure');
@@ -309,13 +324,14 @@ function requestIBAN(e) {
     });
 }
 
-function startIDINTransaction(e) {
-    e.preventDefault();
+function startIDINTransaction(e, selectedBank) {
+    if (e) {
+        e.preventDefault();
+    }
     setStatus('info', MESSAGES['start-idin-transaction']);
     $('#btn-ideal-request').prop('disabled', true);
     $('#result-alert').addClass('hidden');
 
-    var selectedBank = $('#input-idin-bank').val();
     sessionStorage.idx_selectedBank = selectedBank;
     var data = {
         bank: selectedBank,

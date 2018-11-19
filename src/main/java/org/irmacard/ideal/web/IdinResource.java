@@ -1,5 +1,7 @@
 package org.irmacard.ideal.web;
 
+import com.google.gson.reflect.TypeToken;
+import io.jsonwebtoken.ExpiredJwtException;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.bouncycastle.util.encoders.Hex;
@@ -7,6 +9,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.irmacard.api.common.ApiClient;
 import org.irmacard.api.common.AttributeDisjunction;
 import org.irmacard.api.common.AttributeDisjunctionList;
+import org.irmacard.api.common.JwtParser;
 import org.irmacard.api.common.issuing.IdentityProviderRequest;
 import org.irmacard.credentials.info.AttributeIdentifier;
 import org.irmacard.credentials.info.CredentialIdentifier;
@@ -22,6 +25,7 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -92,7 +96,8 @@ public class IdinResource {
 		IdealConfiguration conf = IdealConfiguration.getInstance();
 
 		// Request an email address.
-		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(1);
+		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(2);
+		requestAttrs.add(new AttributeDisjunction("IBAN", "pbdf.pbdf.ideal.bic"));
 		requestAttrs.add(new AttributeDisjunction("IBAN", "pbdf.pbdf.ideal.iban"));
 		return ApiClient.getDisclosureJWT(requestAttrs,
 				conf.getServerName(),
@@ -222,6 +227,40 @@ public class IdinResource {
 			default:
 				return Response.status(Response.Status.BAD_GATEWAY).entity("idin-status:other").build();
 		}
+	}
+
+	@POST
+	@Path("/get-token")
+	public Response generateToken(@FormParam("jwt") String jwt) {
+		Map<AttributeIdentifier, String> disclosureAttrs;
+		try {
+			Type t = new TypeToken<Map<AttributeIdentifier, String>>() {}.getType();
+			// TODO: max age
+			JwtParser<Map<AttributeIdentifier, String>> parser =
+					new JwtParser<>(t, false, 12000, "disclosure_result", "attributes");
+			parser.setSigningKey(IdealConfiguration.getInstance().getApiServerPublicKey());
+			parser.parseJwt(jwt);
+			disclosureAttrs = parser.getPayload();
+		} catch (ExpiredJwtException e) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-jwt").build();
+		}
+
+		String bic = disclosureAttrs.get(new AttributeIdentifier("pbdf.pbdf.ideal.bic"));
+		String iban = disclosureAttrs.get(new AttributeIdentifier("pbdf.pbdf.ideal.iban"));
+
+		byte[] rawToken = IdinResource.makeToken(bic, iban);
+		String token = Base64.encodeBase64URLSafeString(rawToken);
+
+		byte[] rawSignature = IdinResource.signToken(rawToken);
+		String signature = Base64.encodeBase64URLSafeString(rawSignature);
+		String signedToken = token + ":" + signature;
+
+		// Check whether the token is listed in the database
+		if (IdinResource.loadTokenRecord(signedToken) == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-token").build();
+		}
+
+		return Response.status(Response.Status.OK).entity(signedToken).build();
 	}
 
 	private String getGenderString(String isoCode){
@@ -371,7 +410,7 @@ public class IdinResource {
 	 * seems fishy about it. It returns null when the token is invalid, not
 	 * signed correctly, or does not occur in the database.
 	 */
-	private IdinToken loadTokenRecord(String token) {
+	public static IdinToken loadTokenRecord(String token) {
 		if (token == null) {
 			logger.error("token == null");
 			return null;

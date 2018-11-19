@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.PublicKey;
 
 public class IdealConfiguration extends Configuration{
     private static final String filename = "iDEAL-config.json";
@@ -18,9 +20,11 @@ public class IdealConfiguration extends Configuration{
     private String scheme_manager = "";
     private String ideal_issuer = "";
     private String iban_credential = "";
+    private String api_server_public_key = "";
 
     private String ideal_issuers_path = "ideal-banks.json";
     private transient IdealIssuers iDealIssuers;
+    private transient PublicKey apiServerPublickKey;
 
     public static IdealConfiguration getInstance() {
         if (instance == null) {
@@ -77,5 +81,17 @@ public class IdealConfiguration extends Configuration{
 
     public String getIbanCredential() {
         return iban_credential;
+    }
+
+    public PublicKey getApiServerPublicKey() {
+        if (apiServerPublickKey == null) {
+            try {
+                apiServerPublickKey = parsePublicKey(getResource(api_server_public_key));
+            } catch (KeyManagementException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return apiServerPublickKey;
     }
 }
