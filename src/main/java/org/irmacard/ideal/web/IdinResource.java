@@ -99,8 +99,8 @@ public class IdinResource {
 
 		// Request an email address.
 		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(2);
-		requestAttrs.add(new AttributeDisjunction("IBAN", "pbdf.pbdf.ideal.bic"));
-		requestAttrs.add(new AttributeDisjunction("IBAN", "pbdf.pbdf.ideal.iban"));
+		requestAttrs.add(new AttributeDisjunction("BIC", conf.getIdealBICAttribute()));
+		requestAttrs.add(new AttributeDisjunction("IBAN", conf.getIdealIBANAttribute()));
 		return ApiClient.getDisclosureJWT(requestAttrs,
 				conf.getServerName(),
 				conf.getHumanReadableName(),
@@ -247,8 +247,13 @@ public class IdinResource {
 			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-jwt").build();
 		}
 
-		String bic = disclosureAttrs.get(new AttributeIdentifier("pbdf.pbdf.ideal.bic"));
-		String iban = disclosureAttrs.get(new AttributeIdentifier("pbdf.pbdf.ideal.iban"));
+		IdinConfiguration conf = IdinConfiguration.getInstance();
+		String bic = disclosureAttrs.get(new AttributeIdentifier(conf.getIdealBICAttribute()));
+		String iban = disclosureAttrs.get(new AttributeIdentifier(conf.getIdealIBANAttribute()));
+		if (bic == null || iban == null) {
+			logger.error("cannot find IBAN/BIC attributes in provided JWT");
+			return Response.status(Response.Status.BAD_REQUEST).entity("error:attributes-not-found-in-jwt").build();
+		}
 
 		byte[] rawToken = IdinResource.makeToken(bic, iban);
 		String token = Base64.encodeBase64URLSafeString(rawToken);

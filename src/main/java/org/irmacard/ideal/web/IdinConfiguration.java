@@ -33,6 +33,8 @@ public class IdinConfiguration extends Configuration{
     private String birthdate_attribute = "";
     private String gender_attribute = "";
     private String country_attribute = "";
+    private String ideal_bic_attribute = "";
+    private String ideal_iban_attribute = "";
     private String static_salt = "";
 
     private String idin_issuers_path = "idin-banks.json";
@@ -175,5 +177,13 @@ public class IdinConfiguration extends Configuration{
         }
 
         return apiServerPublickKey;
+    }
+
+    public String getIdealBICAttribute() {
+        return ideal_bic_attribute;
+    }
+
+    public String getIdealIBANAttribute() {
+        return ideal_iban_attribute;
     }
 }
