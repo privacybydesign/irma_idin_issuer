@@ -25,7 +25,6 @@ public class BackgroundJobManager implements ServletContextListener {
 		// This has to be loaded before the first time the cronjob is run,
 		// as the call to new Communicator(); needs the iDIN configuration.
 		// same goes for the iDEAL Connector
-		IdealConfiguration.load();
 		IdinConfiguration.load();
 		IdinConfiguration.loadIdinConfiguration();
 	}
@@ -39,13 +38,10 @@ public class BackgroundJobManager implements ServletContextListener {
 			@Override public void run() {
 				//attempting to close old sessions with status Open or Pending
 				IdinOpenTransactions.getIdinOpenTransactions().requestStates();
-				IdealOpenTransactions.getIdealOpenTransactions().requestStates();
 				//Swapping to a new list for this day, so that we only request a state once per day.
 				IdinOpenTransactions.getIdinOpenTransactions().newDay();
-				IdealOpenTransactions.getIdealOpenTransactions().newDay();
 				//refresh Issuerlists
 				refreshIdinIssuerList();
-				refreshIdealIssuerList();
 			}
 		}, 0, 1, TimeUnit.DAYS);
 	}
@@ -77,30 +73,6 @@ public class BackgroundJobManager implements ServletContextListener {
             logger.error("Failed to run idin issuer fetching cron task");
             e.printStackTrace();
         }
-	}
-
-	private void refreshIdealIssuerList() {
-		try {
-			IdealIssuers idealIssuers = IdealConfiguration.getInstance().getIdealIssuers();
-			if (idealIssuers != null && !idealIssuers.shouldUpdate()) {
-				logger.info("iDEAL issuer list is still up to date, not refreshing");
-				return;
-			}
-
-			logger.info("Updating iDEAL issuer list");
-			IdealConnector connector = new IdealConnector();
-			idealIssuers = new IdealIssuers(connector.getIssuerList().getCountryList());
-			Files.write(
-					IdealConfiguration.getInstance().getIdealIssuersPath(),
-					GsonUtil.getGson().toJson(idealIssuers).getBytes()
-			);
-		} catch (IdealException ie){
-			logger.error("Retrieving iDEAL issuer list failed!");
-			ie.printStackTrace();
-		} catch (Exception e) {
-			logger.error("Failed to run ideal issuer fetching cron task");
-			e.printStackTrace();
-		}
 	}
 
 	@Override

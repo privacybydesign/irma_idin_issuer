@@ -11,12 +11,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
 @ApplicationPath("/")
-public class IdealApplication extends ResourceConfig {
-	private static Logger logger = LoggerFactory.getLogger(IdealApplication.class);
+public class IdinApplication extends ResourceConfig {
+	private static Logger logger = LoggerFactory.getLogger(IdinApplication.class);
 
-	public IdealApplication() throws IOException, ParserConfigurationException, SAXException {
+	public IdinApplication() throws IOException, ParserConfigurationException, SAXException {
 		register(GsonJerseyProvider.class);
-		register(IdealResource.class);
 		register(IdinResource.class);
 		register(IdinExceptionMapper.class);
 

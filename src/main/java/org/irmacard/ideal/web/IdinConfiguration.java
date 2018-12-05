@@ -10,6 +10,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.PublicKey;
 
 
 public class IdinConfiguration extends Configuration{
@@ -21,6 +23,7 @@ public class IdinConfiguration extends Configuration{
     private String idin_issuer = "";
     private String idin_credential = "";
     private String age_limits_credential = "";
+    private String api_server_public_key = "";
 
     private String initials_attribute = "";
     private String lastname_attribute = "";
@@ -35,6 +38,7 @@ public class IdinConfiguration extends Configuration{
     private String idin_issuers_path = "idin-banks.json";
     private transient IdinIssuers iDinIssuers;
     private String hmac_key = "";
+    private transient PublicKey apiServerPublickKey;
 
     public static IdinConfiguration getInstance() {
         if (instance == null) {
@@ -159,5 +163,17 @@ public class IdinConfiguration extends Configuration{
 
     public String getHMACKey() {
         return hmac_key;
+    }
+
+    public PublicKey getApiServerPublicKey() {
+        if (apiServerPublickKey == null) {
+            try {
+                apiServerPublickKey = parsePublicKey(getResource(api_server_public_key));
+            } catch (KeyManagementException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return apiServerPublickKey;
     }
 }

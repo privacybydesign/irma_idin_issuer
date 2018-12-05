@@ -93,7 +93,7 @@ public class IdinResource {
 	@Path("/create-iban-disclosure-req")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String getDiscloseEmailRequest() throws IOException {
-		IdealConfiguration conf = IdealConfiguration.getInstance();
+		IdinConfiguration conf = IdinConfiguration.getInstance();
 
 		// Request an email address.
 		AttributeDisjunctionList requestAttrs = new AttributeDisjunctionList(2);
@@ -238,7 +238,7 @@ public class IdinResource {
 			// TODO: max age
 			JwtParser<Map<AttributeIdentifier, String>> parser =
 					new JwtParser<>(t, false, 12000, "disclosure_result", "attributes");
-			parser.setSigningKey(IdealConfiguration.getInstance().getApiServerPublicKey());
+			parser.setSigningKey(IdinConfiguration.getInstance().getApiServerPublicKey());
 			parser.parseJwt(jwt);
 			disclosureAttrs = parser.getPayload();
 		} catch (ExpiredJwtException e) {
@@ -430,7 +430,7 @@ public class IdinResource {
 				return null;
 			}
 			// TODO: validate the parameter in the database.
-			IdealApplication.openDatabase();
+			IdinApplication.openDatabase();
 			return IdinToken.findFirst("hashedToken = ?", hashToken(rawToken));
 		} catch (IllegalArgumentException e) {
 			logger.error("token: not found");

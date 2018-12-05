@@ -8,9 +8,9 @@ public class IdinRecord extends Model {
 	public static final String TIME_FIELD = "time";
 
 	public static void New(String bin) {
-		IdealApplication.openDatabase();
+		IdinApplication.openDatabase();
 		new IdinRecord(bin);
-		IdealApplication.closeDatabase();
+		IdinApplication.closeDatabase();
 	}
 
 	public IdinRecord(String bin) {
