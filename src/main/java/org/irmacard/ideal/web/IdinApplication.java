@@ -28,7 +28,7 @@ public class IdinApplication extends ResourceConfig {
 	public static void openDatabase() {
 		if(!Base.hasConnection()) {
 			// TODO: make configurable
-			Base.open("org.sqlite.JDBC", "jdbc:sqlite:irma_idx.sqlite3", "", "");
+			Base.open("java:comp/env/jdbc/irma_ideal");
 		}
 	}
 
