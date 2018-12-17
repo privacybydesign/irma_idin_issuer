@@ -1,7 +1,7 @@
 'use strict';
 
-var IDEAL_API = '/tomcat/irma_ideal_server/api/v1/ideal/';
-var IDIN_API = '/tomcat/irma_ideal_server/api/v1/idin/';
+var IDEAL_API = 'https://metrics.privacybydesign.foundation/ideal/irma_ideal_server/api/v1/ideal/';
+var IDIN_API = 'https://privacybydesign.foundation/tomcat/irma_ideal_server/api/v1/idin/';
 
 var iDealBanksLoaded = false;
 var iDINBanksLoaded = false;
@@ -368,8 +368,8 @@ function finishIDINTransaction(params) {
         delete localStorage.idx_token; // removed on the server
         delete localStorage.idx_ideal_trxid; // no longer needed
         setStatus('info', MESSAGES['issuing-idin-credential']);
-        console.log('issuing JWT:', response.jwt);
-        IRMA.issue(response.jwt, function(e) {
+        console.log('issuing JWT:', response);
+        IRMA.issue(response, function(e) {
             console.log('iDeal credential issued:', e);
             setStatus('success', MESSAGES['issue-success']);
         }, function(e) {
