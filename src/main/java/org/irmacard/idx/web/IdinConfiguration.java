@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import com.google.gson.JsonSyntaxException;
 import org.irmacard.api.common.util.GsonUtil;

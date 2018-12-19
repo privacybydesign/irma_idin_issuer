@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import net.bankid.merchant.library.ErrorResponse;
 

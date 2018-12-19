@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;

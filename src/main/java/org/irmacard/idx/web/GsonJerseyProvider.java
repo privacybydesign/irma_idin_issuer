@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import org.irmacard.api.common.util.GsonUtil;
 

@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.irmacard.api.common.util.GsonUtil;

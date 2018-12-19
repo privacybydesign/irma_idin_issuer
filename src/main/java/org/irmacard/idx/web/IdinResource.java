@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import com.google.gson.reflect.TypeToken;
 import io.jsonwebtoken.ExpiredJwtException;

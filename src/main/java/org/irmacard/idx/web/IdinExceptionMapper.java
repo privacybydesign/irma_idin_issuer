@@ -1,4 +1,4 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;

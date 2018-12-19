@@ -1,7 +1,5 @@
-package org.irmacard.ideal.web;
+package org.irmacard.idx.web;
 
-import com.ing.ideal.connector.IdealConnector;
-import com.ing.ideal.connector.IdealException;
 import net.bankid.merchant.library.Communicator;
 import net.bankid.merchant.library.DirectoryResponse;
 import org.irmacard.api.common.util.GsonUtil;
