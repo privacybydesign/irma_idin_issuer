@@ -19,7 +19,7 @@ public class IdinApplication extends ResourceConfig {
 		register(IdinResource.class);
 		register(IdinExceptionMapper.class);
 
-		logger.info("Starting IRMA iDeal server");
+		logger.info("Starting IRMA iDin server");
 
 		openDatabase();
 		closeDatabase();
