@@ -72,3 +72,7 @@ body:not(.phase4) #pane-idin-result {
     margin-right: 0px;
     margin-left: 15px;
 }
+
+.bottom {
+    margin-top: 3cm;
+}

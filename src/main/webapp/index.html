@@ -3,7 +3,7 @@
 <html>
     <head>
         <meta charset="utf-8"/>
-        <title>iDeal - IRMA</title>
+        <title>iDeal en iDin - IRMA</title>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <meta value="https://privacybydesign.foundation/tomcat/irma_api_server/server/" name="irma-web-server">
         <meta value="https://demo.irmacard.org/tomcat/irma_api_server/api/v2/" name="irma-api-server">
@@ -16,7 +16,7 @@
     </head>
     <body>
         <div class="container-fluid">
-            <h1>iDeal + iDIN attributes <img src="images/iDIN logo rgb 96 pixels.png" align="right" class='logo'/> <img class='logo' src="images/iDEAL-klein.png" align="right"/></h1>
+            <h1>IBAN + iDin attributen <img src="images/iDIN logo rgb 96 pixels.png" align="right" class='logo'/> <img class='logo' src="images/iDEAL-klein.png" align="right"/></h1>
 
             <ul class="steps">
                 <li class="step">1</li>
@@ -28,30 +28,20 @@
             <div id="result-alert" class="alert hidden"></div>
 
             <div id="transaction-alert" class="alert alert-warning hidden">
-                <strong>You already have a transaction in progress.</strong>
-                Continue the transaction <a href="">where you left</a>.
+                <strong>Er is nog een lopende transactie actief.</strong>
+                Ga verder met de al lopende <a href="">transactie</a>.
             </div>
 
             <div id="token-alert" class="alert alert-warning hidden">
-                <strong>You already requested iDeal attributes.</strong>
-                Jump ahead to request <a href="?ec=ideal-phase3" class="idin">iDIN attributes</a>
-                or load <a href="?ec=ideal" class="ideal">iDeal attributes</a>
-                in your IRMA app, if you haven't already done so.
+                <strong>U heeft al eerder IBAN attributen aangevraagd.</strong>
+                Ga verder met het aanvragen van <a href="?ec=ideal-phase3" class="idin">iDIN attributen</a>,
+                of wanneer u uw <a href="?ec=ideal" class="ideal">IBAN attributen</a> nog niet geladen heeft,
+                laad dan uw <a href="?ec=ideal" class="ideal">IBAN attributen</a> in uw IRMA app.
             </div>
 
             <div id="pane-ideal">
-                <p>Here you can request iDeal attributes.</p>
-                <!-- disabled for now
-                <div class="form-group">
-                    <label for="input-email">Email address</label>
-                    <div class="input-group">
-                        <input id="input-email" type="email" class="form-control readonly" readonly/>
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" id="input-pick-email">Pick</button>
-                        </span>
-                    </div>
-                </div>
-                -->
+                <p>Hier kunt u IBAN attributen aanvragen, dmv een iDeal transactie.</p>
+
                 <form id="form-ideal-request" onsubmit="return false;">
                     <div class="form-group form-bank">
                         <label for="input-ideal-bank">iDeal Bank</label>
@@ -64,35 +54,45 @@
                     </div>
 
                     <p>
-                        When you've received your iDeal attributes but did not
-                        request your iDIN attributes, you can still receive them.
+                        Wanneer u al uw IBAN attributen heeft, maar nog niet uw
+                        iDin attributen, dan kunt u verder gaan.
                     </p>
                     <div class="text-right">
-                        <input type="submit" id="btn-disclose-iban" class="btn btn-default" value="Continue after iDeal"/>
+                        <input type="submit" id="btn-disclose-iban" class="btn btn-default" value="Ga verder naar iDin"/>
                     </div>
                 </form>
+                <div class="bottom">
+                    <p>
+                    Via deze pagina kunt u zowel IBAN attributen (uw rekeningnummer, etc.)
+                    als uw iDin attributen (uw naam, adres, etc.) verkrijgen. Eerst verkrijgt u uw IBAN attributen door
+                    een iDeal transactie van 1 euro af te ronden. Hiermee bewijst u eigendom van het rekeningnummer en
+                    dekt u de kosten van de iDeal en iDin transacties.
+                    Vervolgens kunt u uw iDin attributen verkrijgen door nogmaals in te loggen bij uw bank (iDin).
+                    Uw bank stuurt dan, na uw toestemming, enkele attributen terug naar deze website.
+                    </p>
+                </div>
             </div>
 
             <div id="pane-ideal-result-ok" class="hidden">
                 <p>
-                    The iDeal transaction was completed. You can issue iDeal
-                    attributes here, or decide to skip this step.
+                    De iDeal transaction is succesvol afgerond. U kunt hier uw IBAN
+                    attributen laden, of deze stap overslaan.
                 </p>
                 <div class="text-right">
-                    <button id="btn-ideal-skip" class="btn btn-default">Skip this step</button>
-                    <button id="btn-ideal-issue" class="btn btn-primary">Issue</button>
+                    <button id="btn-ideal-skip" class="btn btn-default">Sla deze stap over</button>
+                    <button id="btn-ideal-issue" class="btn btn-primary">Laad attributen in IRMA app</button>
                 </div>
             </div>
 
             <div id="pane-ideal-result-fail" class="hidden">
                 <p>
-                    <button id="btn-ideal-retry" class="btn btn-primary">Retry</button>
-                    <button id="btn-ideal-onwards" class="btn btn-default pull-right">Continue with IBAN attribute</button>
+                    <button id="btn-ideal-retry" class="btn btn-primary">Probeer opnieuw</button>
+                    <button id="btn-ideal-onwards" class="btn btn-default pull-right">Ga verder met iDin attributen</button>
                 </p>
             </div>
 
             <div id="pane-idin">
-                <p>After receiving these initial attributes, you can get more attributes with iDIN:</p>
+                <p>Na het ontvangen van deze IBAN attributen kunt u nu uw iDIN attributen ophalen:</p>
                 <form id="form-idin-request" onsubmit="return false;">
                     <div class="form-group form-bank">
                         <label for="input-idin-bank">iDIN Bank</label>
@@ -107,7 +107,7 @@
             </div>
 
             <div id="pane-idin-result">
-                <p>You can now load the iDIN attributes into your phone.</p>
+                <p>U kunt nu de iDIN attributen laden in uw telefoon.</p>
             </div>
         </div>
     </body>
