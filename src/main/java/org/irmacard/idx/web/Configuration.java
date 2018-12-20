@@ -20,9 +20,7 @@ import java.security.spec.X509EncodedKeySpec;
 public abstract class Configuration {
     protected String server_name = "IRMA_bank_test";
     protected String jwt_privatekey = "sk.der";
-    protected String jwt_publickey = "pk.der";
     protected transient PrivateKey jwtPrivateKey;
-    protected transient PublicKey jwtPublicKey;
     private String human_readable_name = "";
 
     private String return_url = "";
@@ -98,17 +96,6 @@ public abstract class Configuration {
             return human_readable_name;
     }
 
-    public PublicKey getJwtPublicKey() {
-        if (jwtPublicKey == null) {
-            try {
-                jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
-            } catch (KeyManagementException|IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return jwtPublicKey;
-    }
 
     public PrivateKey getJwtPrivateKey() {
         if (jwtPrivateKey == null) {

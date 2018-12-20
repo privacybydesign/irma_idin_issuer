@@ -237,9 +237,8 @@ public class IdinResource {
 		Map<AttributeIdentifier, String> disclosureAttrs;
 		try {
 			Type t = new TypeToken<Map<AttributeIdentifier, String>>() {}.getType();
-			// TODO: max age
 			JwtParser<Map<AttributeIdentifier, String>> parser =
-					new JwtParser<>(t, true, 120, "disclosure_result", "attributes");
+					new JwtParser<>(t, true, 120*1000, "disclosure_result", "attributes");
 			parser.setSigningKey(IdinConfiguration.getInstance().getApiServerPublicKey());
 			parser.parseJwt(jwt);
 			disclosureAttrs = parser.getPayload();
