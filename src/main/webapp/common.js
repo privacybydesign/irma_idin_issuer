@@ -30,6 +30,7 @@ function init() {
         clickedButton = e.target;
     });
     $('#btn-disclose-iban').click(function(e) {
+        $('#input-ideal-bank').removeAttr('required');
         clickedButton = e.target;
     });
     $('#btn-ideal-issue').click(finishIDealTransaction);
