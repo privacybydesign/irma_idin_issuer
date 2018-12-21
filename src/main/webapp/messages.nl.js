@@ -5,4 +5,6 @@ var MESSAGES = {
     'idin-status:Cancelled': 'De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.',
     'idin-status:Expired': 'De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.',
     'idin-status:other': 'Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.',
+    'ideal-skip-confirm': 'Weet u zeker dat u deze stap wilt overslaan?\nMocht de iDIN stap falen, dan moet mogelijk het hele proces (inclusief de betaling) opnieuw doorlopen worden.' +
+    'Are you sure you want to skip this step?\nIt means that you may need to start from the beginning (costing you money) when the iDIN transaction fails!',
 };
