@@ -25,6 +25,7 @@ body:not(.phase4) #pane-idin-result {
 }
 
 .steps {
+    width: 100%;
     list-style-type: none;
     padding: 0;
     font-size: 2rem;
@@ -66,8 +67,8 @@ body:not(.phase4) #pane-idin-result {
 }
 
 .logo {
-    height: 50px;
-    margin-top: 15px;
+    height: 40px;
+    margin-top: 5px;
     margin-bottom: 15px;
     margin-right: 0px;
     margin-left: 15px;
