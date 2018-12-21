@@ -1,0 +1,34 @@
+{
+    // A sample configuration file.
+
+    //"server_name": "idin_server",
+    "server_name": "testip",
+    "human_readable_name": "Privacy by Design Foundation",
+
+    "jwt_privatekey": "sk.der",
+
+    "api_server_public_key": "apiserver-pk.der",
+
+    "server_url": "http://localhost:8080/",
+
+    "scheme_manager": "irma-demo",
+    "idin_issuer": "idin",
+    "age_limits_credential": "ageLimits",
+    "idin_credential": "idin",
+    "initials_attribute": "initials",
+    "lastname_attribute": "familyname",
+    "address_attribute": "address",
+    "city_attribute": "city",
+    "postalcode_attribute": "zipcode",
+    "birthdate_attribute": "dateofbirth",
+    "gender_attribute": "gender",
+    "tel_attribute": "telephone",
+    "email_attribute": "email",
+    "country_attribute": "country",
+
+    "ideal_bic_attribute": "irma-demo.ideal.ideal.bic",
+    "ideal_iban_attribute": "irma-demo.ideal.ideal.iban",
+
+    "static_salt": "salt",
+    "hmac_key": "password"
+}
