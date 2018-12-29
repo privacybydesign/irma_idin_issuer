@@ -1,7 +1,7 @@
 'use strict';
 
 var IDEAL_API = 'https://metrics.privacybydesign.foundation/ideal/irma_ideal_server/api/v1/ideal/';
-var IDIN_API = 'https://privacybydesign.foundation/tomcat/irma_ideal_server/api/v1/idin/';
+var IDIN_API = 'https://privacybydesign.foundation/tomcat/irma_idin_server/api/v1/idin/';
 
 var iDealBanksLoaded = false;
 var iDINBanksLoaded = false;
