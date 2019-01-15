@@ -28,7 +28,7 @@ public class IdinApplication extends ResourceConfig {
 	public static void openDatabase() {
 		if(!Base.hasConnection()) {
 			// TODO: make configurable
-			Base.open("java:comp/env/jdbc/irma_ideal");
+			Base.open("jdbc/irma_ideal");
 		}
 	}
 
