@@ -1,11 +1,6 @@
 irma_configuration
-config.properties
-iDEAL-config.json
 iDIN-config.json
-ideal-merchant.crt
-ideal_v3.cer
-config.json
 config.xml
-iis.jks
+*.jks
 *.der
 *.pem

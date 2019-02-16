@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -94,7 +95,8 @@ public class IdinResource {
 	@GET
 	@Path("/create-iban-disclosure-req")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String getDiscloseEmailRequest() throws IOException {
+	public String getDiscloseEmailRequest()
+			throws IOException, KeyManagementException {
 		IdinConfiguration conf = IdinConfiguration.getInstance();
 
 		// Request an email address.
@@ -111,7 +113,8 @@ public class IdinResource {
 	@GET
 	@Path("/verify")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String getVerificationJWT () {
+	public String getVerificationJWT ()
+			throws KeyManagementException {
 		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
 		list.add(new AttributeDisjunction("Geboortedatum", getIdinBdAttributeIdentifier()));
 		return ApiClient.getDisclosureJWT(
@@ -186,7 +189,8 @@ public class IdinResource {
 
 	@POST
 	@Path("/return")
-	public Response authenticated(@FormParam("trxid") String trxID, @FormParam("token") String token) {
+	public Response authenticated(@FormParam("trxid") String trxID, @FormParam("token") String token)
+			throws KeyManagementException {
 		IdinToken record = loadTokenRecord(token);
 		if (record == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-token").build();
@@ -233,7 +237,8 @@ public class IdinResource {
 
 	@POST
 	@Path("/get-token")
-	public Response generateToken(@FormParam("jwt") String jwt) {
+	public Response generateToken(@FormParam("jwt") String jwt)
+			throws KeyManagementException {
 		Map<AttributeIdentifier, String> disclosureAttrs;
 		try {
 			Type t = new TypeToken<Map<AttributeIdentifier, String>>() {}.getType();
@@ -364,7 +369,8 @@ public class IdinResource {
 		return valueMissing;
 	}
 
-	private String createIssueJWT(Map<String, String> attributes) {
+	private String createIssueJWT(Map<String, String> attributes)
+			throws KeyManagementException {
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
 		Date dob = getDobObject(attributes.get(idinSamlBirthdateKey));
 
@@ -464,7 +470,7 @@ public class IdinResource {
 	 */
 	public static byte[] makeToken(String bic, String iban) {
 		String input = bic + "-" + iban;
-		String salt = IdinConfiguration.getInstance().getStaticSalt();
+		String salt = IdinConfiguration.getInstance().getTokenStaticSalt();
 		if (salt.length() == 0) {
 			// Make sure we have a salt configured - just in case.
 			throw new IllegalStateException("no static salt configured");
@@ -504,7 +510,7 @@ public class IdinResource {
 	 * @return the HMAC signature
 	 */
 	public static byte[] signToken(byte[] token) {
-		String key = IdinConfiguration.getInstance().getHMACKey();
+		String key = IdinConfiguration.getInstance().getTokenHMACKey();
 		if (key.length() == 0) {
 			// Make sure we have a salt configured - just in case.
 			throw new IllegalStateException("no HMAC key configured");

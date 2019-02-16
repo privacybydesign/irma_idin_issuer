@@ -23,7 +23,6 @@ public class BackgroundJobManager implements ServletContextListener {
 		// This has to be loaded before the first time the cronjob is run,
 		// as the call to new Communicator(); needs the iDIN configuration.
 		// same goes for the iDEAL Connector
-		IdinConfiguration.load();
 		IdinConfiguration.loadIdinConfiguration();
 	}
 

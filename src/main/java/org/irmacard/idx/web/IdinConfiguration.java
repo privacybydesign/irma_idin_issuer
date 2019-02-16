@@ -1,29 +1,52 @@
 package org.irmacard.idx.web;
 
-import com.google.gson.JsonSyntaxException;
+import foundation.privacybydesign.common.BaseConfiguration;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.irmacard.api.common.util.GsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 
-public class IdinConfiguration extends Configuration{
-    private static final String filename = "iDIN-config.json";
+@SuppressWarnings({"FieldCanBeLocal"})
+public class IdinConfiguration extends BaseConfiguration<IdinConfiguration> {
     private static Logger logger = LoggerFactory.getLogger(IdinConfiguration.class);
-    private static IdinConfiguration instance;
+
+    static {
+        BaseConfiguration.clazz = IdinConfiguration.class;
+        BaseConfiguration.environmentVarPrefix = "IRMA_IDIN_CONF_";
+        BaseConfiguration.confDirEnvironmentVarName = "IRMA_IDIN_CONF";
+        BaseConfiguration.logger = IdinConfiguration.logger;
+        BaseConfiguration.filename = "iDIN-config.json";
+        BaseConfiguration.confDirName = "irma_idin_server";
+        BaseConfiguration.printOnLoad = true;
+    }
+
+    private static final String CONFIG_FILENAME = "iDIN-config.json";
+
+    private String server_name = "";
+    private String human_readable_name = "";
+    private String jwt_privatekey = "";
+    private String api_server_public_key = "";
+    private String idin_issuers_path = "idin-banks.json";
+
+    private String token_static_salt = "";
+    private String token_hmac_key = "";
 
     private String scheme_manager = "";
     private String idin_issuer = "";
     private String idin_credential = "";
     private String age_limits_credential = "";
-    private String api_server_public_key = "";
+
+    private String ideal_bic_attribute = "";
+    private String ideal_iban_attribute = "";
 
     private String initials_attribute = "";
     private String lastname_attribute = "";
@@ -33,53 +56,14 @@ public class IdinConfiguration extends Configuration{
     private String birthdate_attribute = "";
     private String gender_attribute = "";
     private String country_attribute = "";
-    private String ideal_bic_attribute = "";
-    private String ideal_iban_attribute = "";
-    private String static_salt = "";
 
-    private String idin_issuers_path = "idin-banks.json";
-    private transient IdinIssuers iDinIssuers;
-    private String hmac_key = "";
+    private transient PrivateKey jwtPrivateKey;
     private transient PublicKey apiServerPublickKey;
+    private transient IdinIssuers iDinIssuers;
 
     public static IdinConfiguration getInstance() {
-        if (instance == null) {
-            load();
-        }
-        return instance;
+        return (IdinConfiguration) BaseConfiguration.getInstance();
     }
-
-
-    /**
-     * Reloads the configuration from disk so that {@link IdinConfiguration#getInstance()} returns the updated version
-     */
-    public static void load() {
-        try {
-            String json = new String(getResource(filename));
-            instance = GsonUtil.getGson().fromJson(json, IdinConfiguration.class);
-        } catch (IOException |JsonSyntaxException e) {
-            logger.warn("Could not load configuration file, using default values!");
-            e.printStackTrace();
-            instance = new IdinConfiguration();
-        }
-
-        System.out.println("Configuration:");
-        System.out.println(instance.toString());
-    }
-
-    public static void loadIdinConfiguration() {
-        try {
-            URL config = IdinConfiguration.class.getClassLoader().getResource("config.xml");
-            if (config == null)
-                throw new Exception("Could not load config.xml");
-            net.bankid.merchant.library.Configuration.defaultInstance().Load(config.openStream());
-        } catch (Exception e) {
-            logger.error("Could not load iDIN configuration");
-            logger.error(e.getMessage());
-            throw new RuntimeException(e);
-        }
-    }
-
 
     /** Path to the file from which the iDIN issuer list is saved and loaded */
     public Path getIdinIssuersPath() {
@@ -102,6 +86,30 @@ public class IdinConfiguration extends Configuration{
         }
 
         return iDinIssuers;
+    }
+
+    public String getServerName() {
+        return server_name;
+    }
+
+    public String getHumanReadableName() {
+        if (human_readable_name == null || human_readable_name.length() == 0)
+            return server_name;
+        else
+            return human_readable_name;
+    }
+
+
+    public PrivateKey getJwtPrivateKey() throws KeyManagementException {
+        if (jwtPrivateKey == null) {
+            jwtPrivateKey = BaseConfiguration.getPrivateKey(jwt_privatekey);
+        }
+
+        return jwtPrivateKey;
+    }
+
+    public SignatureAlgorithm getJwtAlgorithm() {
+        return SignatureAlgorithm.RS256;
     }
 
 
@@ -159,21 +167,17 @@ public class IdinConfiguration extends Configuration{
         return age_limits_credential;
     }
 
-    public String getStaticSalt() {
-        return static_salt;
+    public String getTokenStaticSalt() {
+        return token_static_salt;
     }
 
-    public String getHMACKey() {
-        return hmac_key;
+    public String getTokenHMACKey() {
+        return token_hmac_key;
     }
 
-    public PublicKey getApiServerPublicKey() {
+    public PublicKey getApiServerPublicKey() throws KeyManagementException {
         if (apiServerPublickKey == null) {
-            try {
-                apiServerPublickKey = parsePublicKey(getResource(api_server_public_key));
-            } catch (KeyManagementException | IOException e) {
-                throw new RuntimeException(e);
-            }
+            apiServerPublickKey = BaseConfiguration.getPublicKey(api_server_public_key);
         }
 
         return apiServerPublickKey;
@@ -185,5 +189,18 @@ public class IdinConfiguration extends Configuration{
 
     public String getIdealIBANAttribute() {
         return ideal_iban_attribute;
+    }
+
+    public static void loadIdinConfiguration() {
+        try {
+            URL config = IdinConfiguration.class.getClassLoader().getResource("config.xml");
+            if (config == null)
+                throw new Exception("Could not load config.xml");
+            net.bankid.merchant.library.Configuration.defaultInstance().Load(config.openStream());
+        } catch (Exception e) {
+            logger.error("Could not load iDIN configuration");
+            logger.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

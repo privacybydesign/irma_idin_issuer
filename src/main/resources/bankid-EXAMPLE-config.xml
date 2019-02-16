@@ -2,7 +2,7 @@
 <configuration>
  <appSettings>
     <add key="BankId.Merchant.MerchantID" value="TODO" />
-    <add key="BankId.Merchant.SubID" value="TODO" />
+    <add key="BankId.Merchant.SubID" value="0" />
     <add key="BankId.Merchant.ReturnUrl" value="TODO" />
     
     <add key="BankId.Acquirer.AcquirerID" value="TODO" />

@@ -38,6 +38,7 @@ dependencies {
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
     compile 'org.irmacard.api:irma_api_common:0.9.2'
+    compile 'foundation.privacybydesign.common:irma_server_common:0.3.2'
 
     compile files('libs/net.bankid.merchant.library.jar')
     compile files('libs/iDEAL_Advanced_Java_code-3.3.2.jar')
