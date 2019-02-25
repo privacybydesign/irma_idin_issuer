@@ -166,7 +166,7 @@ public class IdinResource {
 
 		// Handle request result
 		if (response.getIsError()) {
-			logError(response.getErrorResponse());
+			logError(response.getErrorResponse(), null);
 			return Response.status(Response.Status.BAD_GATEWAY).entity("error:" + response.getErrorResponse().getConsumerMessage()).build();
 		}
 		logger.info("trxid {}: session created at bank, redirecting to {}",
@@ -176,7 +176,7 @@ public class IdinResource {
 		return Response.accepted(response.getIssuerAuthenticationURL()).build();
 	}
 
-	private void logError (ErrorResponse err){
+	private void logError(ErrorResponse err, SamlStatus status){
 		logger.error("============================ ERROR ============================");
 		logger.error(err.toString());
 		logger.error(err.getConsumerMessage());
@@ -184,6 +184,11 @@ public class IdinResource {
 		logger.error(err.getErrorDetails());
 		logger.error(err.getErrorMessage());
 		logger.error(err.getSuggestedAction());
+		if (status != null) {
+			logger.error("saml status 1st level: " + status.getStatusCodeFirstLevel());
+			logger.error("saml status 2nd level: " + status.getStatusCodeSecondLevel());
+			logger.error("saml status message:   " + status.getStatusMessage());
+		}
 		logger.error("===============================================================");
 	}
 
@@ -198,8 +203,12 @@ public class IdinResource {
 		StatusRequest sr = new StatusRequest(trxID);
 		StatusResponse response = new Communicator().getResponse(sr);
 		if (response.getIsError()) {
-			logError(response.getErrorResponse());
-			throw new IdinException(response.getErrorResponse());
+			SamlStatus status = null;
+			if (response.getSamlResponse() != null && response.getSamlResponse().getStatus() != null) {
+			    status = response.getSamlResponse().getStatus();
+			}
+			logError(response.getErrorResponse(), status);
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("error:saml:" + response.getSamlResponse().getStatus().getStatusMessage()).build();
 		}
 		logger.info("trxid {}: response status {}", trxID, response.getStatus());
 		switch (response.getStatus()) {

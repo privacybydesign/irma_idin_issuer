@@ -393,8 +393,10 @@ function finishIDINTransaction(params) {
             }
         } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
             setStatus('danger', MESSAGES['idin-status:consumermsg'], xhr.responseText.substr(12));
+        } else if (xhr.status == 500 && xhr.responseText.substr(0, 11) == 'error:saml:') {
+            setStatus('danger', MESSAGES['error:saml'], xhr.responseText.substr(11));
         } else {
-            setStatus('danger', MESSAGES['failed-to-verify-idin'], xhr);
+            setStatus('danger', MESSAGES['failed-to-verify-idin'], xhr.responseText);
             console.error('failed to finish iDIN transaction:', xhr.responseText);
         }
     });

@@ -27,6 +27,7 @@ var MESSAGES = {
     'ideal-status:consumermsg': 'Transaction failed with a message:',
     'idin-status:Cancelled': 'The iDIN transaction was cancelled. Go back to the iDIN issue page to try again.',
     'idin-status:Expired': 'The iDIN session has expired. Go back to the iDIN issue page to try again. When this problem keeps occuring, contact your bank.',
-    'idin-status:other': 'Something unexpected went wrong. Go back to the iDIN issue page to try againn. When this problem keeps occuring, contact your bank.',
+    'idin-status:other': 'Something unexpected went wrong. Go back to the iDIN issue page to try again. When this problem keeps occuring, contact your bank.',
+    'error:saml': 'Something unexpected went wrong. Go back and try again. When this problem keeps occuring, contact IRMA.',
     'error:missing-idin-attributes': 'The iDIN transaction did not give all attributes. Sadly this means we can\'t issue any attributes.',
 };
