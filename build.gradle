@@ -32,6 +32,7 @@ dependencies {
 
     compile 'ch.qos.logback:logback-classic:1.2.3'
     compile 'org.slf4j:log4j-over-slf4j:1.7.25'
+    compile 'io.sentry:sentry-log4j:1.7.16'
 
     compile 'io.jsonwebtoken:jjwt:0.6.0'
 

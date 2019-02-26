@@ -150,6 +150,9 @@ public class IdinResource {
 		}
 		if (loadTokenRecord(token) == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("error:invalid-token").build();
+
+		if (true) {
+			throw new RuntimeException("test");
 		}
 
 		// Create request
