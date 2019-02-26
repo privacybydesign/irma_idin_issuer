@@ -48,9 +48,10 @@ All paths here are relative to the resources directory: `src/main/resources`.
     fields as appropriate:
       * `server_name`: should be `testip` or the actual server name used by the
         API server.
-      * `static_salt` and `token_hmac_key`: must match the values configured in
+      * `token_static_salt` and `token_hmac_key`: must match the values configured in
         [go-ideal-issuer](https://github.com/privacybydesign/go-ideal-issuer/blob/master/README.md),
         see that README for details.
+      * `sentry_dsn`: if you use Sentry, set the DSN here.
       * The rest of the file contains many values related to the exact
         configuration of IRMA credentials.
   * Put the public key of the API server you're using (test or production) in

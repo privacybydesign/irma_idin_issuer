@@ -5,6 +5,12 @@
     </encoder>
   </appender>
 
+  <appender name="Sentry" class="io.sentry.logback.SentryAppender">
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+  </appender>
+
   <logger name="org.irmacard.ideal" level="DEBUG"/>
   <logger name="org.javalite" level="DEBUG"/>
   <logger name="IdealConnector" level="TRACE"/>
@@ -17,6 +23,7 @@
 
   <root level="TRACE">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="Sentry"/>
   </root>
 </configuration>
 

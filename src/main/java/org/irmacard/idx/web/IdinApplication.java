@@ -1,5 +1,6 @@
 package org.irmacard.idx.web;
 
+import io.sentry.Sentry;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,11 @@ public class IdinApplication extends ResourceConfig {
 		register(GsonJerseyProvider.class);
 		register(IdinResource.class);
 		register(IdinExceptionMapper.class);
+
+		String sentry_dsn = IdinConfiguration.getInstance().getSentryDSN();
+		if (sentry_dsn.length() != 0) {
+			Sentry.init(sentry_dsn);
+		}
 
 		logger.info("Starting IRMA iDin server");
 

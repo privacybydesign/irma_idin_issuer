@@ -177,19 +177,20 @@ public class IdinResource {
 	}
 
 	private void logError(ErrorResponse err, SamlStatus status){
-		logger.error("============================ ERROR ============================");
-		logger.error(err.toString());
-		logger.error(err.getConsumerMessage());
-		logger.error(err.getErrorCode());
-		logger.error(err.getErrorDetails());
-		logger.error(err.getErrorMessage());
-		logger.error(err.getSuggestedAction());
 		if (status != null) {
-			logger.error("saml status 1st level: " + status.getStatusCodeFirstLevel());
-			logger.error("saml status 2nd level: " + status.getStatusCodeSecondLevel());
-			logger.error("saml status message:   " + status.getStatusMessage());
+			logger.error("ERROR: {} {} {}\nSAML 1: {}\nSAML 2: {}\nSAML msg: {}",
+					err.getErrorCode(),
+					err.getErrorDetails(),
+					err.getErrorMessage(),
+					status.getStatusCodeFirstLevel(),
+					status.getStatusCodeSecondLevel(),
+					status.getStatusMessage());
+		} else {
+			logger.error("ERROR: {} {} {}",
+					err.getErrorCode(),
+					err.getErrorDetails(),
+					err.getErrorMessage());
 		}
-		logger.error("===============================================================");
 	}
 
 	@POST

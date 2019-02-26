@@ -6,6 +6,7 @@
     "jwt_privatekey": "sk.der",
     "api_server_public_key": "apiserver-pk.der",
     "idin_issuers_path": "idin-banks.json",
+    "sentry_dsn": "",
 
     "token_static_salt": "",
     "token_hmac_key": "",

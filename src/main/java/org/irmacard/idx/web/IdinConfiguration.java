@@ -36,6 +36,7 @@ public class IdinConfiguration extends BaseConfiguration<IdinConfiguration> {
     private String jwt_privatekey = "";
     private String api_server_public_key = "";
     private String idin_issuers_path = "idin-banks.json";
+    private String sentry_dsn = "";
 
     private String token_static_salt = "";
     private String token_hmac_key = "";
@@ -63,6 +64,10 @@ public class IdinConfiguration extends BaseConfiguration<IdinConfiguration> {
 
     public static IdinConfiguration getInstance() {
         return (IdinConfiguration) BaseConfiguration.getInstance();
+    }
+
+    public String getSentryDSN() {
+        return sentry_dsn;
     }
 
     /** Path to the file from which the iDIN issuer list is saved and loaded */
