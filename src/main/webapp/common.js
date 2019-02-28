@@ -21,7 +21,6 @@ function init() {
             startIDealTransaction(e);
         }
     });
-    //document.querySelector('#input-pick-email').onclick = requestEmail;
     $('#form-idin-request').submit(function(e) {
         var selectedBank = $('#input-idin-bank').val();
         startIDINTransaction(e, selectedBank);
@@ -158,30 +157,6 @@ function insertBanksIntoForm(data, select) {
     }
 
     select.val(sessionStorage.idx_selectedBank);
-}
-
-function requestEmail(e) {
-    $('#result-alert').addClass('hidden');
-    e.preventDefault();
-    $.ajax({
-        url: IDEAL_API + 'create-email-disclosure-req',
-    }).done(function(jwt) {
-        //showProgress('Creating email disclosure request...');
-        IRMA.verify(jwt,
-            function(disclosureJWT) { // success
-                console.log('disclosure JWT:', disclosureJWT)
-                emailJWT = disclosureJWT;
-            }, function(message) { // cancel
-                // The user explicitly cancelled the request, so do nothing.
-                console.warn('user cancelled disclosure');
-                setStatus('cancel');
-            }, function(errormsg) { // error
-                console.error('could not disclose email attribute:', errormsg);
-                setStatus('danger', MESSAGES['disclosure-error'], errormsg);
-            });
-    }).fail(function(data) {
-        setStatus('danger', MESSAGES['api-fail']);
-    });
 }
 
 // With the name and email, start a transaction.
