@@ -179,7 +179,7 @@ function startIDealTransaction(e) {
         setStatus('info', MESSAGES['redirect-to-ideal-bank']);
         location.href = data;
     }).fail(function(xhr) {
-        setStatus('danger', MESSAGES['api-fail'], xhr);
+        setStatus('danger', MESSAGES['api-fail'], xhr.statusText);
         $('#btn-ideal-request').prop('disabled', false);
     });
 }
@@ -239,7 +239,7 @@ function finishIDealTransaction() {
         } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
             setStatus('danger', MESSAGES['ideal-status:consumermsg'], xhr.responseText.substr(12));
         } else {
-            setStatus('danger', MESSAGES['failed-to-verify'], xhr.responseText);
+            setStatus('danger', MESSAGES['failed-to-verify'], xhr.statusText);
             console.error('failed to finish iDeal transaction:', xhr.responseText);
         }
     });
@@ -324,7 +324,7 @@ function startIDINTransaction(e, selectedBank) {
         if (xhr.status == 502 && xhr.responseText.substr(0, 6) == 'error:') {
             setStatus('danger', xhr.responseText.substr(6));
         } else {
-            setStatus('danger', MESSAGES['api-fail'], xhr);
+            setStatus('danger', MESSAGES['api-fail'], xhr.statusText);
         }
         $('#btn-idin-request').prop('disabled', false);
     });

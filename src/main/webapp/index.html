@@ -51,7 +51,7 @@
 
                 <form id="form-ideal-request" onsubmit="return false;">
                     <div class="form-group form-bank">
-                        <label for="input-ideal-bank">iDEAL Bank</label>
+                        <label for="input-ideal-bank">Bank</label>
                         <select id="input-ideal-bank" class="form-control" required>
                             <option disabled value="">Bezig met laden...</option>
                         </select>
@@ -60,16 +60,15 @@
                         <input type="submit" id="btn-ideal-request" class="btn btn-primary" value="Inloggen via uw bank"/>
                     </div>
 
-                    <h3>Doorgaan naar iDIN</h3>
+                    <h3>Hervat afgebroken sessie</h3>
                     <p>
-                        Wanneer u al uw iDEAL attributen in uw app
-                        heeft, maar nog geen persoonsgegevens uit
-                        iDIN, dan kunt de eerste twee iDEAL stappen
-                        overslaan en via de onderstaande knop
-                        rechtstreeks een iDIN login starten.
+                        Wanneer u al uw iDEAL attributen in uw app heeft, maar
+                        nog geen iDIN transactie heeft voltooid, dan kunt de
+                        eerste twee iDEAL stappen overslaan en via de
+                        onderstaande knop rechtstreeks een iDIN login starten.
                     </p>
                     <div class="text-right">
-                        <input type="submit" id="btn-disclose-iban" class="btn btn-default" value="Ga verder naar iDIN"/>
+                        <input type="submit" id="btn-disclose-iban" class="btn btn-default" value="Ga verder met iDEAL attributen"/>
                     </div>
                 </form>
                 <div class="bottom">
@@ -135,7 +134,7 @@
                 <p>Na het ontvangen van deze iDEAL attributen kunt u nu iDIN attributen ophalen:</p>
                 <form id="form-idin-request" onsubmit="return false;">
                     <div class="form-group form-bank">
-                        <label for="input-idin-bank">iDIN Bank</label>
+                        <label for="input-idin-bank">Bank</label>
                         <select id="input-idin-bank" class="form-control" required>
                             <option disabled value="">Bezig met laden...</option>
                         </select>
