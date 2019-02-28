@@ -213,7 +213,7 @@ function finishIDealTransaction() {
         IRMA.issue(response.jwt, function(e) {
             delete localStorage.idx_ideal_trxid; // no longer needed
             console.log('iDeal credential issued:', e);
-            setStatus('success', MESSAGES['issue-success']);
+            setStatus('success', MESSAGES['issue-success-ideal']);
             history.pushState(null, '', '?ec=ideal-phase3')
             setPhase(3);
         }, function(e) {
@@ -239,7 +239,7 @@ function finishIDealTransaction() {
         } else if (xhr.status == 502 && xhr.responseText.substr(0, 12) == 'consumermsg:') {
             setStatus('danger', MESSAGES['ideal-status:consumermsg'], xhr.responseText.substr(12));
         } else {
-            setStatus('danger', MESSAGES['failed-to-verify'], xhr);
+            setStatus('danger', MESSAGES['failed-to-verify'], xhr.responseText);
             console.error('failed to finish iDeal transaction:', xhr.responseText);
         }
     });
@@ -347,7 +347,7 @@ function finishIDINTransaction(params) {
         console.log('issuing JWT:', response);
         IRMA.issue(response, function(e) {
             console.log('iDeal credential issued:', e);
-            setStatus('success', MESSAGES['issue-success']);
+            setStatus('success', MESSAGES['issue-success-idin']);
         }, function(e) {
             console.warn('cancelled:', e);
             setStatus('cancel');
