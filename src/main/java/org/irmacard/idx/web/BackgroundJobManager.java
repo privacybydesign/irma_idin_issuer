@@ -67,7 +67,7 @@ public class BackgroundJobManager implements ServletContextListener {
                     GsonUtil.getGson().toJson(idinIssuers).getBytes()
             );
         } catch (Exception e) {
-            logger.error("Failed to run idin issuer fetching cron task");
+            logger.error("Failed to run idin issuer fetching cron task", e);
             e.printStackTrace();
         }
 	}
