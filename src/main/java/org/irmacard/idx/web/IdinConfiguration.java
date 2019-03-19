@@ -58,6 +58,8 @@ public class IdinConfiguration extends BaseConfiguration<IdinConfiguration> {
     private String gender_attribute = "";
     private String country_attribute = "";
 
+    private String database_jndi = "jdbc/irma_ideal";
+
     private transient PrivateKey jwtPrivateKey;
     private transient PublicKey apiServerPublickKey;
     private transient IdinIssuers iDinIssuers;
@@ -194,6 +196,10 @@ public class IdinConfiguration extends BaseConfiguration<IdinConfiguration> {
 
     public String getIdealIBANAttribute() {
         return ideal_iban_attribute;
+    }
+
+    public String getDatabaseJndi() {
+        return database_jndi;
     }
 
     public static void loadIdinConfiguration() {

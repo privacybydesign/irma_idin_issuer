@@ -33,8 +33,7 @@ public class IdinApplication extends ResourceConfig {
 
 	public static void openDatabase() {
 		if(!Base.hasConnection()) {
-			// TODO: make configurable
-			Base.open("jdbc/irma_ideal");
+			Base.open(IdinConfiguration.getInstance().getDatabaseJndi());
 		}
 	}
 

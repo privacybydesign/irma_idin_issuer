@@ -1,6 +1,8 @@
 {
     // A sample configuration file.
 
+    "database_jndi": "jdbc/irma_ideal",
+
     "server_name": "testip",
     "human_readable_name": "Privacy by Design Foundation",
     "jwt_privatekey": "sk.der",
