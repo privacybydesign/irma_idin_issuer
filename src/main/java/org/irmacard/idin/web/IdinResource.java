@@ -43,6 +43,8 @@ public class IdinResource {
 	private static final String idinSamlTelephoneKey = "urn:nl:bvn:bankid:1.0:consumer.telephone";
 	private static final String idinSamlStreetKey = "urn:nl:bvn:bankid:1.0:consumer.street";
 	private static final String idinSamlHouseNoKey = "urn:nl:bvn:bankid:1.0:consumer.houseno";
+	private static final String idinSamlHouseNoSufKey = "urn:nl:bvn:bankid:1.0:consumer.housenosuf";
+	private static final String idinSamlAddressExtraKey = "urn:nl:bvn:bankid:1.0:consumer.addressextra";
 	private static final String idinSamlPostalCodeKey = "urn:nl:bvn:bankid:1.0:consumer.postalcode";
 
 
@@ -314,6 +316,14 @@ public class IdinResource {
 		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
 		Date dob = getDobObject(attributes.get(idinSamlBirthdateKey));
 
+		String addressLine = attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey);
+		if (attributes.get(idinSamlHouseNoSufKey) != null) {
+			addressLine += attributes.get(idinSamlHouseNoSufKey);
+		}
+		if (attributes.get(idinSamlAddressExtraKey) != null) {
+			addressLine += "; " + attributes.get(idinSamlAddressExtraKey);
+		}
+
 		//get iDIN data credential
 		HashMap<String,String> attrs = new HashMap<>();
 		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
@@ -323,7 +333,7 @@ public class IdinResource {
 		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(),
 				getDobString(dob));
 		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),getGenderString(attributes.get(idinSamlGenderKey)));
-		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey));
+		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), addressLine);
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
 		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
