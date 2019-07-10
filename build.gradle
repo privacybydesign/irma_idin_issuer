@@ -1,7 +1,6 @@
 apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'org.akhikhl.gretty'
-apply plugin: 'org.javalite.activejdbc'
 
 targetCompatibility = '1.7'
 sourceCompatibility = '1.7'
@@ -15,7 +14,6 @@ buildscript {
     }
     dependencies {
         classpath 'org.akhikhl.gretty:gretty:1.4.0'
-        classpath "org.javalite:activejdbc-gradle-plugin:1.4.12-SNAPSHOT"
     }
 }
 
@@ -42,7 +40,6 @@ dependencies {
     compile files('libs/net.bankid.merchant.library.jar')
 
     gretty 'commons-dbcp:commons-dbcp:1.4'
-    compile 'org.javalite:activejdbc:1.4.11'
     compile 'net.glxn:qrgen:1.4'
     compile 'mysql:mysql-connector-java:5.1.27'
 

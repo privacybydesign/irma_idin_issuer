@@ -183,7 +183,6 @@ public class IdinResource {
 						}else {
 							//redirect to issuing page
 							followupURL = successURL;
-							IdinRecord.New(attributes.get(idinSamlBinKey));
 							String jwt = createIssueJWT(attributes);
 							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
 						}
