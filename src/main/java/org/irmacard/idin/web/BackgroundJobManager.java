@@ -34,8 +34,6 @@ public class BackgroundJobManager implements ServletContextListener {
 			@Override public void run() {
 				//attempting to close old sessions with status Open or Pending
 				OpenTransactions.requestStates();
-				//Swapping to a new list for this day, so that we only request a state once per day.
-				OpenTransactions.newDay();
 
 				try {
 					IdinIssuers issuers = IdinConfiguration.getInstance().getIdinIssuers();

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -49,25 +50,11 @@ public class IdinResource {
 
 
 	private static Random random = new Random();
+	private static SecureRandom secureRandom = new SecureRandom();
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
 
 	private static String successURL = IdinConfiguration.getInstance().getReturnUrl()+"/enroll.html";
 	private static String errorURL = IdinConfiguration.getInstance().getReturnUrl()+"/error.html";
-
-	//Issuer response codes
-	private static String entranceCode = "successHIO100OIHtest";
-	//private static String entranceCode = "cancelledHIO200OIHtest";
-	//private static String entranceCode = "expiredHIO300OIHtest";
-	//private static String entranceCode = "openHIO400OIHtest";
-	//private static String entranceCode = "failureHIO500OIHtest";
-
-	//Issuer error messages
-	//private static String entranceCode = "systemUnavailabilityHIO702OIHtest";
-	//private static String entranceCode = "receivedXMLNotValidHIO701OIHtest";
-	//private static String entranceCode = "invalidElectronicSignatureHIO703OIHtest";
-	//private static String entranceCode = "versionNumberInvalidHIO704OIHtest";
-	//private static String entranceCode = "productSpecificErrorHIO705OIHtest";
-
 
 	@GET
 	@Path("/banks")
@@ -122,6 +109,7 @@ public class IdinResource {
 		//iDIN lib wants the random MerchantReference to start with a letter.
 		merchantReference = "a"+merchantReference;
 
+		String entranceCode = new RandomString(40, secureRandom).nextString();
 		AuthenticationRequest request = new AuthenticationRequest(entranceCode,IDIN_ATTRIBUTES,bank,AssuranceLevel.Loa3,"nl",merchantReference);
 
 		logger.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
@@ -137,6 +125,8 @@ public class IdinResource {
 		logger.info("trxid {}: session created at bank, redirecting to {}",
 				response.getTransactionID(),
 				response.getIssuerAuthenticationURL());
+		IdinTransaction it = new IdinTransaction(response.getTransactionID(), entranceCode);
+		OpenTransactions.addTransaction(it);
 		return Response.accepted(response.getIssuerAuthenticationURL()).build();
 	}
 
@@ -154,7 +144,7 @@ public class IdinResource {
 	@GET
 	@Path("/return")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID){
+	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID, @QueryParam("ec") String ec){
 		NewCookie[] cookies = new NewCookie[1];
 		String followupURL = errorURL;
 
@@ -166,6 +156,16 @@ public class IdinResource {
 		} else {
 			logger.info("trxid {}: return url called", trxID);
 
+			IdinTransaction transaction = OpenTransactions.findTransaction(trxID);
+			if (transaction == null) {
+				logger.info("transaction with trxid {} could not be found", trxID);
+				return null;
+			} else if (!transaction.getEntranceCode().equals(ec)) {
+				// Wrong entrance code is used
+				logger.info("ec {} of trxid {} does not match with actual ec {}", ec, trxID, transaction.getEntranceCode());
+				return null;
+			}
+
 			StatusRequest sr = new StatusRequest(trxID);
 			StatusResponse response = new Communicator().getResponse(sr);
 			if (response.getIsError()) {
@@ -173,6 +173,7 @@ public class IdinResource {
 				throw new IdinException(response.getErrorResponse());
 			} else {
 				logger.info("trxid {}: response status {}", trxID, response.getStatus());
+				transaction.handled();
 				switch (response.getStatus()) {
 					case StatusResponse.Success:
 						Map<String, String> attributes = response.getSamlResponse().getAttributes();
@@ -180,27 +181,30 @@ public class IdinResource {
 						if (nullOrEmptyAttributes(attributes,trxID)){
 							cookies[0] = new NewCookie("error","De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen","/",null,null,60,isHttpsEnabled);
 							followupURL = errorURL;
-						}else {
+						} else {
 							//redirect to issuing page
 							followupURL = successURL;
 							String jwt = createIssueJWT(attributes);
 							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
 						}
+						transaction.finished();
 						break;
 					case StatusResponse.Cancelled:
 						followupURL = errorURL;
 						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.", "/", null, null, 60, isHttpsEnabled);
+						transaction.finished();
 						break;
 					case StatusResponse.Expired:
 						followupURL = errorURL;
 						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
+						transaction.finished();
 						break;
 					case StatusResponse.Open:
 					case StatusResponse.Pending:
-						OpenTransactions.addTransaction(trxID);
 						break;
 					case StatusResponse.Failure:
 					default:
+						transaction.finished();
 						followupURL = errorURL;
 						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
 						break;
