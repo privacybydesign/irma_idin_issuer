@@ -20,4 +20,6 @@
     "tel_attribute": "telephone",
     "email_attribute": "email"
 
+		"iDinLibConfigLocation": "config.xml"
+
 }

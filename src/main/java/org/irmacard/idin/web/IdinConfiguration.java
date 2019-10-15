@@ -56,6 +56,8 @@ public class IdinConfiguration {
 	private transient PrivateKey jwtPrivateKey;
 	private transient PublicKey jwtPublicKey;
 
+	private static String iDinLibConfigLocation ="config.xml";
+
 	/** Path to the file from which the iDIN issier list is saved and loaded */
 	public Path getIdinIssuersPath() {
 		return Paths.get(idin_issuers_path);
@@ -80,10 +82,12 @@ public class IdinConfiguration {
 	}
 
 	public static void loadIdinConfiguration() {
+		getInstance();
 		try {
-			URL config = IdinConfiguration.class.getClassLoader().getResource("config.xml");
-			if (config == null)
-				throw new Exception("Could not load config.xml");
+			URL config = IdinConfiguration.class.getClassLoader().getResource(iDinLibConfigLocation);
+			if (config == null) {
+				throw new Exception("Could not load iDin configfile: "+iDinLibConfigLocation);
+			}
 			Configuration.defaultInstance().Load(config.openStream());
 		} catch (Exception e) {
 			logger.error("Could not load iDIN configuration");
