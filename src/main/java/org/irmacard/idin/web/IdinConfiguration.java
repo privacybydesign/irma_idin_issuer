@@ -93,7 +93,11 @@ public class IdinConfiguration extends BaseConfiguration {
 			if (config == null) {
 				throw new Exception("Could not load iDin configfile: "+iDinLibConfigLocation);
 			}
-			Configuration.defaultInstance().Load(config.openStream());
+			InputStream configS = config.openStream();
+			if (configS == null) {
+				throw new Exception("Could not open iDin configfile: "+iDinLibConfigLocation);
+			}
+			Configuration.defaultInstance().Load(configS);
 		} catch (Exception e) {
 			logger.error("Could not load iDIN configuration");
 			logger.error(e.getMessage());
