@@ -1,5 +1,7 @@
 package org.irmacard.idin.web;
 
+import foundation.privacybydesign.common.BaseConfiguration;
+
 import com.google.gson.JsonSyntaxException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import net.bankid.merchant.library.Configuration;
@@ -11,7 +13,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,10 +22,14 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal", "unused"})
-public class IdinConfiguration {
+public class IdinConfiguration extends BaseConfiguration {
 	private static Logger logger = LoggerFactory.getLogger(IdinConfiguration.class);
 	private static final String filename = "config.json";
 	private static IdinConfiguration instance;
+
+	static {
+        BaseConfiguration.confDirName = "irma_idin_issuer";
+    }
 
 	private String server_name = "IRMAiDIN_test";
 	private String human_readable_name;
@@ -84,7 +89,7 @@ public class IdinConfiguration {
 	public static void loadIdinConfiguration() {
 		getInstance();
 		try {
-			URL config = IdinConfiguration.class.getClassLoader().getResource(iDinLibConfigLocation);
+			URL config = getConfigurationDirectory().resolve(iDinLibConfigLocation).toURL();
 			if (config == null) {
 				throw new Exception("Could not load iDin configfile: "+iDinLibConfigLocation);
 			}
@@ -146,16 +151,6 @@ public class IdinConfiguration {
 		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
 			throw new KeyManagementException(e);
 		}
-	}
-
-	public static byte[] getResource(String filename) throws IOException {
-		URL url = IdinConfiguration.class.getClassLoader().getResource(filename);
-		if (url == null)
-			throw new IOException("Could not load file " + filename);
-
-		URLConnection urlCon = url.openConnection();
-		urlCon.setUseCaches(false);
-		return convertStreamToByteArray(urlCon.getInputStream(), 2048);
 	}
 
 	public static byte[] convertStreamToByteArray(InputStream stream, int size) throws IOException {
