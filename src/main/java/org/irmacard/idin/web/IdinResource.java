@@ -327,6 +327,9 @@ public class IdinResource {
 			addressLine += "; " + attributes.get(idinSamlAddressExtraKey);
 		}
 
+		int[] ages = {12,16,18,21,65};
+		HashMap<String,String> ageAttrs = ageAttributes(ages, dob);
+
 		//get iDIN data credential
 		HashMap<String,String> attrs = new HashMap<>();
 		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
@@ -340,6 +343,7 @@ public class IdinResource {
 		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
 		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
 		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
+		attrs.putAll(ageAttrs);
 
 		//add iDIN data credential
 		credentials.put(new CredentialIdentifier(
@@ -348,13 +352,14 @@ public class IdinResource {
 				IdinConfiguration.getInstance().getIdinCredential()
 		), attrs);
 
-		//add age limits credential
-		int[] ages = {12,16,18,21,65};
-		credentials.put(new CredentialIdentifier(
-				IdinConfiguration.getInstance().getSchemeManager(),
-				IdinConfiguration.getInstance().getAgeLimitsIssuer(),
-				IdinConfiguration.getInstance().getAgeLimitsCredential()
-		), ageAttributes(ages, dob));
+		//add age limits credential if enabled
+		if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
+			credentials.put(new CredentialIdentifier(
+					IdinConfiguration.getInstance().getSchemeManager(),
+					IdinConfiguration.getInstance().getAgeLimitsIssuer(),
+					IdinConfiguration.getInstance().getAgeLimitsCredential()
+			), ageAttrs);
+		}
 
 		Calendar calendar = Calendar.getInstance();
 		calendar.add(Calendar.YEAR, 1);
