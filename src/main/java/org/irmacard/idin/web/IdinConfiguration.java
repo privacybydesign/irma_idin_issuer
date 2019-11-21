@@ -39,6 +39,7 @@ public class IdinConfiguration extends BaseConfiguration {
 	private String scheme_manager = "";
 	private String idin_issuer = "";
 	private String idin_credential = "";
+	private boolean age_limits_credential_enabled = true;
 	private String age_limits_credential = "";
 
 
@@ -282,5 +283,9 @@ public class IdinConfiguration extends BaseConfiguration {
 
 	public String getAgeLimitsCredential() {
 		return age_limits_credential;
+	}
+
+	public boolean isAgeLimitsCredentialEnabled() {
+		return age_limits_credential_enabled;
 	}
 }

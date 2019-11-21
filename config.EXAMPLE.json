@@ -9,6 +9,7 @@
     "scheme_manager": "irma-demo",
     "idin_issuer": "RU",
     "idin_credential": "idinData",
+    "age_limits_credential_enabled": true,
     "age_limits_credential": "ageLimits",
     "initials_attribute": "initials",
     "lastname_attribute": "familyName",
