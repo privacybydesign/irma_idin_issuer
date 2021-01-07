@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <appSettings>
+        <add key="BankId.Merchant.MerchantID" value="" />
+        <add key="BankId.Merchant.SubID" value="0" />
+        <add key="BankId.Merchant.ReturnUrl" value="https://example.com/return" />
+
+        <add key="BankId.Acquirer.AcquirerID" value="" />
+        <add key="BankId.Acquirer.DirectoryUrl" value="" />
+        <add key="BankId.Acquirer.TransactionUrl" value="" />
+        <add key="BankId.Acquirer.StatusUrl" value="" />
+        <add key="BankId.TLS12.Enabled" value="true" />
+
+        <add key="BankId.KeyStore.Location" value="idin_keystore.jks" />
+        <add key="BankId.KeyStore.Password" value="keystore-passwd" />
+
+        <add key="BankId.Merchant.Certificate.Alias" value="self" />
+        <add key="BankId.Merchant.Certificate.Password" value="test" />
+        <add key="BankId.Acquirer.Certificate.Alias" value="bank-alias" />
+        <add key="BankId.SAML.Certificate.Alias" value="self" />
+        <add key="BankId.SAML.Certificate.Password" value="cert-passwd" />
+
+        <add key="BankId.Logs.Enabled" value="true" />
+        <add key="BankId.ServiceLogs.Enabled" value="true" />
+        <add key="BankId.ServiceLogs.Location" value="logs" />
+        <add key="BankId.ServiceLogs.Pattern" value="%Y-%M-%D/%h%m%s.%f-%a.xml" />
+    </appSettings>
+</configuration>
