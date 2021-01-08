@@ -1,9 +1,7 @@
-
 # iDIN server
 
 Add personal data received from Dutch banks via iDIN for use in your
 [IRMA app](https://github.com/privacybydesign/irmamobile).
-
 
 ## Setting up the server
 
@@ -13,8 +11,8 @@ Add personal data received from Dutch banks via iDIN for use in your
     check `config.EXAMPLE.xml` in the root of this repository.
  3. Supply the Java keystore on the location as specified in the iDIN library config. Make sure
     that this file is available in the Java classpath. For example, include it in `src/main/resources/...`
-    or in `webapp/WEB-INF/classes`.
- 3. Run `gradle appRun` in the root directory of this project.
+    or in `webapp/WEB-INF/classes/...`.
+ 4. Run `gradle appRun` in the root directory of this project.
 
 ## Building new version of iDIN library
 
