@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-    build-war:
+    build-docker:
       runs-on: ubuntu-latest
 
       steps:
@@ -22,18 +22,4 @@ jobs:
 
         # Step 2: Build the Docker image for Java/Gradle (stop at javabuild step)
         - name: Build Docker image
-          run: docker build --target javabuild -t idin-issuer-javabuild .
-
-        # Step 3: Run the container and extract the WAR file
-        - name: Extract WAR file
-          run: |
-            mkdir -p artifacts
-            docker run --rm -v ${{ github.workspace }}/artifacts:/app/artifacts idin-issuer-javabuild \
-            bash -c "cp /app/build/libs/*.war /app/artifacts"
-
-        # Step 4: Upload the WAR file as an artifact
-        - name: Upload WAR file
-          uses: actions/upload-artifact@v4
-          with:
-            name: irma_idin_server
-            path: artifacts/irma_idin_server.war
+          run: docker build -t idin-issuer .
