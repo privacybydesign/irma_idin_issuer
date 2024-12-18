@@ -15,7 +15,7 @@ RUN ls -la /tmp/idin_issuer_webclient/build
 RUN mkdir -p /var/www/pbdf-website/uitgifte/idin/
 RUN rsync -r -o -g -p /tmp/idin_issuer_webclient/build/ /var/www/pbdf-website/uitgifte/idin/ --chmod=D755,F644 --chown=root:www-data
 
-COPY ./.secrets/idin-config-webclient.json /var/www/pbdf-website/uitgifte/idin/conf.json
+# COPY ./.secrets/idin-config-webclient.json /var/www/pbdf-website/uitgifte/idin/conf.json
 
 # -------------------------------------------------------------------------------
 
@@ -54,8 +54,8 @@ RUN openssl pkcs8 -topk8 -inform PEM -outform DER -in $CONFIG_DIR/sk.pem -out $C
 RUN openssl rsa -in $CONFIG_DIR/sk.pem -pubout -outform PEM -out $CONFIG_DIR/pk.pem
 RUN openssl pkey -pubin -inform PEM -outform DER -in $CONFIG_DIR/pk.pem -out $CONFIG_DIR/pk.der
 
-COPY ./.secrets/config.xml $CONFIG_DIR/
-COPY ./.secrets/config.json $CONFIG_DIR/
+# COPY ./.secrets/config.xml $CONFIG_DIR/
+# COPY ./.secrets/config.json $CONFIG_DIR/
 # COPY ./.secrets/keystore.jks /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes
 
 
