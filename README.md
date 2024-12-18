@@ -23,12 +23,13 @@ Additionally, we need a secret for the iDIN credential id.
 This can be passed in at runtime via the `IDIN_ISSUER_ID` environment variable.
 The last thing we need is a `keystore.jks` file. This is a binary file that should be passed as a base64 encoded string to `KEYSTORE_JKS`.
 
-### Generating RSA keys
+### Generating JWT keys
 ```
-openssl genrsa -out sk.pem 2048
-openssl rsa -in sk.pem -pubout -outform PEM -out pk.pem
+mkdir -p .secrets
+openssl genrsa 4096 > .secrets/sk.pem
+openssl rsa -in .secrets/sk.pem -pubout > .secrets/pk.pem
 ```
 
 Note: these keys will be transformed to `der` keys at runtime. 
-They're expected as pem files because that's easier to store in secret managers.
+They're expected as `pem` files because that's easier to store in secret managers.
 In the `config.json` they should be named `sk.der` and `pk.der`.
