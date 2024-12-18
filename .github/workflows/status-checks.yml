@@ -50,16 +50,16 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
-        # Step 2: Build the Docker image for Java/Gradle
+        # Step 2: Build the Docker image for Java/Gradle (stop at javabuild step)
         - name: Build Docker image
-          run: docker build -t war-builder .
+          run: docker build --target javabuild -t war-builder .
 
         # Step 3: Run the container and extract the WAR file
         - name: Extract WAR file
           run: |
             mkdir -p artifacts
-            docker run --rm -v ${{ github.workspace }}/artifacts:/app/artifacts war-builder \
-            /bin/bash -c "cp /app/build/libs/irma_idin_server.war /app/artifacts/"
+            docker run --rm -v ${{ github.workspace }}/artifacts:/app/artifacts idin-issuer-javabuild \
+            bash -c "cp /app/build/libs/*.war /app/artifacts"
 
         # Step 4: Upload the WAR file as an artifact
         - name: Upload WAR file
