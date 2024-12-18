@@ -19,8 +19,7 @@ COPY ./.secrets/idin-config-webclient.json /var/www/pbdf-website/uitgifte/idin/c
 
 # -------------------------------------------------------------------------------
 
-# FROM openjdk:8-jdk AS javabuild
-FROM gradle:7.6-jdk11 AS javabuild
+FROM openjdk:8-jdk AS javabuild
 
 RUN apt-get update && apt-get install -y gradle && apt-get clean
 
@@ -38,7 +37,7 @@ RUN mkdir -p artifacts && \
 
 # -------------------------------------------------------------------------------
 
-FROM tomee:9.1-jre11
+FROM tomee:jre8
 
 # Copy the webapp to the webapps directory
 RUN rm -rf /usr/local/tomee/webapps/*
@@ -57,6 +56,8 @@ RUN openssl pkey -pubin -inform PEM -outform DER -in $CONFIG_DIR/pk.pem -out $CO
 
 COPY ./.secrets/config.xml $CONFIG_DIR/
 COPY ./.secrets/config.json $CONFIG_DIR/
+# COPY ./.secrets/keystore.jks /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes
+
 
 ENV IRMA_CONF=$CONFIG_DIR
 EXPOSE 8080
