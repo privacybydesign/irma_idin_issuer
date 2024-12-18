@@ -1,0 +1,6 @@
+{
+    "idin_server_url": "/tomcat/irma_idin_server",
+    "irma_server_url": "/backend",
+    "language": "nl",
+    "idin_credential_id": "$IDIN_ISSUER_ID.idin"
+}
