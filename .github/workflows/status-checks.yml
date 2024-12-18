@@ -52,7 +52,7 @@ jobs:
 
         # Step 2: Build the Docker image for Java/Gradle (stop at javabuild step)
         - name: Build Docker image
-          run: docker build --target javabuild -t war-builder .
+          run: docker build --target javabuild -t idin-issuer-javabuild .
 
         # Step 3: Run the container and extract the WAR file
         - name: Extract WAR file
