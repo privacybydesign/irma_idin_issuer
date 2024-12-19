@@ -49,4 +49,4 @@ COPY --from=javabuild /app/idin-fontend-config-template.txt .
 
 EXPOSE 8080
 
-CMD ["/bin/sh", "-C", "./start.sh"]
+CMD ["/bin/bash", "-C", "./start.sh"]
