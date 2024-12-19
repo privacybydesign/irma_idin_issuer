@@ -13,8 +13,8 @@ RUN cd /tmp/idin_issuer_webclient && unzip /tmp/idin_issuer_webclient/download
 
 RUN ls -la /tmp/idin_issuer_webclient/build
 
-RUN mkdir -p /var/www/pbdf-website/uitgifte/idin/
-RUN rsync -r -o -g -p /tmp/idin_issuer_webclient/build/ /var/www/pbdf-website/uitgifte/idin/ --chmod=D755,F644 --chown=root:www-data
+RUN mkdir -p /var/www/
+RUN rsync -r -o -g -p /tmp/idin_issuer_webclient/build/ /var/www/ --chmod=D755,F644 --chown=root:www-data
 
 # -------------------------------------------------------------------------------
 # Step for building the java library

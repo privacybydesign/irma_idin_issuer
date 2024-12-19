@@ -7,15 +7,14 @@ set -e # make sure the script immediately ends when one of its commands fails
 echo "creating the idin-fontend-config json file based on template"
 echo "issuer id: $IDIN_ISSUER_ID"
 cat idin-fontend-config-template.txt
-mkdir -p /var/www/pbdf-website/uitgifte/idin/
-envsubst < idin-fontend-config-template.txt > /var/www/pbdf-website/uitgifte/idin/conf.json
+mkdir -p /var/www/
+envsubst < idin-fontend-config-template.txt > /var/www/conf.json
 
 
 echo "creating /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/"
 mkdir -p /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/
 
 echo "base64 decoding KEYSTORE_JKS and putting it in /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes"
-echo "contents of KEYSTORE_JKS:\n\n$KEYSTORE_JKS"
 echo "$KEYSTORE_JKS" | base64 -d > /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/keystore.jks
 
 
