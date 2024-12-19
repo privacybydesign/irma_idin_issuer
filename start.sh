@@ -28,7 +28,7 @@ cp -R $CONFIG_DIR $IRMA_CONF
 
 
 pushd $IRMA_CONF
-echo "converting public and private keys to `der` format"
+echo "converting JWT public and private keys to 'der' format"
 openssl pkcs8 -topk8 -inform PEM -outform DER -in sk.pem -out sk.der -nocrypt
 openssl pkey -pubin -inform PEM -outform DER -in pk.pem -out pk.der
 popd
