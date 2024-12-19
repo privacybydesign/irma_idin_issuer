@@ -24,10 +24,14 @@ echo "creating directory $IRMA_CONF"
 mkdir -p $IRMA_CONF
 
 echo "copying config from $CONFIG_DIR to $IRMA_CONF"
-cp -R $CONFIG_DIR $IRMA_CONF
+cp $CONFIG_DIR/sk.pem $IRMA_CONF/sk.pem
+cp $CONFIG_DIR/pk.pem $IRMA_CONF/pk.pem
+cp $CONFIG_DIR/config.json $IRMA_CONF/config.json
+cp $CONFIG_DIR/config.xml $IRMA_CONF/config.xml
 
 
 pushd $IRMA_CONF
+echo "contents of $IRMA_CONF:\n$(ls -la)"
 echo "converting JWT public and private keys to 'der' format"
 openssl pkcs8 -topk8 -inform PEM -outform DER -in sk.pem -out sk.der -nocrypt
 openssl pkey -pubin -inform PEM -outform DER -in pk.pem -out pk.der
