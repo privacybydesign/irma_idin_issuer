@@ -15,7 +15,8 @@ echo "creating /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/"
 mkdir -p /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/
 
 echo "base64 decoding KEYSTORE_JKS and putting it in /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes"
-echo $KEYSTORE_JKS | base64 -d > /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/keystore.jks
+echo "contents of KEYSTORE_JKS:\n\n$KEYSTORE_JKS"
+echo "$KEYSTORE_JKS" | base64 -d > /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/keystore.jks
 
 
 export IRMA_CONF="/irma-idin-conf"
@@ -24,6 +25,7 @@ echo "creating directory $IRMA_CONF"
 mkdir -p $IRMA_CONF
 
 echo "copying config from $CONFIG_DIR to $IRMA_CONF"
+echo "contents of $CONFIG_DIR:\n$(ls -la $CONFIG_DIR)"
 cp $CONFIG_DIR/sk.pem $IRMA_CONF/sk.pem
 cp $CONFIG_DIR/pk.pem $IRMA_CONF/pk.pem
 cp $CONFIG_DIR/config.json $IRMA_CONF/config.json
