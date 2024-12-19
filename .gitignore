@@ -1,6 +1,7 @@
 .gradle
 build
 bin
+.secrets
 .classpath
 .project
 .settings/
