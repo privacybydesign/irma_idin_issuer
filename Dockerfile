@@ -19,7 +19,7 @@ RUN rsync -r -o -g -p /tmp/idin_issuer_webclient/build/ /var/www/ --chmod=D755,F
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM openjdk:8-jdk AS javabuild
+FROM openjdk:11-jdk AS javabuild
 
 RUN apt-get update && apt-get install -y gradle && apt-get clean
 
@@ -34,18 +34,23 @@ RUN mkdir -p artifacts && \
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
-FROM tomee:jre8
+# FROM tomcat:9-jre11
+FROM tomcat:9-jre11-temurin-focal
 
-RUN apt-get update && apt-get install gettext-base
+RUN apt-get update && apt-get install gettext-base unzip 
 
 # Copy the webapp to the webapps directory
-RUN rm -rf /usr/local/tomee/webapps/*
-COPY --from=webappbuild /var/www/ /usr/local/tomee/webapps/ROOT/
+RUN rm -rf /usr/local/tomcat/webapps/*
+COPY --from=webappbuild /var/www/ /usr/local/tomcat/webapps/ROOT/
 
 # Copy the war file to the webapps directory
-COPY --from=javabuild /app/build/libs/irma_idin_server.war /usr/local/tomee/webapps/
+COPY --from=javabuild /app/build/libs/irma_idin_server.war /usr/local/tomcat/webapps/
 COPY --from=javabuild /app/start.sh .
 COPY --from=javabuild /app/idin-fontend-config-template.txt .
+
+COPY --from=javabuild /app/build/libs/irma_idin_server.war /usr/local/tomcat/webapps/
+RUN unzip /usr/local/tomcat/webapps/irma_idin_server.war -d /usr/local/tomcat/webapps/irma_idin_server
+RUN rm -rf /usr/local/tomcat/webapps/irma_idin_server.war
 
 EXPOSE 8080
 

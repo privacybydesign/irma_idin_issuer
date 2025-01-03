@@ -11,12 +11,15 @@ mkdir -p /var/www/
 envsubst < idin-fontend-config-template.txt > /var/www/conf.json
 
 
-echo "creating /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/"
-mkdir -p /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/
 
-echo "base64 decoding KEYSTORE_JKS and putting it in /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes"
-echo "$KEYSTORE_JKS" | base64 -d > /usr/local/tomee/webapps/irma_idin_server/WEB-INF/classes/keystore.jks
+KEYSTORE_DIR=/usr/local/tomcat/webapps/irma_idin_server/WEB-INF/classes/
 
+echo "creating $KEYSTORE_DIR"
+
+mkdir -p $KEYSTORE_DIR
+
+echo "base64 decoding KEYSTORE_JKS and putting it in $KEYSTORE_DIR/keystore.jks"
+echo $KEYSTORE_JKS | base64 -d > $KEYSTORE_DIR/keystore.jks
 
 export IRMA_CONF="/irma-idin-conf"
 
