@@ -16,3 +16,5 @@ The arguments should be based on what's defined in `config.xml`:
 |`--priv-key-password` | `BankId.SAML.Certificate.Password` |
 
 The resulting keystore should be base64 encoded and passed to the KEYSTORE_JKS env var.
+
+NOTE: This will not automatically work. Idin needs to know about the certificates. See their [wiki](https://github.com/Currence-Online/iDIN-libraries-java/wiki).
