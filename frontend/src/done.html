@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <script type="text/javascript" src="node_modules/jwt-decode/build/jwt-decode.js"></script>
+    <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="node_modules/@privacybydesign/irma-frontend/dist/irma.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/iDIN-verify.js"></script>
+
+    <title><%= done_title %></title>
+</head>
+
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
+            <h2><%= done_header %></h2>
+
+            <div id="alert_box"></div>
+
+            <p><%= done_text1 %></p>
+            <p><%= done_text2 %></p>
+            <p><%= done_text3 %></p>
+
+            <button id="verify_idin_bd_btn" class="btn btn-primary"><%= done_show_button %></button>
+
+            <h3 id="result_header"></h3>
+            <h4 id="result_status"></h4>
+            <p id="token-content"></p>
+
+            <a href=".."><%= done_return %></a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
