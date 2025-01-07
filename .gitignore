@@ -11,3 +11,4 @@ banks.json
 logs/
 src/main/webapp/*
 !src/main/webapp/WEB-INF/web.xml
+genkeys/keystore.jks
