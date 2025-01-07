@@ -1,20 +1,17 @@
 FROM node:20 AS webappbuild
 
-RUN apt-get update && apt-get install -y wget rsync unzip
+RUN npm install -g grunt-cli
 
 WORKDIR /app
 COPY . .
 
-# copy the pre-built frontend package from the gitlab server
-RUN mkdir -p /tmp/idin_issuer_webclient
-RUN wget https://gitlab.science.ru.nl/irma/github-mirrors/irma_idin_webclient/-/jobs/artifacts/master/download?job=build-nl -O /tmp/idin_issuer_webclient/download
-
-RUN cd /tmp/idin_issuer_webclient && unzip /tmp/idin_issuer_webclient/download
-
-RUN ls -la /tmp/idin_issuer_webclient/build
+RUN cd /app/frontend && yarn install && grunt build --language="en"
 
 RUN mkdir -p /var/www/
-RUN rsync -r -o -g -p /tmp/idin_issuer_webclient/build/ /var/www/ --chmod=D755,F644 --chown=root:www-data
+RUN cp -r /app/frontend/build/* /var/www/ 
+RUN chmod +755 /var/www/ 
+# RUN chmod +644 /var/www/
+RUN chown -R root:www-data /var/www/
 
 # -------------------------------------------------------------------------------
 # Step for building the java library

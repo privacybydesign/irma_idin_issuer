@@ -8,9 +8,8 @@ echo "creating the idin-fontend-config json file based on template"
 echo "issuer id: $IDIN_ISSUER_ID"
 cat idin-fontend-config-template.txt
 mkdir -p /var/www/
-envsubst < idin-fontend-config-template.txt > /var/www/conf.json
-
-
+envsubst < idin-fontend-config-template.txt > /tmp/conf.json
+mv /tmp/conf.json /usr/local/tomcat/webapps/ROOT/conf.json
 
 KEYSTORE_DIR=/usr/local/tomcat/webapps/irma_idin_server/WEB-INF/classes/
 
