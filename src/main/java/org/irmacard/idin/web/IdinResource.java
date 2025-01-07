@@ -53,7 +53,7 @@ public class IdinResource {
 	private static SecureRandom secureRandom = new SecureRandom();
 	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
 
-	private static String successURL = IdinConfiguration.getInstance().getReturnUrl()+"/enroll.html";
+	private static String successURL = IdinConfiguration.getInstance().getEnrollUrl();
 	private static String errorURL = IdinConfiguration.getInstance().getReturnUrl()+"/error.html";
 
 	@GET

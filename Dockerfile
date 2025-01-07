@@ -10,7 +10,6 @@ RUN cd /app/frontend && yarn install && grunt build --language="en"
 RUN mkdir -p /var/www/
 RUN cp -r /app/frontend/build/* /var/www/ 
 RUN chmod +755 /var/www/ 
-# RUN chmod +644 /var/www/
 RUN chown -R root:www-data /var/www/
 
 # -------------------------------------------------------------------------------

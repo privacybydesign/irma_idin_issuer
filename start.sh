@@ -11,14 +11,15 @@ mkdir -p /var/www/
 envsubst < idin-fontend-config-template.txt > /tmp/conf.json
 mv /tmp/conf.json /usr/local/tomcat/webapps/ROOT/conf.json
 
-KEYSTORE_DIR=/usr/local/tomcat/webapps/irma_idin_server/WEB-INF/classes/
+KEYSTORE_DIR=/usr/local/tomcat/webapps/irma_idin_server/WEB-INF/classes
 
 echo "creating $KEYSTORE_DIR"
 
 mkdir -p $KEYSTORE_DIR
 
 echo "base64 decoding KEYSTORE_JKS and putting it in $KEYSTORE_DIR/keystore.jks"
-echo $KEYSTORE_JKS | base64 -d > $KEYSTORE_DIR/keystore.jks
+echo $KEYSTORE_JKS | base64 -d > /tmp/keystore.jks 
+mv /tmp/keystore.jks $KEYSTORE_DIR/keystore.jks
 
 export IRMA_CONF="/irma-idin-conf"
 
