@@ -1,53 +1,72 @@
 <!DOCTYPE html>
 <html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="node_modules/bootstrap/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/@privacybydesign/yivi-css/dist/yivi.min.css"
+      rel="stylesheet"
+    />
+    <link href="css/style.css" rel="stylesheet" />
 
-    <script type="text/javascript" src="node_modules/jwt-decode/build/jwt-decode.js"></script>
-    <script type="text/javascript" src="node_modules/jquery/dist/jquery.min.js"></script>
-    <script type="text/javascript" src="node_modules/js-cookie/src/js.cookie.js"></script>
+    <script
+      type="text/javascript"
+      src="node_modules/jwt-decode/build/jwt-decode.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="node_modules/jquery/dist/jquery.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="node_modules/js-cookie/src/js.cookie.js"
+    ></script>
 
-    <script type="text/javascript" src="node_modules/@privacybydesign/irma-frontend/dist/irma.js"></script>
+    <script
+      type="text/javascript"
+      src="node_modules/@privacybydesign/yivi-frontend/dist/yivi.js"
+    ></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/iDIN-enroll.js"></script>
 
     <title><%= enroll_title %></title>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <div class="content">
+        <img class="logo-img" src="images/idin-logo.svg" />
+        <h1><%= enroll_header %></h1>
+      </div>
+    </header>
+    <main class="content">
+      <div>
+        <div id="alert_box"></div>
 
-<div class="container">
-    <div class="row">
-        <div id="logo" class="col-xs-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3">
-            <hr/>
-            <a href="#">
-                <img class="logo-img" src="images/iDIN_logo_64.png" />
-            </a>
-        </div>
-        <div class="col-xs-12 col-md-8 col-lg-6 col-md-offset-2 col-lg-offset-3" id="enroll-page" style="display: none;">
-            <h2><%= enroll_header %></h2>
+        <p><%= enroll_received_attributes %></p>
+        <table class="table" id="idinTable">
+          <tbody></tbody>
+        </table>
+        <br />
+        <p><%= enroll_derived_attributes %></p>
+        <table class="table" id="ageTable">
+          <tbody></tbody>
+        </table>
 
-            <div id="alert_box"></div>
+        <p id="twoCredentialsWarning" style="display: none">
+          <i><%= enroll_two_credentials_warning %></i>
+        </p>
 
-            <p><%= enroll_received_attributes %></p>
-            <table class="table" id="idinTable">
-                <tbody></tbody>
-            </table>
-            <br/>
-            <p><%= enroll_derived_attributes %></p>
-            <table class="table" id="ageTable">
-                <tbody></tbody>
-            </table>
-
-            <p id="twoCredentialsWarning" style="display: none"><i><%= enroll_two_credentials_warning %></i></p>
-
-            <p><%= enroll_clicktoload %></p>
-            <button id="enroll" class="btn btn-primary"><%= enroll_load_button %></button>
-            <hr />
-        </div>
-    </div>
-</div>
-</body>
+        <p><%= enroll_clicktoload %></p>
+        <button id="enroll" class="yivi-web-button">
+          <%= enroll_load_button %>
+        </button>
+        <hr />
+      </div>
+    </main>
+  </body>
 </html>

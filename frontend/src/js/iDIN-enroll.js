@@ -49,7 +49,7 @@ getSetupFromJson(function() {
             //disable enroll button
             $('#enroll').prop('disabled', true);
 
-            irma.newPopup({
+            yivi.newPopup({
                 language: irma_server_conf.language,
                 session: {
                     url: irma_server_conf.server,

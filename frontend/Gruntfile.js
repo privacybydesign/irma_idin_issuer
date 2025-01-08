@@ -25,21 +25,12 @@ module.exports = function(grunt) {
     console.log("Configuration:", conf);
 
     grunt.initConfig({
-        connect: {
-            server: {
-                options: {
-                    port: 9000, // Port to run the server
-                    base: 'build', // Serve files from the 'dist' directory
-                    livereload: true, // Enable LiveReload
-                    open: true, // Automatically open in the browser
-                },
-            },
-        },
         copy: {
             node_modules: {
                 cwd: "node_modules",
                 src: [
-                    "@privacybydesign/irma-frontend/dist/irma.js",
+                    "@privacybydesign/yivi-frontend/dist/yivi.js",
+                    "@privacybydesign/yivi-css/dist/yivi.min.css",
                     "bootstrap/dist/**",
                     "jquery/dist/jquery.min.js",
                     "js-cookie/src/js.cookie.js",
@@ -105,14 +96,12 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-multi-lang-site-generator");
     grunt.loadNpmTasks("grunt-json-generator");
 
     grunt.registerTask("default", [
-        "connect",
         "copy:non_html",
         "json_generator",
         "copy:node_modules",
