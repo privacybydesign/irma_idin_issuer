@@ -35,7 +35,7 @@ getSetupFromJson(function() {
             type: 'GET',
             url: server + '/verify',
             success: function(data) {
-                irma.newPopup({
+                yivi.newPopup({
                     language: irma_server_conf.language,
                     session: {
                         url: irma_server_conf.server,
