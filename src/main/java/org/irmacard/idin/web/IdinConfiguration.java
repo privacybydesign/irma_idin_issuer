@@ -31,6 +31,7 @@ public class IdinConfiguration extends BaseConfiguration {
         BaseConfiguration.confDirName = "irma_idin_issuer";
     }
 
+    private String enroll_url;
 	private String server_name = "IRMAiDIN_test";
 	private String human_readable_name;
 
@@ -192,6 +193,10 @@ public class IdinConfiguration extends BaseConfiguration {
 	public String getIdinCredential() {
 		return idin_credential;
 	}
+
+    public String getEnrollUrl() {
+        return enroll_url;
+    }
 
 	public String getEmailAttribute() {
 		return email_attribute;

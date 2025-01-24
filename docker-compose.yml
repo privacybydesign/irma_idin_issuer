@@ -1,0 +1,38 @@
+services:
+  sms-issuer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: idin_issuer
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.secrets:/config
+    restart: unless-stopped
+    networks:
+      - app_network
+    environment:
+      CONFIG_DIR: ${CONFIG_DIR}
+      IDIN_ISSUER_ID: ${IDIN_ISSUER_ID}
+      KEYSTORE_JKS: ${KEYSTORE_JKS}
+      ISSUER_HOST_NAME: ${ISSUER_HOST_NAME}
+      IRMA_SERVER_HOST_NAME: ${IRMA_SERVER_HOST_NAME}
+
+  irma:
+    build:
+      # downloading and building, because the prebuilt one may not match our local arch
+      context: https://github.com/privacybydesign/irmago.git
+      dockerfile: Dockerfile
+    container_name: irma-server
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./.secrets:/config
+    command: server --no-tls --no-auth=false --url=http://localhost:8088 --config=/config/irma-config.json
+    restart: unless-stopped
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge

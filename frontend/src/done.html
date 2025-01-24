@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link
+      href="node_modules/bootstrap/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/@privacybydesign/yivi-css/dist/yivi.min.css"
+      rel="stylesheet"
+    />
+    <link href="css/style.css" rel="stylesheet" />
+
+    <script
+      type="text/javascript"
+      src="node_modules/jwt-decode/build/jwt-decode.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="node_modules/jquery/dist/jquery.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="node_modules/@privacybydesign/yivi-frontend/dist/yivi.js"
+    ></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/iDIN-verify.js"></script>
+
+    <title><%= done_title %></title>
+  </head>
+
+  <body>
+    <header>
+      <div class="content">
+        <img class="logo-img" src="images/idin-logo.svg" />
+        <h1><%= done_header %></h1>
+      </div>
+    </header>
+    <main class="content">
+      <div>
+        <div id="alert_box"></div>
+
+        <p><%= done_text1 %></p>
+        <p><%= done_text2 %></p>
+        <p><%= done_text3 %></p>
+
+        <button id="verify_idin_bd_btn" class="yivi-web-button">
+          <%= done_show_button %>
+        </button>
+
+        <h3 id="result_header"></h3>
+        <h4 id="result_status"></h4>
+        <p id="token-content"></p>
+
+        <a href=".."><%= done_return %></a>
+      </div>
+    </main>
+  </body>
+</html>

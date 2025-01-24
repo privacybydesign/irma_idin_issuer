@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link
+      href="node_modules/bootstrap/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="node_modules/@privacybydesign/yivi-css/dist/yivi.min.css"
+      rel="stylesheet"
+    />
+    <link href="css/style.css" rel="stylesheet" />
+
+    <script
+      type="text/javascript"
+      src="node_modules/jquery/dist/jquery.min.js"
+    ></script>
+    <script type="text/javascript" src="js/common.js"></script>
+    <script type="text/javascript" src="js/iDIN.js"></script>
+
+    <title><%= index_title %></title>
+  </head>
+
+  <body>
+    <header>
+      <div class="content">
+        <img class="logo-img" src="images/idin-logo.svg" />
+        <h1>
+          <%= index_header %>
+          <a href="https://www.idin.nl/" target="_blank">iDIN</a>
+        </h1>
+      </div>
+    </header>
+    <main class="content">
+      <form id="form" method="post">
+        <div id="alert_box"></div>
+
+        <p><%= index_explanation %></p>
+
+        <label for="back-select"><%= index_selectbank %></label>
+        <select id="bank-select">
+          <option value="default"><%= index_defaultoption %></option>
+        </select>
+        <button
+          type="submit"
+          id="continue"
+          disabled="true"
+          class="yivi-web-button"
+        >
+          Ga naar uw bank
+        </button>
+      </form>
+    </main>
+  </body>
+</html>

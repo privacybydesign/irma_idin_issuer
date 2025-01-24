@@ -1,0 +1,6 @@
+{
+    "name": "idin-issuer-dev",
+    "build": {
+        "dockerfile": "Dockerfile"
+    }
+}

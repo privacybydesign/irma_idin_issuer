@@ -5,6 +5,7 @@
     "human_readable_name": "testip",
 
     "server_url": "http://localhost:8080/",
+    "enroll_url": "http://localhost:8080/enroll.html",
 
     "scheme_manager": "irma-demo",
     "idin_issuer": "RU",
