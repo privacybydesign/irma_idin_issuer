@@ -6,8 +6,11 @@ COPY . .
 RUN cd /app/frontend && yarn install && yarn build
 
 RUN mkdir -p /var/www/
+
 RUN cp -r /app/frontend/dist/* /var/www/
-RUN chmod +755 /var/www/ 
+RUN cp -r /app/frontend/src/languages /var/www/
+RUN chmod +755 /var/www/
+
 RUN chown -R root:www-data /var/www/
 
 # -------------------------------------------------------------------------------
