@@ -10,7 +10,7 @@ buildscript {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'http://repo.javalite.io' }
+        maven { url 'https://repo.javalite.io' }
     }
     dependencies {
         classpath 'org.akhikhl.gretty:gretty:1.4.0'
