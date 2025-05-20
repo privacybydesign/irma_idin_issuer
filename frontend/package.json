@@ -21,6 +21,7 @@
     "@testing-library/react": "^14.0.0",
     "@types/js-cookie": "^3.0.3",
     "@vitejs/plugin-react": "^4.0.0",
+    "jsdom": "^26.1.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.9",
     "vitest": "^0.34.6"
