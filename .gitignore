@@ -12,4 +12,6 @@ logs/
 src/main/webapp/*
 !src/main/webapp/WEB-INF/web.xml
 genkeys/keystore.jks
+.*/node_modules
+frontend/dist
 .DS_Store

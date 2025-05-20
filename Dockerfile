@@ -1,14 +1,12 @@
 FROM node:20 AS webappbuild
 
-RUN npm install -g grunt-cli
-
 WORKDIR /app
 COPY . .
 
-RUN cd /app/frontend && yarn install && grunt build --language="en"
+RUN cd /app/frontend && yarn install && yarn build
 
 RUN mkdir -p /var/www/
-RUN cp -r /app/frontend/build/* /var/www/ 
+RUN cp -r /app/frontend/dist/* /var/www/
 RUN chmod +755 /var/www/ 
 RUN chown -R root:www-data /var/www/
 

@@ -38,6 +38,11 @@ In the `config.json` they should be named `sk.der` and `pk.der`.
 ### Docker Compose
 It's easiest to run this repo locally using Docker Compose.
 The `docker-compose.yml` file expects a `.secrets` directory with the config files and jwt keys specified above.
+
+### Frontend
+The web interface is located in the `frontend` directory and is implemented with
+Vite, React and TypeScript. Use `yarn install` followed by `yarn build` to
+generate the static files that are served by the Docker image.
 To pass the required environment variables, it's recommended to create a `.env` file too and place that in `.secrets`.
 The `.env` file should look something like the following:
 ```
