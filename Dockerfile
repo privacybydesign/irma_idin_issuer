@@ -3,11 +3,11 @@ FROM node:20 AS webappbuild
 WORKDIR /app
 COPY . .
 
-RUN cd /app/frontend && yarn install && yarn build
+RUN cd /app/frontend && npm install && npm run build
 
 RUN mkdir -p /var/www/
 
-RUN cp -r /app/frontend/dist/* /var/www/
+RUN cp -r /app/frontend/build/* /var/www/
 RUN chmod +755 /var/www/
 
 RUN chown -R root:www-data /var/www/

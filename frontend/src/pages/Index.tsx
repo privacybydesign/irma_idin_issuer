@@ -36,7 +36,10 @@ export default function IndexPage() {
       body: selected,
     })
       .then((r) => r.text())
-      .then((url) => (window.location.href = url))
+      .then((url) => {
+        console.log('Received URL:', url);
+        window.location.href = url
+      })
       .catch((e) => console.error('start failed', e));
   };
 

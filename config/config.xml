@@ -4,7 +4,7 @@
     <add key="BankId.Merchant.MerchantID" value="0750001221" />
     <add key="BankId.Merchant.SubID" value="0" />
 
-    <add key="BankId.Merchant.ReturnUrl" value="https://idin-issuer.staging.yivi.app/irma_idin_server/api/v1/idin/return" />
+    <add key="BankId.Merchant.ReturnUrl" value="http://localhost:8080/irma_idin_server/api/v1/idin/return" />
 
     <add key="BankId.Acquirer.AcquirerID" value="000341" />
     <add key="BankId.Acquirer.DirectoryUrl" value="https://openbanking1-int.worldline-solutions.com/bvn-idx-bankid-rs/bankidGateway" />
