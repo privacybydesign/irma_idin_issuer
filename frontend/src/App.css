@@ -252,3 +252,12 @@ select {
   padding: 0.5rem 0;
   width: 100%;
 }
+
+.table {
+	width: 100%;
+}
+.table th,
+.table td {
+	width: 50%;
+	text-align: left;
+}

@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import jwtDecode from 'jwt-decode';
 import { useConfig } from '../hooks';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from "react-router-dom";
 
 interface CredAttr {
   [key: string]: string;
@@ -10,6 +11,7 @@ interface CredAttr {
 
 export default function EnrollPage() {
   const config = useConfig();
+  const navigate = useNavigate();
   const [idinAttrs, setIdinAttrs] = useState<CredAttr>({});
   const [ageAttrs, setAgeAttrs] = useState<CredAttr>({});
   const { t } = useTranslation();
@@ -35,9 +37,11 @@ export default function EnrollPage() {
 
   if (!config) return <p>Loading...</p>;
 
-  const enroll = () => {
-    (window as any).yivi
-      .newPopup({
+  const enroll = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    import("@privacybydesign/yivi-frontend").then((yivi) => {
+      yivi.newPopup({
         language: config.language,
         session: {
           url: config.irma_server_url,
@@ -51,8 +55,9 @@ export default function EnrollPage() {
       })
       .start()
       .then(() => {
-        
+        navigate("/");
       });
+    });
   };
 
   return (
@@ -64,6 +69,8 @@ export default function EnrollPage() {
         </header>
         <main>
           <div id="idin-form">
+
+            <p>{t('enroll_received_attributes')}</p>
             <table className="table">
               <tbody>
                 {Object.entries(idinAttrs).map(([k, v]) => (
@@ -74,6 +81,8 @@ export default function EnrollPage() {
                 ))}
               </tbody>
             </table>
+
+            <p>{t('enroll_derived_attributes')}</p>
             <table className="table">
               <tbody>
                 {Object.entries(ageAttrs).map(([k, v]) => (
@@ -89,7 +98,7 @@ export default function EnrollPage() {
         <footer>
           <div className="actions">
             <div></div>
-            <button id="submit-button" type="submit">{t('enroll_load_button')}</button>
+            <button id="submit-button" >{t('enroll_load_button')}</button>
           </div>
         </footer>
       </form>
