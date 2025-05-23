@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useConfig, useStrings } from '../hooks';
-import { Config, Strings } from '../types';
+import { useConfig } from '../hooks';
+import { useTranslation } from 'react-i18next';
 
 interface Bank {
   issuerID: string;
@@ -9,7 +9,7 @@ interface Bank {
 
 export default function IndexPage() {
   const config = useConfig();
-  const strings = useStrings(config?.language);
+  const { t, i18n } = useTranslation();
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selected, setSelected] = useState('default');
 
@@ -26,7 +26,7 @@ export default function IndexPage() {
       });
   }, [config]);
 
-  if (!config || !strings) return <p>Loading...</p>;
+  if (!config) return <p>Loading...</p>;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,25 +41,37 @@ export default function IndexPage() {
   };
 
   return (
-    <main className="content">
-      <form onSubmit={submit} id="form">
-        <label htmlFor="bank-select">{strings.index_selectbank}</label>
-        <select
-          id="bank-select"
-          value={selected}
-          onChange={(e) => setSelected(e.target.value)}
-        >
-          <option value="default">{strings.index_defaultoption}</option>
-          {banks.map((b) => (
-            <option key={b.issuerID} value={b.issuerID}>
-              {b.issuerName}
-            </option>
-          ))}
-        </select>
-        <button className="yivi-web-button" disabled={selected === 'default'}>
-          Ga naar uw bank
-        </button>
+    <>
+      <form id="container" onSubmit={submit}>
+        <header>
+          <img className="logo-img" src="images/idin-logo.svg" />
+          <h1>{t('index_header')} <a href="https://www.idin.nl/" target="_blank">iDIN</a></h1>
+        </header>
+        <main>
+          <div id="idin-form">
+            <p>{t('index_explanation')}</p>
+            <label htmlFor="bank-select">{t('index_selectbank')}</label>
+            <select
+              id="bank-select"
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
+            >
+              <option value="default">{t('index_defaultoption')}</option>
+              {banks.map((b) => (
+                <option key={b.issuerID} value={b.issuerID}>
+                  {b.issuerName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </main>
+        <footer>
+          <div className="actions">
+            <div></div>
+            <button id="submit-button" type="submit" disabled={selected === 'default'}>{t('index_start')}</button>
+          </div>
+        </footer>
       </form>
-    </main>
+    </>
   );
 }

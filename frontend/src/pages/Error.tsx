@@ -1,18 +1,19 @@
-import React from 'react';
-import { useConfig, useStrings } from '../hooks';
+import { useConfig } from '../hooks';
 import Cookies from 'js-cookie';
+import { useTranslation } from 'react-i18next';
 
 export default function ErrorPage() {
   const config = useConfig();
-  const strings = useStrings(config?.language);
+  const { t } = useTranslation();
 
-  if (!config || !strings) return <p>Loading...</p>;
+
+  if (!config) return <p>Loading...</p>;
 
   const error = Cookies.get('error');
   return (
     <main className="content">
       <p>{error}</p>
-      <a href="/">{strings.error_text2}</a>
+      <a href="/">{t('error_text2')}</a>
     </main>
   );
 }

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import jwtDecode from 'jwt-decode';
-import { useConfig, useStrings } from '../hooks';
-import { Strings } from '../types';
+import { useConfig } from '../hooks';
+import { useTranslation } from 'react-i18next';
 
 interface CredAttr {
   [key: string]: string;
@@ -10,9 +10,9 @@ interface CredAttr {
 
 export default function EnrollPage() {
   const config = useConfig();
-  const strings = useStrings(config?.language);
   const [idinAttrs, setIdinAttrs] = useState<CredAttr>({});
   const [ageAttrs, setAgeAttrs] = useState<CredAttr>({});
+  const { t } = useTranslation();
 
   useEffect(() => {
     const token = Cookies.get('jwt');
@@ -33,7 +33,7 @@ export default function EnrollPage() {
     }
   }, [config]);
 
-  if (!config || !strings) return <p>Loading...</p>;
+  if (!config) return <p>Loading...</p>;
 
   const enroll = () => {
     (window as any).yivi
@@ -51,35 +51,48 @@ export default function EnrollPage() {
       })
       .start()
       .then(() => {
-        window.location.href = '/done';
+        
       });
   };
 
   return (
-    <main className="content">
-      <table className="table">
-        <tbody>
-          {Object.entries(idinAttrs).map(([k, v]) => (
-            <tr key={k}>
-              <th>{strings[`attribute_${k}`] || k}</th>
-              <td>{v}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <table className="table">
-        <tbody>
-          {Object.entries(ageAttrs).map(([k, v]) => (
-            <tr key={k}>
-              <th>{strings[`attribute_${k}`] || k}</th>
-              <td>{v}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button id="enroll" className="yivi-web-button" onClick={enroll}>
-        {strings.enroll_load_button}
-      </button>
-    </main>
+    <>
+      <form id="container" onSubmit={enroll}>
+        <header>
+          <img className="logo-img" src="images/idin-logo.svg" />
+          <h1>{t('index_header')} <a href="https://www.idin.nl/" target="_blank">iDIN</a></h1>
+        </header>
+        <main>
+          <div id="idin-form">
+            <table className="table">
+              <tbody>
+                {Object.entries(idinAttrs).map(([k, v]) => (
+                  <tr key={k}>
+                    <th>{t(`attribute_${k}`) || k}</th>
+                    <td>{v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <table className="table">
+              <tbody>
+                {Object.entries(ageAttrs).map(([k, v]) => (
+                  <tr key={k}>
+                    <th>{t(`attribute_${k}`) || k}</th>
+                    <td>{v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </main>
+        <footer>
+          <div className="actions">
+            <div></div>
+            <button id="submit-button" type="submit">{t('enroll_load_button')}</button>
+          </div>
+        </footer>
+      </form>
+    </>
   );
 }

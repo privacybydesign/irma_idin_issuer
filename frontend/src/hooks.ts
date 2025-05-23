@@ -12,14 +12,3 @@ export function useConfig(): Config | null {
   return config;
 }
 
-export function useStrings(language?: string): Strings | null {
-  const [strings, setStrings] = useState<Strings | null>(null);
-  useEffect(() => {
-    if (!language) return;
-    fetch(`/languages/${language}.json`)
-      .then((r) => r.json())
-      .then(setStrings)
-      .catch((e) => console.error('strings fetch failed', e));
-  }, [language]);
-  return strings;
-}
