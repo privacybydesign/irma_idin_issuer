@@ -1,0 +1,9 @@
+<urlrewrite>
+    <rule>
+        <name>SPA fallback</name>
+        <condition type="request-filename" operator="notfile" />
+        <condition type="request-filename" operator="notdir" />
+        <from>^/(.*)$</from>
+        <to>/index.html</to>
+    </rule>
+</urlrewrite>

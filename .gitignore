@@ -12,4 +12,15 @@ logs/
 src/main/webapp/*
 !src/main/webapp/WEB-INF/web.xml
 genkeys/keystore.jks
+.*/node_modules
+frontend/dist
 .DS_Store
+
+.vite
+# Node files
+node_modules/
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js

@@ -1,5 +1,5 @@
 services:
-  sms-issuer:
+  idin-issuer:
     build:
       context: .
       dockerfile: Dockerfile
