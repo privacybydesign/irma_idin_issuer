@@ -1,19 +1,20 @@
 apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
-apply plugin: 'org.akhikhl.gretty'
+apply plugin: 'org.gretty'
 
-targetCompatibility = '1.7'
-sourceCompatibility = '1.7'
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
 
 buildscript {
     repositories {
         mavenLocal()
-        jcenter()
         mavenCentral()
-        maven { url 'http://repo.javalite.io' }
+        maven {
+            url 'https://repo1.maven.org/maven2'
+        }
     }
     dependencies {
-        classpath 'org.akhikhl.gretty:gretty:1.4.0'
+        classpath 'org.gretty:gretty:4.0.3'
     }
 }
 
@@ -29,9 +30,11 @@ dependencies {
     compile 'org.glassfish.jersey.core:jersey-server:2.19'
     compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.19'
 
-    compile 'ch.qos.logback:logback-classic:1.1.7'
+    compile 'ch.qos.logback:logback-classic:1.2.13'
+
 
     compile 'io.jsonwebtoken:jjwt:0.6.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
