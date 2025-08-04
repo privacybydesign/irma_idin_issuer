@@ -1,4 +1,4 @@
-FROM openjdk:11-jdk AS build
+FROM openjdk:21-jdk AS build
 
 RUN apt-get update && apt-get install -y gradle && apt-get clean
 

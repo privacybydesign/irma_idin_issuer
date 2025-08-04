@@ -15,7 +15,7 @@ RUN chown -R root:www-data /var/www/
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM openjdk:11-jdk AS javabuild
+FROM openjdk:21-jdk-slim AS javabuild
 
 RUN apt-get update && apt-get install -y gradle && apt-get clean
 
@@ -24,13 +24,13 @@ WORKDIR /app
 COPY . .
 
 RUN mkdir -p artifacts && \
-    gradle clean && \
-    gradle build
+    ./gradlew clean && \
+    ./gradlew build
 
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
-FROM tomcat:9-jre11-temurin-focal
+FROM tomcat:9-jre21-temurin-jammy
 
 RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clean
 

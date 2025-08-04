@@ -8,7 +8,7 @@ public class IdinTransaction {
 
     private static final long DAY_IN_MILLIS = 1000*60*60*24;
 
-    public IdinTransaction(String trxid, String ec) {
+    public IdinTransaction(final String trxid, final String ec) {
         this.transactionId = trxid;
         this.entranceCode = ec;
         this.handled();
