@@ -23,8 +23,11 @@ ext {
 }
 
 dependencies {
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${jerseyVersion}"
     implementation "org.glassfish.jersey.core:jersey-server:${jerseyVersion}"
     implementation "org.glassfish.jersey.containers:jersey-container-servlet:${jerseyVersion}"
+    implementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
+
     implementation 'ch.qos.logback:logback-classic:1.1.7'
     implementation 'io.jsonwebtoken:jjwt:0.6.0'
     implementation 'org.irmacard.api:irma_api_common:1.2.1'
@@ -33,7 +36,7 @@ dependencies {
     implementation 'net.glxn:qrgen:1.4'
     implementation 'mysql:mysql-connector-java:5.1.27'
 
-    compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
     testImplementation 'junit:junit:4.11'
     testImplementation 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'

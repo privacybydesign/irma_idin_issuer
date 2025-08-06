@@ -6,9 +6,9 @@ import org.irmacard.api.common.util.GsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
+import jakarta.servlet.annotation.WebListener;
 import java.nio.file.Files;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

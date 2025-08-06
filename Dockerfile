@@ -30,7 +30,7 @@ RUN mkdir -p artifacts && \
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
-FROM tomcat:9-jre21-temurin-jammy
+FROM tomcat:10.1-jre21-temurin-jammy
 
 RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clean
 
@@ -38,8 +38,8 @@ RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clea
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Install Tuckey Rewrite Filter
-RUN curl -L -o /usr/local/tomcat/lib/urlrewritefilter-4.0.4.jar \
-    https://repo1.maven.org/maven2/org/tuckey/urlrewritefilter/4.0.4/urlrewritefilter-4.0.4.jar
+RUN curl -L -o /usr/local/tomcat/lib/urlrewritefilter-5.1.3.jar \
+    https://repo1.maven.org/maven2/org/tuckey/urlrewritefilter/5.1.3/urlrewritefilter-5.1.3.jar
 
 # Copy frontend build into ROOT webapp
 COPY --from=webappbuild /var/www/ /usr/local/tomcat/webapps/ROOT/
