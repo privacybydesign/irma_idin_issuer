@@ -23,7 +23,7 @@ ext {
 }
 
 dependencies {
-    implementation "jakarta.ws.rs:jakarta.ws.rs-api:${jerseyVersion}"
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:3.1.0"
     implementation "org.glassfish.jersey.core:jersey-server:${jerseyVersion}"
     implementation "org.glassfish.jersey.containers:jersey-container-servlet:${jerseyVersion}"
     implementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
@@ -38,11 +38,16 @@ dependencies {
 
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-    testImplementation 'junit:junit:4.11'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     testImplementation 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'
 
     // Gretty's runtime dependencies
     gretty 'commons-dbcp:commons-dbcp:1.4'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 gretty {
