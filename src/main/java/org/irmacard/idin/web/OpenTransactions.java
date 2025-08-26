@@ -37,7 +37,7 @@ public class OpenTransactions {
         LOGGER.info("Starting status requests for open and pending statuses, initially: {}", startSize);
 
         final StringBuilder closed = new StringBuilder();
-        Communicator communicator = null;
+        final Communicator communicator = new Communicator();
 
         for (final java.util.Iterator<IdinTransaction> it = OPEN_OR_PENDING_TRANSACTIONS.iterator(); it.hasNext(); ) {
             final IdinTransaction idinTransaction = it.next();
@@ -51,9 +51,6 @@ public class OpenTransactions {
             }
 
             try {
-                if (communicator == null) {
-                    communicator = new Communicator();
-                }
                 final StatusRequest statusRequest = new StatusRequest(idinTransaction.getTransactionId());
                 final StatusResponse response = communicator.getResponse(statusRequest);
                 idinTransaction.handled();

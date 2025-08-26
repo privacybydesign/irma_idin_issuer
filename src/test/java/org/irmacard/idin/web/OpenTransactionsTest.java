@@ -63,7 +63,7 @@ public class OpenTransactionsTest {
             OpenTransactions.requestStates();
 
             assertEquals(0, OpenTransactions.getHowMany());
-            assertEquals(0, mocked.constructed().size());
+            assertEquals(1, mocked.constructed().size());
         }
         verify(finished, never()).handled();
     }
@@ -80,7 +80,7 @@ public class OpenTransactionsTest {
             OpenTransactions.requestStates();
 
             assertEquals(1, OpenTransactions.getHowMany());
-            assertEquals(0, mocked.constructed().size());
+            assertEquals(1, mocked.constructed().size());
         }
         verify(young, never()).handled();
     }
