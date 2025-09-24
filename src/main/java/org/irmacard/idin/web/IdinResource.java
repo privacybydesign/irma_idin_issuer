@@ -340,6 +340,8 @@ public class IdinResource {
         attrs.putAll(ageAttrs);
 
         //add iDIN data credential
+        LOGGER.info("Now entering credentials");
+        LOGGER.info("SchemeManager: {}, IdinIssuer: {}, IdinCredentials: {}", IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getIdinIssuer(), IdinConfiguration.getInstance().getIdinCredential());
         credentials.put(credId(
                 IdinConfiguration.getInstance().getSchemeManager(),
                 IdinConfiguration.getInstance().getIdinIssuer(),
@@ -347,6 +349,8 @@ public class IdinResource {
         ), attrs);
 
         //add age limits credential if enabled
+        LOGGER.info("Now entering credentials for age limit");
+        LOGGER.info("SchemeManager: {}, AgeLimitsIssuer: {}, AgeLimitCredentials: {}", IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getAgeLimitsIssuer(), IdinConfiguration.getInstance().getAgeLimitsCredential());
         if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
             credentials.put(credId(
                     IdinConfiguration.getInstance().getSchemeManager(),
@@ -370,7 +374,7 @@ public class IdinResource {
     }
 
     private static CredentialIdentifier credId(final String scheme, final String issuer, final String credential) {
-        if (scheme == null || scheme.isEmpty() || issuer == null || issuer.isEmpty() || credential == null || credential.isEmpty()) {
+        if (scheme.isBlank() || issuer.isBlank() || credential.isBlank()) {
             throw new IllegalStateException(String.format(
                     "Missing parts for credential id (scheme='%s', issuer='%s', credential='%s')", scheme, issuer, credential));
         }
