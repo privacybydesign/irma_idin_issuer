@@ -15,17 +15,19 @@ RUN chown -R root:www-data /var/www/
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM openjdk:21-jdk-slim AS javabuild
-
-RUN apt-get update && apt-get install -y gradle && apt-get clean
-
+FROM gradle:8.10-jdk21 AS javabuild
 WORKDIR /app
 
-COPY . .
+# Layer build files first for better dependency caching
+COPY build.gradle settings.gradle gradle /app/
+# Prime the dependency cache (won't fail the build if no tasks)
+RUN gradle --no-daemon tasks || true
+
+# Now copy sources
+COPY . /app
 
 RUN mkdir -p artifacts && \
-    ./gradlew clean && \
-    ./gradlew build
+    gradle clean build --no-daemon
 
 # -------------------------------------------------------------------------------
 # Step for hosting the server
