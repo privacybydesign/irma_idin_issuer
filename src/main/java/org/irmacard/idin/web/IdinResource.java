@@ -340,7 +340,7 @@ public class IdinResource {
         attrs.putAll(ageAttrs);
 
         //add iDIN data credential
-        credentials.put(new CredentialIdentifier(
+        credentials.put(credId(
                 IdinConfiguration.getInstance().getSchemeManager(),
                 IdinConfiguration.getInstance().getIdinIssuer(),
                 IdinConfiguration.getInstance().getIdinCredential()
@@ -348,7 +348,7 @@ public class IdinResource {
 
         //add age limits credential if enabled
         if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
-            credentials.put(new CredentialIdentifier(
+            credentials.put(credId(
                     IdinConfiguration.getInstance().getSchemeManager(),
                     IdinConfiguration.getInstance().getAgeLimitsIssuer(),
                     IdinConfiguration.getInstance().getAgeLimitsCredential()
@@ -367,6 +367,14 @@ public class IdinResource {
                 IdinConfiguration.getInstance().getJwtPrivateKey()
         );
 
+    }
+
+    private static CredentialIdentifier credId(final String scheme, final String issuer, final String credential) {
+        if (scheme == null || scheme.isEmpty() || issuer == null || issuer.isEmpty() || credential == null || credential.isEmpty()) {
+            throw new IllegalStateException(String.format(
+                    "Missing parts for credential id (scheme='%s', issuer='%s', credential='%s')", scheme, issuer, credential));
+        }
+        return new CredentialIdentifier(scheme, issuer, credential);
     }
 
 }
