@@ -49,6 +49,8 @@ public class IdinResource {
 
     private static final String SUCCESS_URL = IdinConfiguration.getInstance().getEnrollUrl();
     private static final String ERROR_URL = IdinConfiguration.getInstance().getReturnUrl() + "/error.html";
+    public static final String ERROR_DESCRIPTION_BANK_UNAVAILABLE = "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer.";
+    public static final String FAILURE_MESSAGE = "Failure in system";
 
     @GET
     @Path("/banks")
@@ -109,8 +111,8 @@ public class IdinResource {
             if (response.getIsError()) {
                 logError(response.getErrorResponse());
                 return upstreamError(
-                        "Het is op dit moment niet mogelijk om iDIN te gebruiken. Probeer het later nog een keer.",
-                        "Failure in system", 504);
+                        ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                        FAILURE_MESSAGE, 504);
             }
 
             final String transactionID = response.getTransactionID();
@@ -134,45 +136,12 @@ public class IdinResource {
         } catch (final IdinException e) {
             LOGGER.error("iDIN exception", e);
             return upstreamError(
-                    "Het is op dit moment niet mogelijk om iDIN te gebruiken. Probeer het later nog een keer.",
-                    "Failure in system", 504);
+                    ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                    FAILURE_MESSAGE, 504);
         } catch (final Exception e) {
             LOGGER.error("Unexpected error starting iDIN session", e);
             return upstreamError("Er is een onverwachte fout opgetreden.", "Unexpected error", 500);
         }
-    }
-
-    /** 5xx helper (voor acquirer/upstream fouten) */
-    private static Response upstreamError(final String description, final String message, final int status) {
-        return Response.status(status)
-                .entity(Map.of(
-                        "status", status,
-                        "message", message,
-                        "description", description))
-                .type(MediaType.APPLICATION_JSON)
-                .build();
-    }
-
-    /** Alleen absolute http(s) URL’s toestaan */
-    private static boolean isValidHttpUrl(final String url) {
-        if (url == null || url.isBlank()) return false;
-        try {
-            final URI u = URI.create(url);
-            return u.isAbsolute() && ("http".equalsIgnoreCase(u.getScheme()) || "https".equalsIgnoreCase(u.getScheme()));
-        } catch (final Exception e) {
-            return false;
-        }
-    }
-
-    private void logError(final ErrorResponse err) {
-        LOGGER.error("============================ ERROR ============================");
-        LOGGER.error(err.toString());
-        LOGGER.error(err.getConsumerMessage());
-        LOGGER.error(err.getErrorCode());
-        LOGGER.error(err.getErrorDetails());
-        LOGGER.error(err.getErrorMessage());
-        LOGGER.error(err.getSuggestedAction());
-        LOGGER.error("===============================================================");
     }
 
     @GET
@@ -252,6 +221,37 @@ public class IdinResource {
             LOGGER.error(e.getMessage(), e);
         }
         return null;
+    }
+
+    private static boolean isValidHttpUrl(final String url) {
+        if (url == null || url.isBlank()) return false;
+        try {
+            final URI u = URI.create(url);
+            return u.isAbsolute() && ("http".equalsIgnoreCase(u.getScheme()) || "https".equalsIgnoreCase(u.getScheme()));
+        } catch (final Exception e) {
+            return false;
+        }
+    }
+
+    private static Response upstreamError(final String description, final String message, final int status) {
+        return Response.status(status)
+                .entity(Map.of(
+                        "status", status,
+                        "message", message,
+                        "description", description))
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+    }
+
+    private void logError(final ErrorResponse err) {
+        LOGGER.error("============================ ERROR ============================");
+        LOGGER.error(err.toString());
+        LOGGER.error(err.getConsumerMessage());
+        LOGGER.error(err.getErrorCode());
+        LOGGER.error(err.getErrorDetails());
+        LOGGER.error(err.getErrorMessage());
+        LOGGER.error(err.getSuggestedAction());
+        LOGGER.error("===============================================================");
     }
 
     private String getGenderString(final String isoCode) {
