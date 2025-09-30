@@ -18,17 +18,18 @@ RUN chown -R root:www-data /var/www/
 FROM gradle:8.10-jdk21 AS javabuild
 WORKDIR /app
 
-# Layer build files first for better dependency caching
+# Layer build files for dependency caching
 COPY build.gradle settings.gradle gradle /app/
-# Prime the dependency cache (won't fail the build if no tasks)
-RUN gradle --no-daemon tasks || true
+RUN gradle --no-daemon dependencies || true
 
-# Now copy sources
+# Copy sources
 COPY . /app
 
-RUN mkdir -p artifacts && \
-    gradle clean build --no-daemon
+# Run unit tests explicitly (build also runs tests, but this keeps intent clear)
+RUN gradle --no-daemon clean test
 
+# If tests passed, produce the artifact
+RUN mkdir -p artifacts && gradle --no-daemon build
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
