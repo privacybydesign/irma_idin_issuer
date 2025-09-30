@@ -26,11 +26,7 @@ import java.util.*;
 
 @Path("v1/idin")
 public class IdinResource {
-    public final static int IDIN_ATTRIBUTES = ServiceIds.Address
-            | ServiceIds.ConsumerBin
-            | ServiceIds.DateOfBirth
-            | ServiceIds.Gender
-            | ServiceIds.Name;
+    public final static int IDIN_ATTRIBUTES = ServiceIds.Address | ServiceIds.ConsumerBin | ServiceIds.DateOfBirth | ServiceIds.Gender | ServiceIds.Name;
 
     private static final String IDIN_SAML_BIN_KEY = "urn:nl:bvn:bankid:1.0:consumer.bin";
     private static final String IDIN_SAML_CITY_KEY = "urn:nl:bvn:bankid:1.0:consumer.city";
@@ -68,13 +64,7 @@ public class IdinResource {
     public String getVerificationJWT() {
         final AttributeDisjunctionList list = new AttributeDisjunctionList(1);
         list.add(new AttributeDisjunction("Geboortedatum", getIdinBdAttributeIdentifier()));
-        return ApiClient.getDisclosureJWT(
-                list,
-                IdinConfiguration.getInstance().getServerName(),
-                IdinConfiguration.getInstance().getHumanReadableName(),
-                IdinConfiguration.getInstance().getJwtAlgorithm(),
-                IdinConfiguration.getInstance().getJwtPrivateKey()
-        );
+        return ApiClient.getDisclosureJWT(list, IdinConfiguration.getInstance().getServerName(), IdinConfiguration.getInstance().getHumanReadableName(), IdinConfiguration.getInstance().getJwtAlgorithm(), IdinConfiguration.getInstance().getJwtPrivateKey());
     }
 
     @GET
@@ -86,46 +76,92 @@ public class IdinResource {
 
     private AttributeIdentifier getIdinBdAttributeIdentifier() {
         final IdinConfiguration conf = IdinConfiguration.getInstance();
-        return new AttributeIdentifier(
-                new CredentialIdentifier(
-                        conf.getSchemeManager(),
-                        conf.getIdinIssuer(),
-                        conf.getIdinCredential()),
-                conf.getBirthdateAttribute()
-        );
+        return new AttributeIdentifier(new CredentialIdentifier(conf.getSchemeManager(), conf.getIdinIssuer(), conf.getIdinCredential()), conf.getBirthdateAttribute());
     }
 
     @POST
     @Path("/start")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response start(final String bank) {
-        if (!IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
-            throw new RuntimeException("Illegal bankcode received");
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response start(@FormParam("bank") final String bank) {
+        try {
+            if (bank == null || bank.isBlank()
+                    || !IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
+
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of(
+                                "status", 400,
+                                "message", "Bad Request",
+                                "description", "Illegal bankcode received"))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
+
+            final String merchantReference = "a" + new BigInteger(130, RANDOM).toString(32); // iDIN: moet met letter beginnen
+            final String entranceCode = new RandomString(40, SECURE_RANDOM).nextString();
+            final AuthenticationRequest request =
+                    new AuthenticationRequest(entranceCode, IDIN_ATTRIBUTES, bank, AssuranceLevel.Loa3, "nl", merchantReference);
+
+            LOGGER.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
+
+            final AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
+
+            if (response.getIsError()) {
+                logError(response.getErrorResponse());
+                return upstreamError(
+                        "Het is op dit moment niet mogelijk om iDIN te gebruiken. Probeer het later nog een keer.",
+                        "Failure in system", 504);
+            }
+
+            final String transactionID = response.getTransactionID();
+            final String issuerAuthenticationURL = response.getIssuerAuthenticationURL();
+
+            if (!isValidHttpUrl(issuerAuthenticationURL)) {
+                LOGGER.warn("No valid issuerAuthenticationURL for trxid {}. Value: {}", transactionID, issuerAuthenticationURL);
+                return upstreamError("Ontvangen redirect-URL is ongeldig.", "Invalid issuerAuthenticationURL", 502);
+            }
+
+            LOGGER.info("trxid {}: session created at bank, redirecting to {}", transactionID, issuerAuthenticationURL);
+
+            final IdinTransaction it = new IdinTransaction(transactionID, entranceCode);
+            OpenTransactions.addTransaction(it);
+
+            return Response.ok(Map.of(
+                            "redirectUrl", issuerAuthenticationURL,
+                            "trxid", transactionID))
+                    .build();
+
+        } catch (final IdinException e) {
+            LOGGER.error("iDIN exception", e);
+            return upstreamError(
+                    "Het is op dit moment niet mogelijk om iDIN te gebruiken. Probeer het later nog een keer.",
+                    "Failure in system", 504);
+        } catch (final Exception e) {
+            LOGGER.error("Unexpected error starting iDIN session", e);
+            return upstreamError("Er is een onverwachte fout opgetreden.", "Unexpected error", 500);
         }
-        // Create request
-        String merchantReference = new BigInteger(130, RANDOM).toString(32);
-        //iDIN lib wants the random MerchantReference to start with a letter.
-        merchantReference = "a" + merchantReference;
+    }
 
-        final String entranceCode = new RandomString(40, SECURE_RANDOM).nextString();
-        final AuthenticationRequest request = new AuthenticationRequest(entranceCode, IDIN_ATTRIBUTES, bank, AssuranceLevel.Loa3, "nl", merchantReference);
+    /** 5xx helper (voor acquirer/upstream fouten) */
+    private static Response upstreamError(final String description, final String message, final int status) {
+        return Response.status(status)
+                .entity(Map.of(
+                        "status", status,
+                        "message", message,
+                        "description", description))
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+    }
 
-        LOGGER.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
-
-        // Execute request
-        final AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
-
-        // Handle request result
-        if (response.getIsError()) {
-            logError(response.getErrorResponse());
-            throw new IdinException(response.getErrorResponse());
+    /** Alleen absolute http(s) URL’s toestaan */
+    private static boolean isValidHttpUrl(final String url) {
+        if (url == null || url.isBlank()) return false;
+        try {
+            final URI u = URI.create(url);
+            return u.isAbsolute() && ("http".equalsIgnoreCase(u.getScheme()) || "https".equalsIgnoreCase(u.getScheme()));
+        } catch (final Exception e) {
+            return false;
         }
-        LOGGER.info("trxid {}: session created at bank, redirecting to {}",
-                response.getTransactionID(),
-                response.getIssuerAuthenticationURL());
-        final IdinTransaction it = new IdinTransaction(response.getTransactionID(), entranceCode);
-        OpenTransactions.addTransaction(it);
-        return Response.accepted(response.getIssuerAuthenticationURL()).build();
     }
 
     private void logError(final ErrorResponse err) {
@@ -327,11 +363,8 @@ public class IdinResource {
         //get iDIN data credential
         final HashMap<String, String> attrs = new HashMap<>();
         attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(IDIN_SAML_INITIALS_KEY));
-        attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
-                (attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) == null ? "" : attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) + " ")
-                        + attributes.get(IDIN_SAML_LAST_NAME_KEY));
-        attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(),
-                getDobString(dob));
+        attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(), (attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) == null ? "" : attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) + " ") + attributes.get(IDIN_SAML_LAST_NAME_KEY));
+        attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(), getDobString(dob));
         attrs.put(IdinConfiguration.getInstance().getGenderAttribute(), getGenderString(attributes.get(IDIN_SAML_GENDER_KEY)));
         attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), addressLine);
         attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(IDIN_SAML_CITY_KEY));
@@ -340,19 +373,11 @@ public class IdinResource {
         attrs.putAll(ageAttrs);
 
         //add iDIN data credential
-        credentials.put(credId(
-                IdinConfiguration.getInstance().getSchemeManager(),
-                IdinConfiguration.getInstance().getIdinIssuer(),
-                IdinConfiguration.getInstance().getIdinCredential()
-        ), attrs);
+        credentials.put(credId(IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getIdinIssuer(), IdinConfiguration.getInstance().getIdinCredential()), attrs);
 
         //add age limits credential if enabled
         if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
-            credentials.put(credId(
-                    IdinConfiguration.getInstance().getSchemeManager(),
-                    IdinConfiguration.getInstance().getAgeLimitsIssuer(),
-                    IdinConfiguration.getInstance().getAgeLimitsCredential()
-            ), ageAttrs);
+            credentials.put(credId(IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getAgeLimitsIssuer(), IdinConfiguration.getInstance().getAgeLimitsCredential()), ageAttrs);
         }
 
         final Calendar calendar = Calendar.getInstance();
@@ -360,19 +385,13 @@ public class IdinResource {
 
         final IdentityProviderRequest iprequest = ApiClient.getIdentityProviderRequest(credentials, calendar.getTimeInMillis() / 1000);
 
-        return ApiClient.getSignedIssuingJWT(iprequest,
-                IdinConfiguration.getInstance().getServerName(),
-                IdinConfiguration.getInstance().getHumanReadableName(),
-                IdinConfiguration.getInstance().getJwtAlgorithm(),
-                IdinConfiguration.getInstance().getJwtPrivateKey()
-        );
+        return ApiClient.getSignedIssuingJWT(iprequest, IdinConfiguration.getInstance().getServerName(), IdinConfiguration.getInstance().getHumanReadableName(), IdinConfiguration.getInstance().getJwtAlgorithm(), IdinConfiguration.getInstance().getJwtPrivateKey());
 
     }
 
     private static CredentialIdentifier credId(final String scheme, final String issuer, final String credential) {
         if (scheme.isBlank() || issuer.isBlank() || credential.isBlank()) {
-            throw new IllegalStateException(String.format(
-                    "Missing parts for credential id (scheme='%s', issuer='%s', credential='%s')", scheme, issuer, credential));
+            throw new IllegalStateException(String.format("Missing parts for credential id (scheme='%s', issuer='%s', credential='%s')", scheme, issuer, credential));
         }
         return new CredentialIdentifier(scheme, issuer, credential);
     }

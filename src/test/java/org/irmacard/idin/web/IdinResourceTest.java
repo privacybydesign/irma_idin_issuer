@@ -88,7 +88,7 @@ public final class IdinResourceTest {
     }
 
     @Test
-    public void start_throwsWhenBankCodeInvalid() {
+    public void start_returns400WhenBankCodeInvalid() {
         final IdinIssuers idinIssuers = mock(IdinIssuers.class);
         when(idinIssuers.containsBankCode(BANK_CODE_INVALID)).thenReturn(false);
 
@@ -98,12 +98,19 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class)) {
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
             final IdinResource idinResource = new IdinResource();
-            assertThrows(RuntimeException.class, () -> idinResource.start(BANK_CODE_INVALID));
+            final Response response = idinResource.start(BANK_CODE_INVALID);
+
+            assertEquals(400, response.getStatus());
+            assertInstanceOf(Map.class, response.getEntity());
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            assertEquals(400, body.get("status"));
+            assertEquals("Bad Request", body.get("message"));
         }
     }
 
     @Test
-    public void start_returnsAcceptedAndAddsTransactionOnSuccess() {
+    public void start_returnsOkJsonAndAddsTransactionOnSuccess() {
         final IdinIssuers idinIssuers = mock(IdinIssuers.class);
         when(idinIssuers.containsBankCode(BANK_CODE_VALID)).thenReturn(true);
 
@@ -128,8 +135,12 @@ public final class IdinResourceTest {
             final IdinResource idinResource = new IdinResource();
             final Response response = idinResource.start(BANK_CODE_VALID);
 
-            assertEquals(202, response.getStatus());
-            assertEquals(ISSUER_AUTHENTICATION_URL, response.getEntity());
+            assertEquals(200, response.getStatus());
+            assertInstanceOf(Map.class, response.getEntity());
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            assertEquals(ISSUER_AUTHENTICATION_URL, body.get("redirectUrl"));
+            assertEquals(TRANSACTION_ID, body.get("trxid"));
             openTransactionsMockedStatic.verify(() -> OpenTransactions.addTransaction(any(IdinTransaction.class)));
         }
     }
@@ -215,7 +226,7 @@ public final class IdinResourceTest {
     }
 
     @Test
-    public void start_throwsIdinExceptionWhenAuthenticationResponseIsError() {
+    public void start_returns504JsonWhenAuthenticationResponseIsError() {
         final IdinIssuers idinIssuers = mock(IdinIssuers.class);
         when(idinIssuers.containsBankCode(BANK_CODE_VALID)).thenReturn(true);
 
@@ -235,7 +246,14 @@ public final class IdinResourceTest {
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
 
             final IdinResource idinResource = new IdinResource();
-            assertThrows(IdinException.class, () -> idinResource.start(BANK_CODE_VALID));
+            final Response response = idinResource.start(BANK_CODE_VALID);
+
+            assertEquals(504, response.getStatus());
+            assertTrue(response.getEntity() instanceof Map);
+            @SuppressWarnings("unchecked")
+            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            assertEquals(504, body.get("status"));
+            assertEquals("Failure in system", body.get("message"));
         }
     }
 
