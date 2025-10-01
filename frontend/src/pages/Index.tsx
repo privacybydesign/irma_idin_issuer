@@ -9,11 +9,15 @@ interface Bank {
 
 export default function IndexPage() {
   const config = useConfig();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selected, setSelected] = useState('default');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = t('index_title');
+  }, [i18n.language, t]);
 
   useEffect(() => {
     if (!config) return;
