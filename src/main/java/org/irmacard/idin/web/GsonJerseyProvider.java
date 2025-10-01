@@ -35,59 +35,59 @@ package org.irmacard.idin.web;
 
 import org.irmacard.api.common.util.GsonUtil;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.MessageBodyReader;
+import jakarta.ws.rs.ext.MessageBodyWriter;
+import jakarta.ws.rs.ext.Provider;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 
 @Provider
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class GsonJerseyProvider implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
-	private static final String UTF_8 = "UTF-8";
 
 	@Override
-	public boolean isReadable(Class<?> type, Type genericType,
-							  Annotation[] annotations, MediaType mediaType) {
+	public boolean isReadable(final Class<?> type, final Type genericType,
+                              final Annotation[] annotations, final MediaType mediaType) {
 		return true;
 	}
 
 	@Override
-	public Object readFrom(Class<Object> type, Type genericType,
-						   Annotation[] annotations, MediaType mediaType,
-						   MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
+	public Object readFrom(final Class<Object> type, final Type genericType,
+                           final Annotation[] annotations, final MediaType mediaType,
+                           final MultivaluedMap<String, String> httpHeaders, final InputStream entityStream)
 			throws IOException {
-		try (InputStreamReader streamReader = new InputStreamReader(entityStream, UTF_8)) {
+		try (final InputStreamReader streamReader = new InputStreamReader(entityStream, StandardCharsets.UTF_8)) {
 			return GsonUtil.getGson().fromJson(streamReader, genericType);
 		}
 	}
 
 	@Override
-	public boolean isWriteable(Class<?> type, Type genericType,
-							   Annotation[] annotations, MediaType mediaType) {
+	public boolean isWriteable(final Class<?> type, final Type genericType,
+                               final Annotation[] annotations, final MediaType mediaType) {
 		return true;
 	}
 
 	@Override
-	public long getSize(Object object, Class<?> type, Type genericType,
-						Annotation[] annotations, MediaType mediaType) {
+	public long getSize(final Object object, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType) {
 		return -1;
 	}
 
 	@Override
-	public void writeTo(Object object, Class<?> type, Type genericType,
-						Annotation[] annotations, MediaType mediaType,
-						MultivaluedMap<String, Object> httpHeaders,
-						OutputStream entityStream) throws IOException,
+	public void writeTo(final Object object, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException,
 			WebApplicationException {
-		try (OutputStreamWriter writer = new OutputStreamWriter(entityStream, UTF_8)) {
+		try (final OutputStreamWriter writer = new OutputStreamWriter(entityStream, StandardCharsets.UTF_8)) {
 			GsonUtil.getGson().toJson(object, genericType, writer);
 		}
 	}

@@ -1,6 +1,5 @@
 package org.irmacard.idin.web;
 
-import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
@@ -30,7 +29,7 @@ public class RandomString {
 
     private final char[] buf;
 
-    public RandomString(int length, Random random, String symbols) {
+    public RandomString(final int length, final Random random, final String symbols) {
         if (length < 1) throw new IllegalArgumentException();
         if (symbols.length() < 2) throw new IllegalArgumentException();
         this.random = Objects.requireNonNull(random);
@@ -41,7 +40,7 @@ public class RandomString {
     /**
      * Create an alphanumeric string generator.
      */
-    public RandomString(int length, Random random) {
+    public RandomString(final int length, final Random random) {
         this(length, random, alphanum);
     }
 }

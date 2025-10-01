@@ -7,9 +7,9 @@ import net.bankid.merchant.library.ErrorResponse;
  */
 public class IdinException extends RuntimeException {
 
-    private ErrorResponse error;
+    private final ErrorResponse error;
 
-    public IdinException (ErrorResponse resp){
+    public IdinException (final ErrorResponse resp){
         error = resp;
     }
 

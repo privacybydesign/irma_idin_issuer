@@ -10,21 +10,21 @@ import java.io.StringWriter;
  * (although it can also hold other {@link Throwable}s).
  */
 public class IdinErrorMessage {
-    private int status;
-    private String description;
-    private String message;
-    private String stacktrace;
+    private final int status;
+    private final String description;
+    private final String message;
+    private final String stacktrace;
 
 
     /**
      * Construct a new error message.
      * @param ex cause of the problem
      */
-    public IdinErrorMessage(Throwable ex) {
+    public IdinErrorMessage(final Throwable ex) {
         if (ex instanceof IdinException) {
             //IF we get an IdinException, then the blame lies upstream
             this.status = 504;
-            ErrorResponse error = ((IdinException) ex).getError();
+            final ErrorResponse error = ((IdinException) ex).getError();
             this.message = error.getErrorMessage();
             this.description = error.getConsumerMessage();
         } else {
@@ -56,8 +56,8 @@ public class IdinErrorMessage {
         return stacktrace;
     }
 
-    public static String getExceptionStacktrace(Throwable ex) {
-        StringWriter errorStackTrace = new StringWriter();
+    public static String getExceptionStacktrace(final Throwable ex) {
+        final StringWriter errorStackTrace = new StringWriter();
         ex.printStackTrace(new PrintWriter(errorStackTrace));
         return errorStackTrace.toString();
     }

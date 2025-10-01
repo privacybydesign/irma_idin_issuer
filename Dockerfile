@@ -15,22 +15,25 @@ RUN chown -R root:www-data /var/www/
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM openjdk:11-jdk AS javabuild
-
-RUN apt-get update && apt-get install -y gradle && apt-get clean
-
+FROM gradle:8.10-jdk21 AS javabuild
 WORKDIR /app
 
-COPY . .
+# Layer build files for dependency caching
+COPY build.gradle settings.gradle gradle /app/
+RUN gradle --no-daemon dependencies || true
 
-RUN mkdir -p artifacts && \
-    gradle clean && \
-    gradle build
+# Copy sources
+COPY . /app
 
+# Run unit tests explicitly (build also runs tests, but this keeps intent clear)
+RUN gradle --no-daemon clean test
+
+# If tests passed, produce the artifact
+RUN mkdir -p artifacts && gradle --no-daemon build
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
-FROM tomcat:9-jre11-temurin-focal
+FROM tomcat:10.1-jre21-temurin-jammy
 
 RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clean
 
@@ -38,8 +41,8 @@ RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clea
 RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Install Tuckey Rewrite Filter
-RUN curl -L -o /usr/local/tomcat/lib/urlrewritefilter-4.0.4.jar \
-    https://repo1.maven.org/maven2/org/tuckey/urlrewritefilter/4.0.4/urlrewritefilter-4.0.4.jar
+RUN curl -L -o /usr/local/tomcat/lib/urlrewritefilter-5.1.3.jar \
+    https://repo1.maven.org/maven2/org/tuckey/urlrewritefilter/5.1.3/urlrewritefilter-5.1.3.jar
 
 # Copy frontend build into ROOT webapp
 COPY --from=webappbuild /var/www/ /usr/local/tomcat/webapps/ROOT/

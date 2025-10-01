@@ -1,51 +1,55 @@
-apply plugin: 'war'
-apply plugin: 'eclipse-wtp'
-apply plugin: 'org.akhikhl.gretty'
 
-targetCompatibility = '1.7'
-sourceCompatibility = '1.7'
+plugins {
+    id 'java'
+    id 'war'
+    id 'eclipse-wtp'
+    id 'org.gretty' version '4.1.7'
+}
 
-buildscript {
-    repositories {
-        mavenLocal()
-        jcenter()
-        mavenCentral()
-        maven { url 'http://repo.javalite.io' }
-    }
-    dependencies {
-        classpath 'org.akhikhl.gretty:gretty:1.4.0'
-    }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
     mavenLocal()
-    maven {
-        url "https://credentials.github.io/repos/maven2/"
-    }
     mavenCentral()
+    maven { url "https://credentials.github.io/repos/maven2/" }
+}
+
+ext {
+    jerseyVersion = '3.1.10'
 }
 
 dependencies {
-    compile 'org.glassfish.jersey.core:jersey-server:2.19'
-    compile 'org.glassfish.jersey.containers:jersey-container-servlet:2.19'
+    implementation "jakarta.ws.rs:jakarta.ws.rs-api:3.1.0"
+    implementation "org.glassfish.jersey.core:jersey-server:${jerseyVersion}"
+    implementation "org.glassfish.jersey.containers:jersey-container-servlet:${jerseyVersion}"
+    implementation "org.glassfish.jersey.inject:jersey-hk2:${jerseyVersion}"
 
-    compile 'ch.qos.logback:logback-classic:1.1.7'
+    implementation 'ch.qos.logback:logback-classic:1.1.7'
+    implementation 'io.jsonwebtoken:jjwt:0.6.0'
+    implementation 'org.irmacard.api:irma_api_common:1.2.1'
+    implementation 'foundation.privacybydesign.common:irma_server_common:0.3.2'
+    implementation files('libs/net.bankid.merchant.library.jar')
+    implementation 'net.glxn:qrgen:1.4'
+    implementation 'mysql:mysql-connector-java:5.1.27'
 
-    compile 'io.jsonwebtoken:jjwt:0.6.0'
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'
 
-    compile 'org.irmacard.api:irma_api_common:1.2.1'
-    compile 'foundation.privacybydesign.common:irma_server_common:0.3.2'
-
-    compile files('libs/net.bankid.merchant.library.jar')
-
+    // Gretty's runtime dependencies
     gretty 'commons-dbcp:commons-dbcp:1.4'
-    compile 'net.glxn:qrgen:1.4'
-    compile 'mysql:mysql-connector-java:5.1.27'
+}
 
-    testCompile "junit:junit:4.11"
-    testCompile 'org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-jetty:2.19'
+test {
+    useJUnitPlatform()
 }
 
 gretty {

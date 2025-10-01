@@ -1,8 +1,7 @@
 package org.irmacard.idin.web;
 
-import foundation.privacybydesign.common.BaseConfiguration;
-
 import com.google.gson.JsonSyntaxException;
+import foundation.privacybydesign.common.BaseConfiguration;
 import io.jsonwebtoken.SignatureAlgorithm;
 import net.bankid.merchant.library.Configuration;
 import org.irmacard.api.common.util.GsonUtil;
@@ -23,274 +22,274 @@ import java.security.spec.X509EncodedKeySpec;
 
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal", "unused"})
 public class IdinConfiguration extends BaseConfiguration {
-	private static Logger logger = LoggerFactory.getLogger(IdinConfiguration.class);
-	private static final String filename = "config.json";
-	private static IdinConfiguration instance;
+    private static final Logger LOGGER = LoggerFactory.getLogger(IdinConfiguration.class);
+    private static final String FILENAME = "config.json";
+    private static IdinConfiguration instance;
 
-	static {
+    static {
         BaseConfiguration.confDirName = "irma_idin_issuer";
     }
 
     private String enroll_url;
-	private String server_name = "IRMAiDIN_test";
-	private String human_readable_name;
+    private String server_name = "IRMAiDIN_test";
+    private String human_readable_name;
 
-	private String return_url = "";
+    private String return_url = "";
 
-	private String scheme_manager = "";
-	private String idin_issuer = "";
-	private String idin_credential = "";
-	private boolean age_limits_credential_enabled = true;
-	private String age_limits_credential = "";
+    private String scheme_manager = "";
+    private String idin_issuer = "";
+    private String idin_credential = "";
+    private boolean age_limits_credential_enabled = true;
+    private String age_limits_credential = "";
 
 
-	private String initials_attribute = "";
-	private String lastname_attribute = "";
-	private String address_attribute = "";
-	private String city_attribute = "";
-	private String postalcode_attribute = "";
-	private String birthdate_attribute = "";
-	private String gender_attribute = "";
-	private String email_attribute = "";
-	private String tel_attribute = "";
-	private String country_attribute = "";
+    private String initials_attribute = "";
+    private String lastname_attribute = "";
+    private String address_attribute = "";
+    private String city_attribute = "";
+    private String postalcode_attribute = "";
+    private String birthdate_attribute = "";
+    private String gender_attribute = "";
+    private String email_attribute = "";
+    private String tel_attribute = "";
+    private String country_attribute = "";
 
-	private String idin_issuers_path = "banks.json";
-	private transient IdinIssuers issuers;
+    private String idin_issuers_path = "banks.json";
+    private transient IdinIssuers issuers;
 
-	private String jwt_privatekey = "sk.der";
-	private String jwt_publickey = "pk.der";
-	private transient PrivateKey jwtPrivateKey;
-	private transient PublicKey jwtPublicKey;
+    private String jwt_privatekey = "sk.der";
+    private String jwt_publickey = "pk.der";
+    private transient PrivateKey jwtPrivateKey;
+    private transient PublicKey jwtPublicKey;
 
-	private static String iDinLibConfigLocation ="config.xml";
+    private static final String iDinLibConfigLocation = "config.xml";
 
-	/** Path to the file from which the iDIN issier list is saved and loaded */
-	public Path getIdinIssuersPath() {
-		return Paths.get(idin_issuers_path);
-	}
+    /**
+     * Path to the file from which the iDIN issier list is saved and loaded
+     */
+    public Path getIdinIssuersPath() {
+        return Paths.get(idin_issuers_path);
+    }
 
-	/**
-	 * Get the list of iDIN issuers (kept up to date by the {@link BackgroundJobManager})
-	 * @return List of issuers, or null if the serialized issuer file
-	 *         (see {@link #getIdinIssuersPath()}) could not be read
-	 */
-	public IdinIssuers getIdinIssuers() {
-		if (issuers == null) {
-			try {
-				byte[] bytes = Files.readAllBytes(IdinConfiguration.getInstance().getIdinIssuersPath());
-				issuers = GsonUtil.getGson().fromJson(new String(bytes), IdinIssuers.class);
-			} catch (Exception e) {
-				return null;
-			}
-		}
+    /**
+     * Get the list of iDIN issuers (kept up to date by the {@link BackgroundJobManager})
+     *
+     * @return List of issuers, or null if the serialized issuer file
+     * (see {@link #getIdinIssuersPath()}) could not be read
+     */
+    public IdinIssuers getIdinIssuers() {
+        if (issuers == null) {
+            try {
+                final byte[] bytes = Files.readAllBytes(IdinConfiguration.getInstance().getIdinIssuersPath());
+                issuers = GsonUtil.getGson().fromJson(new String(bytes), IdinIssuers.class);
+            } catch (final Exception e) {
+                return null;
+            }
+        }
 
-		return issuers;
-	}
+        return issuers;
+    }
 
-	public static void loadIdinConfiguration() {
-		getInstance();
-		try {
-			URL config = getConfigurationDirectory().resolve(iDinLibConfigLocation).toURL();
-			if (config == null) {
-				throw new Exception("Could not load iDin configfile: "+iDinLibConfigLocation);
-			}
-			InputStream configS = config.openStream();
-			if (configS == null) {
-				throw new Exception("Could not open iDin configfile: "+iDinLibConfigLocation);
-			}
-			Configuration.defaultInstance().Load(configS);
-		} catch (Exception e) {
-			logger.error("Could not load iDIN configuration");
-			logger.error(e.getMessage());
-			throw new RuntimeException(e);
-		}
-	}
+    public static void loadIdinConfiguration() {
+        getInstance();
+        try {
+            final URL config = getConfigurationDirectory().resolve(iDinLibConfigLocation).toURL();
+            if (config == null) {
+                throw new Exception("Could not load iDin configfile: " + iDinLibConfigLocation);
+            }
+            final InputStream configS = config.openStream();
+            if (configS == null) {
+                throw new Exception("Could not open iDin configfile: " + iDinLibConfigLocation);
+            }
+            Configuration.defaultInstance().Load(configS);
+        } catch (final Exception e) {
+            LOGGER.error("Could not load iDIN configuration");
+            LOGGER.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 
-	/**
-	 * Reloads the configuration from disk so that {@link #getInstance()} returns the updated version
-	 */
-	public static void load() {
-		try {
-			String json = new String(getResource(filename));
-			instance = GsonUtil.getGson().fromJson(json, IdinConfiguration.class);
-		} catch (IOException|JsonSyntaxException e) {
-			logger.warn("Could not load configuration file, using default values!");
-			e.printStackTrace();
-			instance = new IdinConfiguration();
-		}
+    /**
+     * Reloads the configuration from disk so that {@link #getInstance()} returns the updated version
+     */
+    public static void load() {
+        try {
+            final String json = new String(getResource(FILENAME));
+            instance = GsonUtil.getGson().fromJson(json, IdinConfiguration.class);
+        } catch (final IOException | JsonSyntaxException e) {
+            LOGGER.warn("Could not load configuration file, using default values!", e);
+            instance = new IdinConfiguration();
+        }
 
-		System.out.println("Configuration:");
-		System.out.println(instance.toString());
-	}
+        System.out.println("Configuration:");
+        System.out.println(instance.toString());
+    }
 
-	public IdinConfiguration() {}
+    public IdinConfiguration() {
+    }
 
-	public static IdinConfiguration getInstance() {
-		if (instance == null)
-			load();
+    public static IdinConfiguration getInstance() {
+        if (instance == null)
+            load();
 
-		return instance;
-	}
+        return instance;
+    }
 
-	private static PublicKey parsePublicKey(byte[] bytes) throws KeyManagementException {
-		try {
-			if (bytes == null || bytes.length == 0)
-				throw new KeyManagementException("Could not read public key");
+    private static PublicKey parsePublicKey(final byte[] bytes) throws KeyManagementException {
+        try {
+            if (bytes == null || bytes.length == 0)
+                throw new KeyManagementException("Could not read public key");
 
-			X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
+            final X509EncodedKeySpec spec = new X509EncodedKeySpec(bytes);
 
-			return KeyFactory.getInstance("RSA").generatePublic(spec);
-		} catch (NoSuchAlgorithmException |InvalidKeySpecException e) {
-			throw new KeyManagementException(e);
-		}
-	}
+            return KeyFactory.getInstance("RSA").generatePublic(spec);
+        } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new KeyManagementException(e);
+        }
+    }
 
-	public static PrivateKey parsePrivateKey(byte[] bytes) throws KeyManagementException {
-		try {
-			if (bytes == null || bytes.length == 0)
-				throw new KeyManagementException("Could not read private key");
+    public static PrivateKey parsePrivateKey(final byte[] bytes) throws KeyManagementException {
+        try {
+            if (bytes == null || bytes.length == 0)
+                throw new KeyManagementException("Could not read private key");
 
-			PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
+            final PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(bytes);
 
-			return KeyFactory.getInstance("RSA").generatePrivate(spec);
-		} catch (NoSuchAlgorithmException|InvalidKeySpecException e) {
-			throw new KeyManagementException(e);
-		}
-	}
+            return KeyFactory.getInstance("RSA").generatePrivate(spec);
+        } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new KeyManagementException(e);
+        }
+    }
 
-	public static byte[] convertStreamToByteArray(InputStream stream, int size) throws IOException {
-		byte[] buffer = new byte[size];
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
+    public static byte[] convertStreamToByteArray(final InputStream stream, final int size) throws IOException {
+        final byte[] buffer = new byte[size];
+        final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
-		int line;
-		while ((line = stream.read(buffer)) != -1) {
-			os.write(buffer, 0, line);
-		}
-		stream.close();
+        int line;
+        while ((line = stream.read(buffer)) != -1) {
+            os.write(buffer, 0, line);
+        }
+        stream.close();
 
-		os.flush();
-		os.close();
-		return os.toByteArray();
-	}
+        os.flush();
+        os.close();
+        return os.toByteArray();
+    }
 
-	public String getReturnUrl() {
-		return return_url;
-	}
+    public String getReturnUrl() {
+        return return_url;
+    }
 
-	public boolean isHttpsEnabled() {
-		return return_url.startsWith("https://");
-	}
+    public boolean isHttpsEnabled() {
+        return return_url.startsWith("https://");
+    }
 
-	public String getSchemeManager() {
-		return scheme_manager;
-	}
+    public String getSchemeManager() {
+        return scheme_manager;
+    }
 
-	public String getIdinIssuer() {
-		return idin_issuer;
-	}
+    public String getIdinIssuer() {
+        return idin_issuer;
+    }
 
-	public String getIdinCredential() {
-		return idin_credential;
-	}
+    public String getIdinCredential() {
+        return idin_credential;
+    }
 
     public String getEnrollUrl() {
         return enroll_url;
     }
 
-	public String getEmailAttribute() {
-		return email_attribute;
-	}
+    public String getEmailAttribute() {
+        return email_attribute;
+    }
 
-	public String getTelephoneAttribute() { return tel_attribute;}
+    public String getTelephoneAttribute() {
+        return tel_attribute;
+    }
 
-	public String getInitialsAttribute() {
-		return initials_attribute;
-	}
+    public String getInitialsAttribute() {
+        return initials_attribute;
+    }
 
-	public String getLastnameAttribute() {
-		return lastname_attribute;
-	}
+    public String getLastnameAttribute() {
+        return lastname_attribute;
+    }
 
-	public String getAddressAttribute() {
-		return address_attribute;
-	}
+    public String getAddressAttribute() {
+        return address_attribute;
+    }
 
-	public String getCityAttribute() {
-		return city_attribute;
-	}
+    public String getCityAttribute() {
+        return city_attribute;
+    }
 
-	public String getPostalcodeAttribute() {
-		return postalcode_attribute;
-	}
+    public String getPostalcodeAttribute() {
+        return postalcode_attribute;
+    }
 
-	public String getBirthdateAttribute() {
-		return birthdate_attribute;
-	}
+    public String getBirthdateAttribute() {
+        return birthdate_attribute;
+    }
 
-	public String getGenderAttribute() {
-		return gender_attribute;
-	}
+    public String getGenderAttribute() {
+        return gender_attribute;
+    }
 
-	public String getCountryAttribute() {
-		return country_attribute;
-	}
+    public String getCountryAttribute() {
+        return country_attribute;
+    }
 
 
-	public String getServerName() {
-		return server_name;
-	}
+    public String getServerName() {
+        return server_name;
+    }
 
-	public String getHumanReadableName() {
-		if (human_readable_name == null || human_readable_name.length() == 0)
-			return server_name;
-		else
-			return human_readable_name;
-	}
+    public String getHumanReadableName() {
+        if (human_readable_name == null || human_readable_name.isEmpty())
+            return server_name;
+        else
+            return human_readable_name;
+    }
 
-	public PublicKey getJwtPublicKey() {
-		if (jwtPublicKey == null) {
-			try {
-				jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
-			} catch (KeyManagementException|IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+    public PublicKey getJwtPublicKey() {
+        if (jwtPublicKey == null) {
+            try {
+                jwtPublicKey = parsePublicKey(getResource(jwt_publickey));
+            } catch (final KeyManagementException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-		return jwtPublicKey;
-	}
+        return jwtPublicKey;
+    }
 
-	public PrivateKey getJwtPrivateKey() {
-		if (jwtPrivateKey == null) {
-			try {
-				jwtPrivateKey = parsePrivateKey(getResource(jwt_privatekey));
-			} catch (KeyManagementException|IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
+    public PrivateKey getJwtPrivateKey() {
+        if (jwtPrivateKey == null) {
+            try {
+                jwtPrivateKey = parsePrivateKey(getResource(jwt_privatekey));
+            } catch (final KeyManagementException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-		return jwtPrivateKey;
-	}
+        return jwtPrivateKey;
+    }
 
-	public SignatureAlgorithm getJwtAlgorithm() {
-		return SignatureAlgorithm.RS256;
-	}
+    public SignatureAlgorithm getJwtAlgorithm() {
+        return SignatureAlgorithm.RS256;
+    }
 
-	@Override
-	public String toString() {
-		return GsonUtil.getGson().toJson(this);
-	}
+    public String getAgeLimitsIssuer() {
+        //currently the same issuer
+        return idin_issuer;
+    }
 
-	public String getAgeLimitsIssuer() {
-		//currently the same issuer
-		return idin_issuer;
-	}
+    public String getAgeLimitsCredential() {
+        return age_limits_credential;
+    }
 
-	public String getAgeLimitsCredential() {
-		return age_limits_credential;
-	}
-
-	public boolean isAgeLimitsCredentialEnabled() {
-		return age_limits_credential_enabled;
-	}
+    public boolean isAgeLimitsCredentialEnabled() {
+        return age_limits_credential_enabled;
+    }
 }

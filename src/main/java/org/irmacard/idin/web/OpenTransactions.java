@@ -5,72 +5,83 @@ import net.bankid.merchant.library.StatusRequest;
 import net.bankid.merchant.library.StatusResponse;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class OpenTransactions {
 
-    private static org.slf4j.Logger logger = LoggerFactory.getLogger(OpenTransactions.class);
-    private static Set<IdinTransaction> openOrPendingTransactions = new HashSet<>();
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(OpenTransactions.class);
+    private static final Set<IdinTransaction> OPEN_OR_PENDING_TRANSACTIONS = new HashSet<>();
 
-    public OpenTransactions() {}
+    public OpenTransactions() {
+    }
 
-    public static String getOpenTransactions(){
-        StringBuilder open = new StringBuilder();
-        for (IdinTransaction it: openOrPendingTransactions){
+    public static String getOpenTransactions() {
+        final StringBuilder open = new StringBuilder();
+        for (final IdinTransaction it : OPEN_OR_PENDING_TRANSACTIONS) {
             open.append(it.getTransactionId()).append(", ");
         }
         return open.toString();
     }
 
-    public static synchronized void addTransaction (IdinTransaction it){
-        openOrPendingTransactions.add(it);
+    public static synchronized void addTransaction(final IdinTransaction it) {
+        OPEN_OR_PENDING_TRANSACTIONS.add(it);
     }
 
-    public static synchronized int getHowMany(){
-        return openOrPendingTransactions.size();
+    public static synchronized int getHowMany() {
+        return OPEN_OR_PENDING_TRANSACTIONS.size();
     }
 
-    public static synchronized void requestStates(){
-        StringBuilder closed = new StringBuilder();
-        int startSize = openOrPendingTransactions.size();
-        logger.info("Starting status requests for open and pending statusses, initially: {}", startSize);
-        for (IdinTransaction it: openOrPendingTransactions){
-            if (it.isFinished()) {
-                openOrPendingTransactions.remove(it);
-                continue;
-            } else if (!it.isOneDayOld()) {
-                // According to the IDIN specs we are only allowed to check the transaction status once a day
+    public static synchronized void requestStates() {
+        final int startSize = OPEN_OR_PENDING_TRANSACTIONS.size();
+        LOGGER.info("Starting status requests for open and pending statuses, initially: {}", startSize);
+
+        final StringBuilder closed = new StringBuilder();
+        final Communicator communicator = new Communicator();
+
+        for (final java.util.Iterator<IdinTransaction> it = OPEN_OR_PENDING_TRANSACTIONS.iterator(); it.hasNext(); ) {
+            final IdinTransaction idinTransaction = it.next();
+
+            if (idinTransaction.isFinished()) {
+                it.remove();
                 continue;
             }
-            StatusRequest sr = new StatusRequest(it.getTransactionId());
-            StatusResponse response = new Communicator().getResponse(sr);
-            it.handled();
-            switch (response.getStatus()) {
-                case StatusResponse.Success:
-                case StatusResponse.Cancelled:
-                case StatusResponse.Expired:
-                case StatusResponse.Failure:
-                    closed.append(it.getTransactionId()).append(", ");
-                    openOrPendingTransactions.remove(it);
-                    break;
-                case StatusResponse.Open:
-                case StatusResponse.Pending:
-                default:
-                    break;
+            if (!idinTransaction.isOneDayOld()) {
+                continue;
+            }
+
+            try {
+                final StatusRequest statusRequest = new StatusRequest(idinTransaction.getTransactionId());
+                final StatusResponse response = communicator.getResponse(statusRequest);
+                idinTransaction.handled();
+
+                switch (response.getStatus()) {
+                    case StatusResponse.Success:
+                    case StatusResponse.Cancelled:
+                    case StatusResponse.Expired:
+                    case StatusResponse.Failure:
+                        closed.append(idinTransaction.getTransactionId()).append(", ");
+                        it.remove();
+                        break;
+                    case StatusResponse.Open:
+                    case StatusResponse.Pending:
+                    default:
+                        break;
+                }
+            } catch (final Exception exception) {
+                LOGGER.warn("Status check failed for {}: {}", idinTransaction.getTransactionId(), exception.toString());
             }
         }
-        logger.info("Finished with status Requests, ended with: {}", openOrPendingTransactions.size());
-        logger.info("Transactions now closed: {}",closed.toString());
-        logger.info("Transactions still open: {}",getOpenTransactions());
+
+        LOGGER.info("Finished with status requests, ended with: {}", OPEN_OR_PENDING_TRANSACTIONS.size());
+        LOGGER.info("Transactions now closed: {}", closed);
+        LOGGER.info("Transactions still open: {}", getOpenTransactions());
     }
 
-    public static synchronized IdinTransaction findTransaction(String trxid) {
-        for (IdinTransaction it : openOrPendingTransactions) {
-            if (it.getTransactionId().equals(trxid)) {
-                return it;
+    public static synchronized IdinTransaction findTransaction(final String transactionId) {
+        for (final IdinTransaction idinTransaction : OPEN_OR_PENDING_TRANSACTIONS) {
+            if (idinTransaction.getTransactionId().equals(transactionId)) {
+                return idinTransaction;
             }
         }
         return null;

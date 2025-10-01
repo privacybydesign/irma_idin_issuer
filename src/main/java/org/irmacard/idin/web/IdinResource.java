@@ -1,5 +1,9 @@
 package org.irmacard.idin.web;
 
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 import net.bankid.merchant.library.*;
 import net.bankid.merchant.library.internal.DirectoryResponseBase;
 import org.irmacard.api.common.ApiClient;
@@ -11,10 +15,6 @@ import org.irmacard.credentials.info.CredentialIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
@@ -26,353 +26,374 @@ import java.util.*;
 
 @Path("v1/idin")
 public class IdinResource {
-	public final static int IDIN_ATTRIBUTES = ServiceIds.Address
-			| ServiceIds.ConsumerBin
-			| ServiceIds.DateOfBirth
-			| ServiceIds.Gender
-			| ServiceIds.Name;
+    public final static int IDIN_ATTRIBUTES = ServiceIds.Address | ServiceIds.ConsumerBin | ServiceIds.DateOfBirth | ServiceIds.Gender | ServiceIds.Name;
 
-	private static final String idinSamlBinKey = "urn:nl:bvn:bankid:1.0:consumer.bin";
-	private static final String idinSamlCityKey = "urn:nl:bvn:bankid:1.0:consumer.city";
-	private static final String idinSamlLastnamePrefixKey = "urn:nl:bvn:bankid:1.0:consumer.legallastnameprefix";
-	private static final String idinSamlLastNameKey = "urn:nl:bvn:bankid:1.0:consumer.legallastname";
-	private static final String idinSamlInitialsKey = "urn:nl:bvn:bankid:1.0:consumer.initials";
-	private static final String idinSamlEmailKey = "urn:nl:bvn:bankid:1.0:consumer.email";
-	private static final String idinSamlBirthdateKey = "urn:nl:bvn:bankid:1.0:consumer.dateofbirth";
-	private static final String idinSamlCountryKey = "urn:nl:bvn:bankid:1.0:consumer.country";
-	private static final String idinSamlGenderKey = "urn:nl:bvn:bankid:1.0:consumer.gender";
-	private static final String idinSamlTelephoneKey = "urn:nl:bvn:bankid:1.0:consumer.telephone";
-	private static final String idinSamlStreetKey = "urn:nl:bvn:bankid:1.0:consumer.street";
-	private static final String idinSamlHouseNoKey = "urn:nl:bvn:bankid:1.0:consumer.houseno";
-	private static final String idinSamlHouseNoSufKey = "urn:nl:bvn:bankid:1.0:consumer.housenosuf";
-	private static final String idinSamlAddressExtraKey = "urn:nl:bvn:bankid:1.0:consumer.addressextra";
-	private static final String idinSamlPostalCodeKey = "urn:nl:bvn:bankid:1.0:consumer.postalcode";
+    private static final String IDIN_SAML_BIN_KEY = "urn:nl:bvn:bankid:1.0:consumer.bin";
+    private static final String IDIN_SAML_CITY_KEY = "urn:nl:bvn:bankid:1.0:consumer.city";
+    private static final String IDIN_SAML_LASTNAME_PREFIX_KEY = "urn:nl:bvn:bankid:1.0:consumer.legallastnameprefix";
+    private static final String IDIN_SAML_LAST_NAME_KEY = "urn:nl:bvn:bankid:1.0:consumer.legallastname";
+    private static final String IDIN_SAML_INITIALS_KEY = "urn:nl:bvn:bankid:1.0:consumer.initials";
+    private static final String IDIN_SAML_BIRTHDATE_KEY = "urn:nl:bvn:bankid:1.0:consumer.dateofbirth";
+    private static final String IDIN_SAML_COUNTRY_KEY = "urn:nl:bvn:bankid:1.0:consumer.country";
+    private static final String IDIN_SAML_GENDER_KEY = "urn:nl:bvn:bankid:1.0:consumer.gender";
+    private static final String IDIN_SAML_STREET_KEY = "urn:nl:bvn:bankid:1.0:consumer.street";
+    private static final String IDIN_SAML_HOUSE_NO_KEY = "urn:nl:bvn:bankid:1.0:consumer.houseno";
+    private static final String IDIN_SAML_HOUSE_NO_SUF_KEY = "urn:nl:bvn:bankid:1.0:consumer.housenosuf";
+    private static final String IDIN_SAML_ADDRESS_EXTRA_KEY = "urn:nl:bvn:bankid:1.0:consumer.addressextra";
+    private static final String IDIN_SAML_POSTAL_CODE_KEY = "urn:nl:bvn:bankid:1.0:consumer.postalcode";
 
 
-	private static Random random = new Random();
-	private static SecureRandom secureRandom = new SecureRandom();
-	private static Logger logger = LoggerFactory.getLogger(IdinResource.class);
+    private static final Random RANDOM = new Random();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final Logger LOGGER = LoggerFactory.getLogger(IdinResource.class);
 
-	private static String successURL = IdinConfiguration.getInstance().getEnrollUrl();
-	private static String errorURL = IdinConfiguration.getInstance().getReturnUrl()+"/error.html";
+    private static final String SUCCESS_URL = IdinConfiguration.getInstance().getEnrollUrl();
+    private static final String ERROR_URL = IdinConfiguration.getInstance().getReturnUrl() + "/error.html";
+    public static final String ERROR_DESCRIPTION_BANK_UNAVAILABLE = "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer.";
+    public static final String FAILURE_MESSAGE = "Failure in system";
 
-	@GET
-	@Path("/banks")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Map<String,List<DirectoryResponseBase.Issuer>> banks() throws IOException {
-		logger.info("Bank list requested");
-		return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
-	}
+    @GET
+    @Path("/banks")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, List<DirectoryResponseBase.Issuer>> banks() throws IOException {
+        LOGGER.info("Bank list requested");
+        return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
+    }
 
-	@GET
-	@Path("/verify")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String getVerificationJWT () {
-		AttributeDisjunctionList list = new AttributeDisjunctionList(1);
-		list.add(new AttributeDisjunction("Geboortedatum", getIdinBdAttributeIdentifier()));
-		return ApiClient.getDisclosureJWT(
-				list,
-				IdinConfiguration.getInstance().getServerName(),
-				IdinConfiguration.getInstance().getHumanReadableName(),
-				IdinConfiguration.getInstance().getJwtAlgorithm(),
-				IdinConfiguration.getInstance().getJwtPrivateKey()
-		);
-	}
+    @GET
+    @Path("/verify")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getVerificationJWT() {
+        final AttributeDisjunctionList list = new AttributeDisjunctionList(1);
+        list.add(new AttributeDisjunction("Geboortedatum", getIdinBdAttributeIdentifier()));
+        return ApiClient.getDisclosureJWT(list, IdinConfiguration.getInstance().getServerName(), IdinConfiguration.getInstance().getHumanReadableName(), IdinConfiguration.getInstance().getJwtAlgorithm(), IdinConfiguration.getInstance().getJwtPrivateKey());
+    }
 
-	@GET
-	@Path("/openTransactions")
-	@Produces(MediaType.TEXT_PLAIN)
-	public String openTransactions (){
-		return OpenTransactions.getOpenTransactions();
-	}
+    @GET
+    @Path("/openTransactions")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String openTransactions() {
+        return OpenTransactions.getOpenTransactions();
+    }
 
-	private AttributeIdentifier getIdinBdAttributeIdentifier() {
-		IdinConfiguration conf = IdinConfiguration.getInstance();
-		return new AttributeIdentifier(
-				new CredentialIdentifier(
-						conf.getSchemeManager(),
-						conf.getIdinIssuer(),
-						conf.getIdinCredential()),
-				conf.getBirthdateAttribute()
-		);
-	}
+    private AttributeIdentifier getIdinBdAttributeIdentifier() {
+        final IdinConfiguration conf = IdinConfiguration.getInstance();
+        return new AttributeIdentifier(new CredentialIdentifier(conf.getSchemeManager(), conf.getIdinIssuer(), conf.getIdinCredential()), conf.getBirthdateAttribute());
+    }
 
-	@POST
-	@Path("/start")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response start (String bank){
-		if (!IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)){
-			throw new RuntimeException("Illegal bankcode received");
-		}
-		// Create request
-		String merchantReference = new BigInteger(130, random).toString(32);
-		//iDIN lib wants the random MerchantReference to start with a letter.
-		merchantReference = "a"+merchantReference;
+    @POST
+    @Path("/start")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response start(@FormParam("bank") final String bank) {
+        try {
+            if (bank == null || bank.isBlank()
+                    || !IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
 
-		String entranceCode = new RandomString(40, secureRandom).nextString();
-		AuthenticationRequest request = new AuthenticationRequest(entranceCode,IDIN_ATTRIBUTES,bank,AssuranceLevel.Loa3,"nl",merchantReference);
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of(
+                                "status", 400,
+                                "message", "Bad Request",
+                                "description", "Illegal bankcode received"))
+                        .type(MediaType.APPLICATION_JSON)
+                        .build();
+            }
 
-		logger.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
+            final String merchantReference = "a" + new BigInteger(130, RANDOM).toString(32); // iDIN: moet met letter beginnen
+            final String entranceCode = new RandomString(40, SECURE_RANDOM).nextString();
+            final AuthenticationRequest request =
+                    new AuthenticationRequest(entranceCode, IDIN_ATTRIBUTES, bank, AssuranceLevel.Loa3, "nl", merchantReference);
 
-		// Execute request
-		AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
+            LOGGER.info("Session started for bank {} with merchantReference {}", bank, merchantReference);
 
-		// Handle request result
-		if (response.getIsError()) {
-			logError(response.getErrorResponse());
-			throw new IdinException(response.getErrorResponse());
-		}
-		logger.info("trxid {}: session created at bank, redirecting to {}",
-				response.getTransactionID(),
-				response.getIssuerAuthenticationURL());
-		IdinTransaction it = new IdinTransaction(response.getTransactionID(), entranceCode);
-		OpenTransactions.addTransaction(it);
-		return Response.accepted(response.getIssuerAuthenticationURL()).build();
-	}
+            final AuthenticationResponse response = new Communicator().newAuthenticationRequest(request);
 
-	private void logError (ErrorResponse err){
-		logger.error("============================ ERROR ============================");
-		logger.error(err.toString());
-		logger.error(err.getConsumerMessage());
-		logger.error(err.getErrorCode());
-		logger.error(err.getErrorDetails());
-		logger.error(err.getErrorMessage());
-		logger.error(err.getSuggestedAction());
-		logger.error("===============================================================");
-	}
+            if (response.getIsError()) {
+                logError(response.getErrorResponse());
+                return upstreamError(
+                        ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                        FAILURE_MESSAGE, 504);
+            }
 
-	@GET
-	@Path("/return")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response authenticated(@DefaultValue("error") @QueryParam("trxid") String trxID, @QueryParam("ec") String ec){
-		NewCookie[] cookies = new NewCookie[1];
-		String followupURL = errorURL;
+            final String transactionID = response.getTransactionID();
+            final String issuerAuthenticationURL = response.getIssuerAuthenticationURL();
 
-		boolean isHttpsEnabled = IdinConfiguration.getInstance().isHttpsEnabled();
-		if (trxID.equals("error") ){
-			//landing on the return page without a trxid. Something is wrong
-			cookies[0] = new NewCookie("error","Something unexpected went wrong","/",null,null,60,isHttpsEnabled);
-			followupURL = errorURL;
-		} else {
-			logger.info("trxid {}: return url called", trxID);
+            if (!isValidHttpUrl(issuerAuthenticationURL)) {
+                LOGGER.warn("No valid issuerAuthenticationURL for trxid {}. Value: {}", transactionID, issuerAuthenticationURL);
+                return upstreamError("Ontvangen redirect-URL is ongeldig.", "Invalid issuerAuthenticationURL", 502);
+            }
 
-			IdinTransaction transaction = OpenTransactions.findTransaction(trxID);
-			if (transaction == null) {
-				logger.info("transaction with trxid {} could not be found", trxID);
-				return null;
-			} else if (!transaction.getEntranceCode().equals(ec)) {
-				// Wrong entrance code is used
-				logger.info("ec {} of trxid {} does not match with actual ec {}", ec, trxID, transaction.getEntranceCode());
-				return null;
-			}
+            LOGGER.info("trxid {}: session created at bank, redirecting to {}", transactionID, issuerAuthenticationURL);
 
-			StatusRequest sr = new StatusRequest(trxID);
-			StatusResponse response = new Communicator().getResponse(sr);
-			if (response.getIsError()) {
-				logError(response.getErrorResponse());
-				throw new IdinException(response.getErrorResponse());
-			} else {
-				logger.info("trxid {}: response status {}", trxID, response.getStatus());
-				transaction.handled();
-				switch (response.getStatus()) {
-					case StatusResponse.Success:
-						Map<String, String> attributes = response.getSamlResponse().getAttributes();
-						logger.info("trxid {}: BIN {}", trxID, attributes.get(idinSamlBinKey));
-						if (nullOrEmptyAttributes(attributes,trxID)){
-							cookies[0] = new NewCookie("error","De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen","/",null,null,60,isHttpsEnabled);
-							followupURL = errorURL;
-						} else {
-							//redirect to issuing page
-							followupURL = successURL;
-							String jwt = createIssueJWT(attributes);
-							cookies[0] = new NewCookie("jwt", jwt, "/", null, null, 600, isHttpsEnabled);
-						}
-						transaction.finished();
-						break;
-					case StatusResponse.Cancelled:
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.", "/", null, null, 60, isHttpsEnabled);
-						transaction.finished();
-						break;
-					case StatusResponse.Expired:
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
-						transaction.finished();
-						break;
-					case StatusResponse.Open:
-					case StatusResponse.Pending:
-						break;
-					case StatusResponse.Failure:
-					default:
-						transaction.finished();
-						followupURL = errorURL;
-						cookies[0] = new NewCookie("error", "Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.", "/", null, null, 60, isHttpsEnabled);
-						break;
-				}
-			}
-		}
-		try {
-			URI followupURI = new URI(followupURL);
-			return Response.seeOther(followupURI).cookie(cookies).build();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+            final IdinTransaction it = new IdinTransaction(transactionID, entranceCode);
+            OpenTransactions.addTransaction(it);
 
-	private String getGenderString(String isoCode){
-		switch (isoCode){
-			case "0":
-				return "unknown";
-			case "1":
-				return "male";
-			case "2":
-				return "female";
-			case "9":
-				return "not applicable";
-			default:
-				throw new RuntimeException("Unknown Gender value");
-		}
-	}
+            return Response.ok(Map.of(
+                            "redirectUrl", issuerAuthenticationURL,
+                            "trxid", transactionID))
+                    .build();
 
-	private String getDobString (Date dob){
-		SimpleDateFormat ourDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-		return ourDateFormat.format(dob);
-	}
+        } catch (final IdinException e) {
+            LOGGER.error("iDIN exception", e);
+            return upstreamError(
+                    ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                    FAILURE_MESSAGE, 504);
+        } catch (final Exception e) {
+            LOGGER.error("Unexpected error starting iDIN session", e);
+            return upstreamError("Er is een onverwachte fout opgetreden.", "Unexpected error", 500);
+        }
+    }
 
-	private Date getDobObject (String bd){
-		SimpleDateFormat idinDateFormat = new SimpleDateFormat("yyyyMMdd");
-		Date dob = null;
-		try {
-			dob = idinDateFormat.parse(bd);
-		} catch (ParseException e) {
-			throw new RuntimeException(e);
-		}
-		return dob;
-	}
+    @GET
+    @Path("/return")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response authenticated(@DefaultValue("error") @QueryParam("trxid") final String trxID, @QueryParam("ec") final String ec) {
+        final NewCookie[] cookies = new NewCookie[1];
+        String followupURL = ERROR_URL;
 
-	public HashMap<String, String> ageAttributes(int[] ages, Date dob) {
-		HashMap<String, String> attrs = new HashMap<>();
+        final boolean isHttpsEnabled = IdinConfiguration.getInstance().isHttpsEnabled();
+        if (trxID.equals("error")) {
+            //landing on the return page without a trxid. Something is wrong
+            cookies[0] = new NewCookie.Builder("error").value("Something unexpected went wrong").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+            followupURL = ERROR_URL;
+        } else {
+            LOGGER.info("trxid {}: return url called", trxID);
 
-		for (int age : ages) {
-			Calendar c = Calendar.getInstance();
-			c.add(Calendar.YEAR, -1 * age);
-			Date ageDate = c.getTime();
+            final IdinTransaction transaction = OpenTransactions.findTransaction(trxID);
+            if (transaction == null) {
+                LOGGER.info("transaction with trxid {} could not be found", trxID);
+                return null;
+            } else if (!transaction.getEntranceCode().equals(ec)) {
+                // Wrong entrance code is used
+                LOGGER.info("ec {} of trxid {} does not match with actual ec {}", ec, trxID, transaction.getEntranceCode());
+                return null;
+            }
 
-			String attrValue;
-			attrValue = dob.before(ageDate) ? "yes" : "no";
-			attrs.put("over" + age, attrValue);
-		}
+            final StatusRequest sr = new StatusRequest(trxID);
+            final StatusResponse response = new Communicator().getResponse(sr);
+            if (response.getIsError()) {
+                logError(response.getErrorResponse());
+                throw new IdinException(response.getErrorResponse());
+            } else {
+                LOGGER.info("trxid {}: response status {}", trxID, response.getStatus());
+                transaction.handled();
+                switch (response.getStatus()) {
+                    case StatusResponse.Success:
+                        final Map<String, String> attributes = response.getSamlResponse().getAttributes();
+                        LOGGER.info("trxid {}: BIN {}", trxID, attributes.get(IDIN_SAML_BIN_KEY));
+                        if (nullOrEmptyAttributes(attributes, trxID)) {
+                            cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                            followupURL = ERROR_URL;
+                        } else {
+                            //redirect to issuing page
+                            followupURL = SUCCESS_URL;
+                            final String jwt = createIssueJWT(attributes);
+                            cookies[0] = new NewCookie.Builder("jwt").value(jwt).path("/").domain(null).comment(null).maxAge(600).secure(isHttpsEnabled).build();
+                        }
+                        transaction.finished();
+                        break;
+                    case StatusResponse.Cancelled:
+                        followupURL = ERROR_URL;
+                        cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        transaction.finished();
+                        break;
+                    case StatusResponse.Expired:
+                        followupURL = ERROR_URL;
+                        cookies[0] = new NewCookie.Builder("error").value("De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        transaction.finished();
+                        break;
+                    case StatusResponse.Open:
+                    case StatusResponse.Pending:
+                        break;
+                    case StatusResponse.Failure:
+                    default:
+                        transaction.finished();
+                        followupURL = ERROR_URL;
+                        cookies[0] = new NewCookie.Builder("error").value("Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        break;
+                }
+            }
+        }
+        try {
+            final URI followupURI = new URI(followupURL);
+            return Response.seeOther(followupURI).cookie(cookies).build();
+        } catch (final URISyntaxException e) {
+            LOGGER.error(e.getMessage(), e);
+        }
+        return null;
+    }
 
-		return attrs;
-	}
+    private static boolean isValidHttpUrl(final String url) {
+        if (url == null || url.isBlank()) return false;
+        try {
+            final URI u = URI.create(url);
+            return u.isAbsolute() && ("http".equalsIgnoreCase(u.getScheme()) || "https".equalsIgnoreCase(u.getScheme()));
+        } catch (final Exception e) {
+            return false;
+        }
+    }
 
-	private boolean isNullOrEmpty(String val){
-		return val == null || val.length()==0;
-	}
-	private boolean nullOrEmptyAttributes (Map<String,String> attributes, String trxId){
-		boolean valueMissing = false;
-		if (isNullOrEmpty(attributes.get(idinSamlBirthdateKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing birthdate value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlInitialsKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing initials value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlLastNameKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing lastname value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlGenderKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing gender value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlStreetKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing street value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlHouseNoKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing house no value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlCityKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing city value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlPostalCodeKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing postal code value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlCountryKey))){
-			valueMissing = true;
-			logger.error("trxid {}: saml is missing country value", trxId);
-		}
-		if (isNullOrEmpty(attributes.get(idinSamlBinKey))){
-			//not aborting for missing bin, but it is recorded in the logs
-			logger.error("trxid {}: saml is missing bin value", trxId);
-		}
-		return valueMissing;
-	}
+    private static Response upstreamError(final String description, final String message, final int status) {
+        return Response.status(status)
+                .entity(Map.of(
+                        "status", status,
+                        "message", message,
+                        "description", description))
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+    }
 
-	private String createIssueJWT(Map<String, String> attributes) {
-		HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
-		Date dob = getDobObject(attributes.get(idinSamlBirthdateKey));
+    private void logError(final ErrorResponse err) {
+        LOGGER.error("============================ ERROR ============================");
+        LOGGER.error(err.toString());
+        LOGGER.error(err.getConsumerMessage());
+        LOGGER.error(err.getErrorCode());
+        LOGGER.error(err.getErrorDetails());
+        LOGGER.error(err.getErrorMessage());
+        LOGGER.error(err.getSuggestedAction());
+        LOGGER.error("===============================================================");
+    }
 
-		String addressLine = attributes.get(idinSamlStreetKey) +" "+attributes.get(idinSamlHouseNoKey);
-		if (attributes.get(idinSamlHouseNoSufKey) != null) {
-			addressLine += attributes.get(idinSamlHouseNoSufKey);
-		}
-		if (attributes.get(idinSamlAddressExtraKey) != null) {
-			addressLine += "; " + attributes.get(idinSamlAddressExtraKey);
-		}
+    private String getGenderString(final String isoCode) {
+        return switch (isoCode) {
+            case "0" -> "unknown";
+            case "1" -> "male";
+            case "2" -> "female";
+            case "9" -> "not applicable";
+            default -> throw new RuntimeException("Unknown Gender value");
+        };
+    }
 
-		int[] ages = {12,16,18,21,65};
-		HashMap<String,String> ageAttrs = ageAttributes(ages, dob);
+    private String getDobString(final Date dob) {
+        final SimpleDateFormat ourDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        return ourDateFormat.format(dob);
+    }
 
-		//get iDIN data credential
-		HashMap<String,String> attrs = new HashMap<>();
-		attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(idinSamlInitialsKey));
-		attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(),
-				(attributes.get(idinSamlLastnamePrefixKey)==null?"":attributes.get(idinSamlLastnamePrefixKey)+ " ")
-						+ attributes.get(idinSamlLastNameKey));
-		attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(),
-				getDobString(dob));
-		attrs.put(IdinConfiguration.getInstance().getGenderAttribute(),getGenderString(attributes.get(idinSamlGenderKey)));
-		attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), addressLine);
-		attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(idinSamlCityKey));
-		attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(),attributes.get(idinSamlPostalCodeKey));
-		attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(idinSamlCountryKey));
-		attrs.putAll(ageAttrs);
+    private Date getDobObject(final String bd) {
+        final SimpleDateFormat idinDateFormat = new SimpleDateFormat("yyyyMMdd");
+        Date dob = null;
+        try {
+            dob = idinDateFormat.parse(bd);
+        } catch (final ParseException e) {
+            throw new RuntimeException(e);
+        }
+        return dob;
+    }
 
-		//add iDIN data credential
-		credentials.put(new CredentialIdentifier(
-				IdinConfiguration.getInstance().getSchemeManager(),
-				IdinConfiguration.getInstance().getIdinIssuer(),
-				IdinConfiguration.getInstance().getIdinCredential()
-		), attrs);
+    public HashMap<String, String> ageAttributes(final int[] ages, final Date dob) {
+        final HashMap<String, String> attrs = new HashMap<>();
 
-		//add age limits credential if enabled
-		if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
-			credentials.put(new CredentialIdentifier(
-					IdinConfiguration.getInstance().getSchemeManager(),
-					IdinConfiguration.getInstance().getAgeLimitsIssuer(),
-					IdinConfiguration.getInstance().getAgeLimitsCredential()
-			), ageAttrs);
-		}
+        for (final int age : ages) {
+            final Calendar c = Calendar.getInstance();
+            c.add(Calendar.YEAR, -1 * age);
+            final Date ageDate = c.getTime();
 
-		Calendar calendar = Calendar.getInstance();
-		calendar.add(Calendar.YEAR, 1);
+            final String attrValue;
+            attrValue = dob.before(ageDate) ? "yes" : "no";
+            attrs.put("over" + age, attrValue);
+        }
 
-		IdentityProviderRequest iprequest = ApiClient.getIdentityProviderRequest(credentials, calendar.getTimeInMillis()/1000);
+        return attrs;
+    }
 
-		return ApiClient.getSignedIssuingJWT(iprequest,
-				IdinConfiguration.getInstance().getServerName(),
-				IdinConfiguration.getInstance().getHumanReadableName(),
-				IdinConfiguration.getInstance().getJwtAlgorithm(),
-				IdinConfiguration.getInstance().getJwtPrivateKey()
-		);
+    private boolean isNullOrEmpty(final String val) {
+        return val == null || val.isEmpty();
+    }
 
-	}
+    private boolean nullOrEmptyAttributes(final Map<String, String> attributes, final String trxId) {
+        boolean valueMissing = false;
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_BIRTHDATE_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing birthdate value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_INITIALS_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing initials value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_LAST_NAME_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing lastname value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_GENDER_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing gender value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_STREET_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing street value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_HOUSE_NO_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing house no value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_CITY_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing city value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_POSTAL_CODE_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing postal code value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_COUNTRY_KEY))) {
+            valueMissing = true;
+            LOGGER.error("trxid {}: saml is missing country value", trxId);
+        }
+        if (isNullOrEmpty(attributes.get(IDIN_SAML_BIN_KEY))) {
+            //not aborting for missing bin, but it is recorded in the logs
+            LOGGER.error("trxid {}: saml is missing bin value", trxId);
+        }
+        return valueMissing;
+    }
+
+    private String createIssueJWT(final Map<String, String> attributes) {
+        final HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
+        final Date dob = getDobObject(attributes.get(IDIN_SAML_BIRTHDATE_KEY));
+
+        String addressLine = attributes.get(IDIN_SAML_STREET_KEY) + " " + attributes.get(IDIN_SAML_HOUSE_NO_KEY);
+        if (attributes.get(IDIN_SAML_HOUSE_NO_SUF_KEY) != null) {
+            addressLine += attributes.get(IDIN_SAML_HOUSE_NO_SUF_KEY);
+        }
+        if (attributes.get(IDIN_SAML_ADDRESS_EXTRA_KEY) != null) {
+            addressLine += "; " + attributes.get(IDIN_SAML_ADDRESS_EXTRA_KEY);
+        }
+
+        final int[] ages = {12, 16, 18, 21, 65};
+        final HashMap<String, String> ageAttrs = ageAttributes(ages, dob);
+
+        //get iDIN data credential
+        final HashMap<String, String> attrs = new HashMap<>();
+        attrs.put(IdinConfiguration.getInstance().getInitialsAttribute(), attributes.get(IDIN_SAML_INITIALS_KEY));
+        attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(), (attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) == null ? "" : attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) + " ") + attributes.get(IDIN_SAML_LAST_NAME_KEY));
+        attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(), getDobString(dob));
+        attrs.put(IdinConfiguration.getInstance().getGenderAttribute(), getGenderString(attributes.get(IDIN_SAML_GENDER_KEY)));
+        attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), addressLine);
+        attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(IDIN_SAML_CITY_KEY));
+        attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(), attributes.get(IDIN_SAML_POSTAL_CODE_KEY));
+        attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(IDIN_SAML_COUNTRY_KEY));
+        attrs.putAll(ageAttrs);
+
+        //add iDIN data credential
+        credentials.put(credId(IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getIdinIssuer(), IdinConfiguration.getInstance().getIdinCredential()), attrs);
+
+        //add age limits credential if enabled
+        if (IdinConfiguration.getInstance().isAgeLimitsCredentialEnabled()) {
+            credentials.put(credId(IdinConfiguration.getInstance().getSchemeManager(), IdinConfiguration.getInstance().getAgeLimitsIssuer(), IdinConfiguration.getInstance().getAgeLimitsCredential()), ageAttrs);
+        }
+
+        final Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, 1);
+
+        final IdentityProviderRequest iprequest = ApiClient.getIdentityProviderRequest(credentials, calendar.getTimeInMillis() / 1000);
+
+        return ApiClient.getSignedIssuingJWT(iprequest, IdinConfiguration.getInstance().getServerName(), IdinConfiguration.getInstance().getHumanReadableName(), IdinConfiguration.getInstance().getJwtAlgorithm(), IdinConfiguration.getInstance().getJwtPrivateKey());
+
+    }
+
+    private static CredentialIdentifier credId(final String scheme, final String issuer, final String credential) {
+        if (scheme.isBlank() || issuer.isBlank() || credential.isBlank()) {
+            throw new IllegalStateException(String.format("Missing parts for credential id (scheme='%s', issuer='%s', credential='%s')", scheme, issuer, credential));
+        }
+        return new CredentialIdentifier(scheme, issuer, credential);
+    }
 
 }
