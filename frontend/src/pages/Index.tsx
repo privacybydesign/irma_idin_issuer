@@ -18,12 +18,11 @@ export default function IndexPage() {
   useEffect(() => {
     if (!config) return;
     fetch(`${config.idin_server_url}/api/v1/idin/banks`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`banks fetch failed: ${r.status}`);
-        return r.json();
+      .then((response) => {
+        if (!response.ok) throw new Error(`banks fetch failed: ${response.status}`);
+        return response.json();
       })
       .then((data) => {
-        // data is meestal { "Nederland": [ {issuerID, issuerName}, ... ] }
         const list: Bank[] = [];
         Object.values(data).forEach((arr: any) => {
           (arr as any[]).forEach((b: any) => list.push(b));
@@ -48,10 +47,8 @@ export default function IndexPage() {
       body: body.toString(),
     })
       .then(async (r) => {
-        // Server stuurt JSON terug (succes of fout)
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
-          // Niet-2xx met JSON body (status/description)
           const msg =
             (data && (data.description || data.message)) ||
             `Request failed: ${r.status}`;
