@@ -54,7 +54,7 @@ public class IdinResource {
     @GET
     @Path("/banks")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, List<DirectoryResponseBase.Issuer>> banks() throws IOException {
+    public Map<String, List<DirectoryResponseBase.Issuer>> banks() {
         LOGGER.info("Bank list requested");
         return IdinConfiguration.getInstance().getIdinIssuers().getIssuers();
     }
@@ -269,7 +269,7 @@ public class IdinResource {
         return dob;
     }
 
-    public HashMap<String, String> ageAttributes(final int[] ages, final Date dob) {
+    private HashMap<String, String> ageAttributes(final int[] ages, final Date dob) {
         final HashMap<String, String> attrs = new HashMap<>();
 
         for (final int age : ages) {
@@ -290,47 +290,31 @@ public class IdinResource {
     }
 
     private boolean nullOrEmptyAttributes(final Map<String, String> attributes, final String trxId) {
+        final Map<String, String> required = Map.of(
+                IDIN_SAML_BIRTHDATE_KEY, "birthdate",
+                IDIN_SAML_INITIALS_KEY, "initials",
+                IDIN_SAML_LAST_NAME_KEY, "lastname",
+                IDIN_SAML_GENDER_KEY, "gender",
+                IDIN_SAML_STREET_KEY, "street",
+                IDIN_SAML_HOUSE_NO_KEY, "house no",
+                IDIN_SAML_CITY_KEY, "city",
+                IDIN_SAML_POSTAL_CODE_KEY, "postal code",
+                IDIN_SAML_COUNTRY_KEY, "country"
+        );
+
         boolean valueMissing = false;
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_BIRTHDATE_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing birthdate value", trxId);
+        for (final var entry : required.entrySet()) {
+            if (isNullOrEmpty(attributes.get(entry.getKey()))) {
+                valueMissing = true;
+                LOGGER.error("trxid {}: saml is missing {} value", trxId, entry.getValue());
+            }
         }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_INITIALS_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing initials value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_LAST_NAME_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing lastname value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_GENDER_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing gender value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_STREET_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing street value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_HOUSE_NO_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing house no value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_CITY_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing city value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_POSTAL_CODE_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing postal code value", trxId);
-        }
-        if (isNullOrEmpty(attributes.get(IDIN_SAML_COUNTRY_KEY))) {
-            valueMissing = true;
-            LOGGER.error("trxid {}: saml is missing country value", trxId);
-        }
+
         if (isNullOrEmpty(attributes.get(IDIN_SAML_BIN_KEY))) {
-            //not aborting for missing bin, but it is recorded in the logs
+            // not aborting for missing bin, but it is recorded in the logs
             LOGGER.error("trxid {}: saml is missing bin value", trxId);
         }
+
         return valueMissing;
     }
 
