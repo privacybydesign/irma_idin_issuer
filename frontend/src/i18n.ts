@@ -8,7 +8,6 @@ i18n
     .init({
         detection: {
             order: ["navigator"],
-            caches: [],
             lookupFromPathIndex: 0,
         },
 
