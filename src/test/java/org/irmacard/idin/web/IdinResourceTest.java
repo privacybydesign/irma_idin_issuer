@@ -32,6 +32,7 @@ public final class IdinResourceTest {
     public static final String ISSUER_AUTHENTICATION_URL = "https://bank.example.org/auth";
     public static final String TRANSACTION_ID = "trx-123";
     public static final String ENTRANCE_CODE = "ec-xyz";
+    public static final String ACCEPT_LANGUAGE_EN = "en";
 
     @Test
     public void banks() throws Exception {
@@ -98,12 +99,11 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class)) {
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
             final IdinResource idinResource = new IdinResource();
-            final Response response = idinResource.start(BANK_CODE_INVALID);
+            final Response response = idinResource.start(BANK_CODE_INVALID, ACCEPT_LANGUAGE_EN);
 
             assertEquals(400, response.getStatus());
             assertInstanceOf(Map.class, response.getEntity());
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            @SuppressWarnings("unchecked") final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(400, body.get("status"));
             assertEquals("Bad Request", body.get("message"));
         }
@@ -133,12 +133,11 @@ public final class IdinResourceTest {
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
 
             final IdinResource idinResource = new IdinResource();
-            final Response response = idinResource.start(BANK_CODE_VALID);
+            final Response response = idinResource.start(BANK_CODE_VALID, ACCEPT_LANGUAGE_EN);
 
             assertEquals(200, response.getStatus());
             assertInstanceOf(Map.class, response.getEntity());
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            @SuppressWarnings("unchecked") final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(ISSUER_AUTHENTICATION_URL, body.get("redirectUrl"));
             assertEquals(TRANSACTION_ID, body.get("trxid"));
             openTransactionsMockedStatic.verify(() -> OpenTransactions.addTransaction(any(IdinTransaction.class)));

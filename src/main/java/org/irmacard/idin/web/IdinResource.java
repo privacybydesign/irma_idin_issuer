@@ -49,7 +49,6 @@ public class IdinResource {
 
     private static final String SUCCESS_URL = IdinConfiguration.getInstance().getEnrollUrl();
     private static final String ERROR_URL = IdinConfiguration.getInstance().getReturnUrl() + "/error.html";
-    public static final String ERROR_DESCRIPTION_BANK_UNAVAILABLE = "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer.";
     public static final String FAILURE_MESSAGE = "Failure in system";
 
     @GET
@@ -85,7 +84,7 @@ public class IdinResource {
     @Path("/start")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response start(@FormParam("bank") final String bank) {
+    public Response start(@FormParam("bank") final String bank, @HeaderParam("Accept-Language") final String acceptLanguage) {
         try {
             if (bank == null || bank.isBlank()
                     || !IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
@@ -111,7 +110,7 @@ public class IdinResource {
             if (response.getIsError()) {
                 logError(response.getErrorResponse());
                 return upstreamError(
-                        ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                        getDescriptionBankUnavailable(acceptLanguage),
                         FAILURE_MESSAGE, 504);
             }
 
@@ -120,7 +119,7 @@ public class IdinResource {
 
             if (!isValidHttpUrl(issuerAuthenticationURL)) {
                 LOGGER.warn("No valid issuerAuthenticationURL for trxid {}. Value: {}", transactionID, issuerAuthenticationURL);
-                return upstreamError("Ontvangen redirect-URL is ongeldig.", "Invalid issuerAuthenticationURL", 502);
+                return upstreamError(getDescriptionInvalidUrl(acceptLanguage), "Invalid issuerAuthenticationURL", 502);
             }
 
             LOGGER.info("trxid {}: session created at bank, redirecting to {}", transactionID, issuerAuthenticationURL);
@@ -136,11 +135,11 @@ public class IdinResource {
         } catch (final IdinException e) {
             LOGGER.error("iDIN exception", e);
             return upstreamError(
-                    ERROR_DESCRIPTION_BANK_UNAVAILABLE,
+                    getDescriptionBankUnavailable(acceptLanguage),
                     FAILURE_MESSAGE, 504);
         } catch (final Exception e) {
             LOGGER.error("Unexpected error starting iDIN session", e);
-            return upstreamError("Er is een onverwachte fout opgetreden.", "Unexpected error", 500);
+            return upstreamError(getDescriptionUnexpectedError(acceptLanguage), "Unexpected error", 500);
         }
     }
 
@@ -241,6 +240,24 @@ public class IdinResource {
                         "description", description))
                 .type(MediaType.APPLICATION_JSON)
                 .build();
+    }
+
+    private String getDescriptionBankUnavailable(final String acceptLanguage) {
+        return isNl(acceptLanguage)
+                ? "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer."
+                : "It is currently not possible to use iDIN for this bank. Please try again later.";
+    }
+
+    private String getDescriptionUnexpectedError(final String acceptLanguage) {
+        return isNl(acceptLanguage) ? "Er is een onverwachte fout opgetreden." : "An unexpected error has occurred.";
+    }
+
+    private String getDescriptionInvalidUrl(final String acceptLanguage) {
+        return isNl(acceptLanguage) ? "Ontvangen redirect-URL is ongeldig." : "Received redirect URL is invalid.";
+    }
+
+    private static boolean isNl(final String acceptLanguage) {
+        return acceptLanguage != null && acceptLanguage.toLowerCase().startsWith("nl");
     }
 
     private void logError(final ErrorResponse err) {
