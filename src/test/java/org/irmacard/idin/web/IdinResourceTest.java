@@ -245,7 +245,7 @@ public final class IdinResourceTest {
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
 
             final IdinResource idinResource = new IdinResource();
-            final Response response = idinResource.start(BANK_CODE_VALID);
+            final Response response = idinResource.start(BANK_CODE_VALID, ACCEPT_LANGUAGE_EN);
 
             assertEquals(504, response.getStatus());
             assertTrue(response.getEntity() instanceof Map);
