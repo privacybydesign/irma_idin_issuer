@@ -84,7 +84,7 @@ public class IdinResource {
     @Path("/start")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response start(@FormParam("bank") final String bank, @HeaderParam("Accept-Language") final String acceptLanguage) {
+    public Response start(@FormParam("bank") final String bank) {
         try {
             if (bank == null || bank.isBlank()
                     || !IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
