@@ -78,7 +78,7 @@ export default function IndexPage() {
             setError(t('error_invalidurl'));
             break;
           case 504:
-            setError(t('error_bankunavailable'));
+            setError(t('error_bankunavailable', { bank: banks.find(b => b.issuerID === selected)?.issuerName || selected }));
             break;
           case 500:
           default:
