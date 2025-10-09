@@ -1,13 +1,5 @@
 package org.irmacard.idin.web;
 
-import com.google.gson.JsonSyntaxException;
-import foundation.privacybydesign.common.BaseConfiguration;
-import io.jsonwebtoken.SignatureAlgorithm;
-import net.bankid.merchant.library.Configuration;
-import org.irmacard.api.common.util.GsonUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,10 +7,24 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.*;
+import java.security.KeyFactory;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+
+import org.irmacard.api.common.util.GsonUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.JsonSyntaxException;
+
+import foundation.privacybydesign.common.BaseConfiguration;
+import io.jsonwebtoken.SignatureAlgorithm;
+import net.bankid.merchant.library.Configuration;
 
 @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "FieldCanBeLocal", "unused"})
 public class IdinConfiguration extends BaseConfiguration {
@@ -62,7 +68,7 @@ public class IdinConfiguration extends BaseConfiguration {
     private transient PrivateKey jwtPrivateKey;
     private transient PublicKey jwtPublicKey;
 
-    private static final String iDinLibConfigLocation = "config.xml";
+    private static final String IDIN_LIB_CONFIG_LOCATION = "config.xml";
 
     /**
      * Path to the file from which the iDIN issier list is saved and loaded
@@ -93,13 +99,13 @@ public class IdinConfiguration extends BaseConfiguration {
     public static void loadIdinConfiguration() {
         getInstance();
         try {
-            final URL config = getConfigurationDirectory().resolve(iDinLibConfigLocation).toURL();
+            final URL config = getConfigurationDirectory().resolve(IDIN_LIB_CONFIG_LOCATION).toURL();
             if (config == null) {
-                throw new Exception("Could not load iDin configfile: " + iDinLibConfigLocation);
+                throw new Exception("Could not load iDin configfile: " + IDIN_LIB_CONFIG_LOCATION);
             }
             final InputStream configS = config.openStream();
             if (configS == null) {
-                throw new Exception("Could not open iDin configfile: " + iDinLibConfigLocation);
+                throw new Exception("Could not open iDin configfile: " + IDIN_LIB_CONFIG_LOCATION);
             }
             Configuration.defaultInstance().Load(configS);
         } catch (final Exception e) {

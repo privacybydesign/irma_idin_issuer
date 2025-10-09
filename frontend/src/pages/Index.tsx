@@ -9,11 +9,15 @@ interface Bank {
 
 export default function IndexPage() {
   const config = useConfig();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [banks, setBanks] = useState<Bank[]>([]);
   const [selected, setSelected] = useState('default');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = t('index_title');
+  }, [i18n.language, t]);
 
   useEffect(() => {
     if (!config) return;
@@ -49,21 +53,39 @@ export default function IndexPage() {
       .then(async (r) => {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
-          const msg =
-            (data && (data.description || data.message)) ||
-            `Request failed: ${r.status}`;
-          throw new Error(msg);
+          const msg = data?.message || `Request failed: ${r.status}`;
+          const error = new Error(msg);
+          (error as any).status = r.status;
+          throw error;
         }
         if (data?.redirectUrl && /^https?:\/\//i.test(data.redirectUrl)) {
           console.log('trxid:', data.trxid);
           window.location.assign(data.redirectUrl);
           return;
         }
-        throw new Error(
-          data?.description || 'Ontvangen response bevat geen geldige redirectUrl.'
+        const error = new Error(
+          data?.message || 'Ontvangen response bevat geen geldige redirectUrl.'
         );
+        (error as any).status = 502;
+        throw error;
       })
-      .catch((e) => setError(e.message))
+      .catch((e: any) => {
+        switch (e.status) {
+          case 400:
+            setError(t('error_invalidbankcode'));
+            break;
+          case 502:
+            setError(t('error_invalidurl'));
+            break;
+          case 504:
+            setError(t('error_bankunavailable', { bank: banks.find(b => b.issuerID === selected)?.issuerName || selected }));
+            break;
+          case 500:
+          default:
+            setError(t('error_generic'));
+            break;
+        }
+      })
       .finally(() => setLoading(false));
   };
 

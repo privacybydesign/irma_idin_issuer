@@ -49,7 +49,6 @@ public class IdinResource {
 
     private static final String SUCCESS_URL = IdinConfiguration.getInstance().getEnrollUrl();
     private static final String ERROR_URL = IdinConfiguration.getInstance().getReturnUrl() + "/error.html";
-    public static final String ERROR_DESCRIPTION_BANK_UNAVAILABLE = "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer.";
     public static final String FAILURE_MESSAGE = "Failure in system";
 
     @GET
@@ -90,13 +89,7 @@ public class IdinResource {
             if (bank == null || bank.isBlank()
                     || !IdinConfiguration.getInstance().getIdinIssuers().containsBankCode(bank)) {
 
-                return Response.status(Response.Status.BAD_REQUEST)
-                        .entity(Map.of(
-                                "status", 400,
-                                "message", "Bad Request",
-                                "description", "Illegal bankcode received"))
-                        .type(MediaType.APPLICATION_JSON)
-                        .build();
+                return upstreamError("Bad Request", 400);
             }
 
             final String merchantReference = "a" + new BigInteger(130, RANDOM).toString(32); // iDIN: moet met letter beginnen
@@ -110,9 +103,7 @@ public class IdinResource {
 
             if (response.getIsError()) {
                 logError(response.getErrorResponse());
-                return upstreamError(
-                        ERROR_DESCRIPTION_BANK_UNAVAILABLE,
-                        FAILURE_MESSAGE, 504);
+                return upstreamError(FAILURE_MESSAGE, 504);
             }
 
             final String transactionID = response.getTransactionID();
@@ -120,7 +111,7 @@ public class IdinResource {
 
             if (!isValidHttpUrl(issuerAuthenticationURL)) {
                 LOGGER.warn("No valid issuerAuthenticationURL for trxid {}. Value: {}", transactionID, issuerAuthenticationURL);
-                return upstreamError("Ontvangen redirect-URL is ongeldig.", "Invalid issuerAuthenticationURL", 502);
+                return upstreamError("Invalid issuerAuthenticationURL", 502);
             }
 
             LOGGER.info("trxid {}: session created at bank, redirecting to {}", transactionID, issuerAuthenticationURL);
@@ -136,11 +127,10 @@ public class IdinResource {
         } catch (final IdinException e) {
             LOGGER.error("iDIN exception", e);
             return upstreamError(
-                    ERROR_DESCRIPTION_BANK_UNAVAILABLE,
                     FAILURE_MESSAGE, 504);
         } catch (final Exception e) {
             LOGGER.error("Unexpected error starting iDIN session", e);
-            return upstreamError("Er is een onverwachte fout opgetreden.", "Unexpected error", 500);
+            return upstreamError("Unexpected error", 500);
         }
     }
 
@@ -233,12 +223,11 @@ public class IdinResource {
         }
     }
 
-    private static Response upstreamError(final String description, final String message, final int status) {
+    private static Response upstreamError(final String message, final int status) {
         return Response.status(status)
                 .entity(Map.of(
                         "status", status,
-                        "message", message,
-                        "description", description))
+                        "message", message))
                 .type(MediaType.APPLICATION_JSON)
                 .build();
     }

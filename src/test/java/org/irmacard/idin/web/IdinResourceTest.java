@@ -102,8 +102,7 @@ public final class IdinResourceTest {
 
             assertEquals(400, response.getStatus());
             assertInstanceOf(Map.class, response.getEntity());
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            @SuppressWarnings("unchecked") final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(400, body.get("status"));
             assertEquals("Bad Request", body.get("message"));
         }
@@ -137,8 +136,7 @@ public final class IdinResourceTest {
 
             assertEquals(200, response.getStatus());
             assertInstanceOf(Map.class, response.getEntity());
-            @SuppressWarnings("unchecked")
-            final Map<String, Object> body = (Map<String, Object>) response.getEntity();
+            @SuppressWarnings("unchecked") final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(ISSUER_AUTHENTICATION_URL, body.get("redirectUrl"));
             assertEquals(TRANSACTION_ID, body.get("trxid"));
             openTransactionsMockedStatic.verify(() -> OpenTransactions.addTransaction(any(IdinTransaction.class)));
@@ -249,7 +247,7 @@ public final class IdinResourceTest {
             final Response response = idinResource.start(BANK_CODE_VALID);
 
             assertEquals(504, response.getStatus());
-            assertTrue(response.getEntity() instanceof Map);
+            assertInstanceOf(Map.class, response.getEntity());
             @SuppressWarnings("unchecked")
             final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(504, body.get("status"));
