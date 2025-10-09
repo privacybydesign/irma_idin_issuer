@@ -66,3 +66,8 @@ You can run the unit tests using:
 ```
 The test reports can be found in `build/reports/tests/test/index.html`.
 
+For code coverage, you can run:
+```bash
+./gradlew test jacocoTestReport
+```
+The code coverage report can be found in `build/reports/jacoco/test/html/index.html`.
