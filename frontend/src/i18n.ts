@@ -29,6 +29,10 @@ i18n
                     error_header: "Error message",
                     error_text1: "Return to the {URL=index.html}iDIN issue page{/URL}, ",
                     error_text2: "or to the {URL=..}general issuance page{/URL}.",
+                    error_generic: "An unexpected error has occurred.",
+                    error_invalidbankcode: "The selected bank code is invalid.",
+                    error_bankunavailable: "It is currently not possible to use iDIN for this bank. Please try again later.",
+                    error_invalidurl: "Received redirect URL is invalid.",
                     enroll_title: "Load basic attributes with iDIN",
                     enroll_header: "Available attributes",
                     enroll_received_attributes:
@@ -88,6 +92,10 @@ i18n
                     error_text1:
                         "Keer terug naar de {URL=index.html}iDIN issue pagina{/URL}, ",
                     error_text2: "of naar de {URL=..}algemene uitgifte pagina{/URL}.",
+                    error_generic: "Er is een onverwachte fout opgetreden.",
+                    error_invalidbankcode: "De geselecteerde bankcode is ongeldig.",
+                    error_bankunavailable: "Het is op dit moment niet mogelijk om iDIN te gebruiken voor deze bank. Probeer het later nog een keer.",
+                    error_invalidurl: "Ontvangen redirect-URL is ongeldig.",
                     enroll_title: "Basis attributen laden met iDIN",
                     enroll_header: "Beschikbare attributen",
                     enroll_received_attributes:
