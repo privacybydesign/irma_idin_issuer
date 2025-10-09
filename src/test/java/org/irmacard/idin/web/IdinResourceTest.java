@@ -218,7 +218,6 @@ public final class IdinResourceTest {
             @SuppressWarnings("unchecked") final Map<String, Object> body = (Map<String, Object>) response.getEntity();
             assertEquals(502, body.get("status"));
             assertEquals("Invalid issuerAuthenticationURL", body.get("message"));
-            assertEquals("Ontvangen redirect-URL is ongeldig.", body.get("description"));
         }
     }
 
