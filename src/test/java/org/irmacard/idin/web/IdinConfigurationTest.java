@@ -1,9 +1,15 @@
 package org.irmacard.idin.web;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import foundation.privacybydesign.common.BaseConfiguration;
+import org.irmacard.api.common.util.GsonUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -12,6 +18,8 @@ import java.nio.file.Paths;
 import java.security.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 public class IdinConfigurationTest {
 
@@ -33,6 +41,10 @@ public class IdinConfigurationTest {
     public static final String TEL = "tel";
     public static final String COUNTRY = "country";
     public static final String GENDER = "male";
+    public static final String JSON_VALID = "{\"enroll_url\":\"https://example.org/enroll\"}";
+    public static final byte[] BYTES_VALID = JSON_VALID.getBytes();
+    public static final String PUBLIC_KEY_PATH = "pk.der";
+    public static final String PRIVATE_KEY_PATH = "sk.der";
 
     @AfterEach
     public void clearInstance() throws Exception {
@@ -184,6 +196,178 @@ public class IdinConfigurationTest {
         final IdinConfiguration idinConfiguration = new IdinConfiguration();
         // no need to set instance, method is instance-level but deterministic
         assertEquals(io.jsonwebtoken.SignatureAlgorithm.RS256, idinConfiguration.getJwtAlgorithm());
+    }
+
+    @Test
+    public void load_setsInstanceFromGsonOnSuccess() {
+        final Gson gson = mock(Gson.class);
+        final IdinConfiguration parsedConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class);
+             final MockedStatic<GsonUtil> gsonUtilMockedStatic = mockStatic(GsonUtil.class)) {
+
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(anyString()))
+                    .thenReturn(BYTES_VALID);
+            gsonUtilMockedStatic.when(GsonUtil::getGson).thenReturn(gson);
+            when(gson.fromJson(anyString(), eq(IdinConfiguration.class))).thenReturn(parsedConfiguration);
+
+            IdinConfiguration.load();
+
+            assertSame(parsedConfiguration, IdinConfiguration.getInstance());
+        }
+    }
+
+    @Test
+    public void load_usesDefaultInstanceOnIOException() {
+        final Gson gson = mock(Gson.class);
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class);
+             final MockedStatic<GsonUtil> gsonUtilMockedStatic = mockStatic(GsonUtil.class)) {
+
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(anyString()))
+                    .thenThrow(new IOException("boom"));
+
+            gsonUtilMockedStatic.when(GsonUtil::getGson).thenReturn(gson);
+            IdinConfiguration.load();
+
+            assertNotNull(IdinConfiguration.getInstance());
+        }
+    }
+
+    @Test
+    public void load_usesDefaultInstanceOnJsonSyntaxException() {
+        final Gson gson = mock(Gson.class);
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class);
+             final MockedStatic<GsonUtil> gsonUtilMockedStatic = mockStatic(GsonUtil.class)) {
+
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(anyString()))
+                    .thenReturn(BYTES_VALID);
+            gsonUtilMockedStatic.when(GsonUtil::getGson).thenReturn(gson);
+            when(gson.fromJson(anyString(), eq(IdinConfiguration.class))).thenThrow(new JsonSyntaxException("bad"));
+
+            IdinConfiguration.load();
+
+            assertNotNull(IdinConfiguration.getInstance());
+        }
+    }
+
+    @Test
+    public void getInstance_initializesSingletonWhenNull() {
+        final Gson gson = mock(Gson.class);
+        final IdinConfiguration parsedConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class);
+             final MockedStatic<GsonUtil> gsonUtilMockedStatic = mockStatic(GsonUtil.class)) {
+
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(anyString()))
+                    .thenReturn(BYTES_VALID);
+            gsonUtilMockedStatic.when(GsonUtil::getGson).thenReturn(gson);
+            when(gson.fromJson(anyString(), eq(IdinConfiguration.class))).thenReturn(parsedConfiguration);
+
+            final IdinConfiguration result = IdinConfiguration.getInstance();
+
+            assertSame(parsedConfiguration, result);
+            assertSame(parsedConfiguration, IdinConfiguration.getInstance());
+        }
+    }
+
+    @Test
+    public void getInstance_returnsExistingWithoutReload() throws Exception {
+        final IdinConfiguration configurationMarker = new IdinConfiguration();
+        setInstance(configurationMarker);
+        final IdinConfiguration result = IdinConfiguration.getInstance();
+        assertSame(configurationMarker, result);
+    }
+
+    @Test
+    public void getJwtPublicKey_parsesAndCaches() throws Exception {
+        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        final KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        final byte[] publicKeyDer = keyPair.getPublic().getEncoded();
+
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PUBLIC_KEY_PATH))).thenReturn(publicKeyDer);
+
+            final PublicKey firstCall = idinConfiguration.getJwtPublicKey();
+            final PublicKey secondCall = idinConfiguration.getJwtPublicKey();
+
+            assertNotNull(firstCall);
+            assertSame(firstCall, secondCall);
+            baseConfigurationMockedStatic.verify(() -> BaseConfiguration.getResource(eq(PUBLIC_KEY_PATH)), times(1));
+        }
+    }
+
+    @Test
+    public void getJwtPrivateKey_parsesAndCaches() throws Exception {
+        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        final KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        final byte[] privateKeyDer = keyPair.getPrivate().getEncoded();
+
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PRIVATE_KEY_PATH))).thenReturn(privateKeyDer);
+
+            final PrivateKey firstCall = idinConfiguration.getJwtPrivateKey();
+            final PrivateKey secondCall = idinConfiguration.getJwtPrivateKey();
+
+            assertNotNull(firstCall);
+            assertSame(firstCall, secondCall);
+            baseConfigurationMockedStatic.verify(() -> BaseConfiguration.getResource(eq(PRIVATE_KEY_PATH)), times(1));
+        }
+    }
+
+    @Test
+    public void getJwtPublicKey_throwsRuntimeOnIOException() {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PUBLIC_KEY_PATH)))
+                    .thenThrow(new java.io.IOException("io"));
+
+            assertThrows(RuntimeException.class, idinConfiguration::getJwtPublicKey);
+        }
+    }
+
+    @Test
+    public void getJwtPrivateKey_throwsRuntimeOnIOException() {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PRIVATE_KEY_PATH)))
+                    .thenThrow(new java.io.IOException("io"));
+
+            assertThrows(RuntimeException.class, idinConfiguration::getJwtPrivateKey);
+        }
+    }
+
+    @Test
+    public void getJwtPublicKey_throwsRuntimeOnInvalidBytes() {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        final byte[] invalidDer = new byte[0];
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PUBLIC_KEY_PATH))).thenReturn(invalidDer);
+
+            assertThrows(RuntimeException.class, idinConfiguration::getJwtPublicKey);
+        }
+    }
+
+    @Test
+    public void getJwtPrivateKey_throwsRuntimeOnInvalidBytes() {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        final byte[] invalidDer = new byte[0];
+
+        try (final MockedStatic<BaseConfiguration> baseConfigurationMockedStatic = mockStatic(BaseConfiguration.class)) {
+            baseConfigurationMockedStatic.when(() -> BaseConfiguration.getResource(eq(PRIVATE_KEY_PATH))).thenReturn(invalidDer);
+
+            assertThrows(RuntimeException.class, idinConfiguration::getJwtPrivateKey);
+        }
     }
 
     private static void setInstance(final IdinConfiguration idinConfiguration) throws Exception {

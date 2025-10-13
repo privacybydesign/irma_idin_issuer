@@ -335,16 +335,7 @@ public final class IdinResourceTest {
         when(statusResponse.getStatus()).thenReturn(StatusResponse.Success);
         final SamlResponse samlResponse = mock(SamlResponse.class);
 
-        final Map<String, String> attributes = new HashMap<>();
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.dateofbirth", "19800131");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.initials", "A.B.");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.legallastname", "Last");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.gender", "1");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.street", "Main");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.houseno", "12");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.postalcode", "1234AB");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.city", "City");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.country", "NL");
+        final Map<String, String> attributes = getAttributesMap();
 
         when(samlResponse.getAttributes()).thenReturn(attributes);
         when(statusResponse.getSamlResponse()).thenReturn(samlResponse);
@@ -378,6 +369,167 @@ public final class IdinResourceTest {
             verify(idinTransaction).finished();
 
             apiClientMockedStatic.verify(() -> ApiClient.getSignedIssuingJWT(eq(dummyIpRequest), anyString(), anyString(), eq(sig), eq(pk)));
+        }
+    }
+
+    @Test
+    public void authenticated_cancelled_setsErrorCookie_and_redirectsToError() {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getEnrollUrl()).thenReturn(ENROLL_URL);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(ENTRANCE_CODE);
+
+        final StatusResponse statusResponse = mock(StatusResponse.class);
+        when(statusResponse.getIsError()).thenReturn(false);
+        when(statusResponse.getStatus()).thenReturn(StatusResponse.Cancelled);
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedConstruction<Communicator> ignored =
+                     mockConstruction(Communicator.class, (communicator, context) ->
+                             when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
+
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+
+            assertNotNull(response);
+            assertEquals(303, response.getStatus());
+            assertEquals(URI.create(ERROR_PAGE), response.getHeaders().getFirst(LOCATION));
+            final Map<String, NewCookie> cookies = response.getCookies();
+            assertTrue(cookies.containsKey("error"));
+            assertTrue(cookies.get("error").getValue().toLowerCase().contains("transactie is geannuleerd"));
+
+            verify(idinTransaction).handled();
+            verify(idinTransaction).finished();
+
+            // ensure no issuing JWT created
+            apiClientMockedStatic.verify(() -> ApiClient.getSignedIssuingJWT((HashMap<CredentialIdentifier, HashMap<String, String>>) any(), anyString(), anyString(), any(), any()), times(0));
+        }
+    }
+
+    @Test
+    public void authenticated_expired_setsErrorCookie_and_redirectsToError() {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getEnrollUrl()).thenReturn(ENROLL_URL);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(ENTRANCE_CODE);
+
+        final StatusResponse statusResponse = mock(StatusResponse.class);
+        when(statusResponse.getIsError()).thenReturn(false);
+        when(statusResponse.getStatus()).thenReturn(StatusResponse.Expired);
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedConstruction<Communicator> ignored =
+                     mockConstruction(Communicator.class, (communicator, context) ->
+                             when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
+
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+
+            assertNotNull(response);
+            assertEquals(303, response.getStatus());
+            assertEquals(URI.create(ERROR_PAGE), response.getHeaders().getFirst(LOCATION));
+            final Map<String, NewCookie> cookies = response.getCookies();
+            assertTrue(cookies.containsKey("error"));
+            assertTrue(cookies.get("error").getValue().toLowerCase().contains("sessie is verlopen"));
+
+            verify(idinTransaction).handled();
+            verify(idinTransaction).finished();
+
+            // ensure no issuing JWT created
+            apiClientMockedStatic.verify(() -> ApiClient.getSignedIssuingJWT((HashMap<CredentialIdentifier, HashMap<String, String>>) any(), anyString(), anyString(), any(), any()), times(0));
+        }
+    }
+
+    @Test
+    public void authenticated_openPending_setsErrorCookie_and_redirectsToError() {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getEnrollUrl()).thenReturn(ENROLL_URL);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(ENTRANCE_CODE);
+
+        final StatusResponse statusResponse = mock(StatusResponse.class);
+        when(statusResponse.getIsError()).thenReturn(false);
+        when(statusResponse.getStatus()).thenReturn(StatusResponse.Open);
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedConstruction<Communicator> ignored =
+                     mockConstruction(Communicator.class, (communicator, context) ->
+                             when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
+
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+
+            assertNotNull(response);
+            assertEquals(303, response.getStatus());
+            assertEquals(URI.create(ERROR_PAGE), response.getHeaders().getFirst(LOCATION));
+            final Map<String, NewCookie> cookies = response.getCookies();
+            assertTrue(cookies.isEmpty());
+
+            verify(idinTransaction).handled();
+            verify(idinTransaction, never()).finished();
+        }
+    }
+
+    @Test
+    public void authenticated_failure_setsErrorCookie_and_redirectsToError() {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getEnrollUrl()).thenReturn(ENROLL_URL);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(ENTRANCE_CODE);
+
+        final StatusResponse statusResponse = mock(StatusResponse.class);
+        when(statusResponse.getIsError()).thenReturn(false);
+        when(statusResponse.getStatus()).thenReturn(StatusResponse.Failure);
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedConstruction<Communicator> ignored =
+                     mockConstruction(Communicator.class, (communicator, context) ->
+                             when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
+
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+
+            assertNotNull(response);
+            assertEquals(303, response.getStatus());
+            assertEquals(URI.create(ERROR_PAGE), response.getHeaders().getFirst(LOCATION));
+            final Map<String, NewCookie> cookies = response.getCookies();
+            assertTrue(cookies.containsKey("error"));
+            assertTrue(cookies.get("error").getValue().toLowerCase().contains("is iets onverwachts misgegaan"));
+
+            verify(idinTransaction).handled();
+            verify(idinTransaction).finished();
         }
     }
 
@@ -507,18 +659,7 @@ public final class IdinResourceTest {
         assertTrue((Boolean) isNullOrEmpty.invoke(idinResource, ""));
         assertFalse((Boolean) isNullOrEmpty.invoke(idinResource, "x"));
 
-        // build a complete attributes map
-        final Map<String, String> good = new HashMap<>();
-        good.put("urn:nl:bvn:bankid:1.0:consumer.dateofbirth", "19800101");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.initials", "A.B.");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.legallastname", "Last");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.gender", "1");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.street", "Main");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.houseno", "12");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.city", "City");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.postalcode", "1234AB");
-        good.put("urn:nl:bvn:bankid:1.0:consumer.country", "NL");
-        // BIN is optional
+        final Map<String, String> good = getAttributesMap();
 
         assertFalse((Boolean) nullOrEmptyAttributes.invoke(idinResource, good, "trx"));
 
@@ -568,16 +709,7 @@ public final class IdinResourceTest {
         when(idinConfiguration.getJwtPrivateKey()).thenReturn(pk);
 
         // prepare attributes map expected by createIssueJWT
-        final Map<String, String> attributes = new HashMap<>();
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.dateofbirth", "19800131");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.initials", "A.B.");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.legallastname", "Last");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.gender", "1");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.street", "Main");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.houseno", "12");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.postalcode", "1234AB");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.city", "City");
-        attributes.put("urn:nl:bvn:bankid:1.0:consumer.country", "NL");
+        final Map<String, String> attributes = getAttributesMap();
 
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class)) {
@@ -598,4 +730,18 @@ public final class IdinResourceTest {
         }
     }
 
+
+    private static Map<String, String> getAttributesMap() {
+        final Map<String, String> attributes = new HashMap<>();
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.dateofbirth", "19800131");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.initials", "A.B.");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.legallastname", "Last");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.gender", "1");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.street", "Main");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.houseno", "12");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.postalcode", "1234AB");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.city", "City");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.country", "NL");
+        return attributes;
+    }
 }
