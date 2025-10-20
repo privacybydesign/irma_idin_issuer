@@ -4,6 +4,7 @@ plugins {
     id 'war'
     id 'eclipse-wtp'
     id 'org.gretty' version '4.1.7'
+    id 'jacoco'
 }
 
 
@@ -50,6 +51,14 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }
 
 gretty {

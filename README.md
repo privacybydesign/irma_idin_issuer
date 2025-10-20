@@ -59,10 +59,15 @@ docker compose --env-file .secrets/.env up --build
 ```
 The `--build` flag is optional, but is recommended during development.
 
-### Running the unit tests
+## Running the unit tests
 You can run the unit tests using:
 ```bash
 ./gradlew test
 ```
 The test reports can be found in `build/reports/tests/test/index.html`.
 
+For code coverage, you can run:
+```bash
+./gradlew test jacocoTestReport
+```
+The code coverage report can be found in `build/reports/jacoco/test/html/index.html`.
