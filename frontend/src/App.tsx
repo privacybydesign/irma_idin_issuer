@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import IndexPage from './pages/Index';
 import EnrollPage from './pages/Enroll';
 import ErrorPage from './pages/Error';
+import SuccessPage from './pages/Success';
 
 import './i18n';
 
@@ -23,6 +24,7 @@ function LanguageRouter() {
     <Routes>
       <Route path="/" element={<IndexPage />} />
       <Route path="/enroll" element={<EnrollPage />} />
+      <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
     </Routes>
   );
@@ -34,6 +36,7 @@ function App() {
       <Routes>
         <Route path="/" element={<IndexPage />} />
         <Route path="/enroll" element={<EnrollPage />} />
+        <Route path="/success" element={<SuccessPage />} />
         <Route path="/error" element={<ErrorPage />} />
       </Routes>
       {/* <Routes>
