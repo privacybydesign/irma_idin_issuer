@@ -312,7 +312,8 @@ public final class IdinResourceTest {
         when(idinConfiguration.getLastnameAttribute()).thenReturn("lastnameAttr");
         when(idinConfiguration.getBirthdateAttribute()).thenReturn("birthdateAttr");
         when(idinConfiguration.getGenderAttribute()).thenReturn("genderAttr");
-        when(idinConfiguration.getAddressAttribute()).thenReturn("addressAttr");
+        when(idinConfiguration.getStreetAttribute()).thenReturn("streetAttr");
+        when(idinConfiguration.getHouseNumberAttribute()).thenReturn("houseNumberAttr");
         when(idinConfiguration.getCityAttribute()).thenReturn("cityAttr");
         when(idinConfiguration.getPostalcodeAttribute()).thenReturn("postalAttr");
         when(idinConfiguration.getCountryAttribute()).thenReturn("countryAttr");
@@ -693,7 +694,8 @@ public final class IdinResourceTest {
         when(idinConfiguration.getLastnameAttribute()).thenReturn("lastnameAttr");
         when(idinConfiguration.getBirthdateAttribute()).thenReturn("birthdateAttr");
         when(idinConfiguration.getGenderAttribute()).thenReturn("genderAttr");
-        when(idinConfiguration.getAddressAttribute()).thenReturn("addressAttr");
+        when(idinConfiguration.getStreetAttribute()).thenReturn("streetAttr");
+        when(idinConfiguration.getHouseNumberAttribute()).thenReturn("houseNumberAttr");
         when(idinConfiguration.getCityAttribute()).thenReturn("cityAttr");
         when(idinConfiguration.getPostalcodeAttribute()).thenReturn("postalAttr");
         when(idinConfiguration.getCountryAttribute()).thenReturn("countryAttr");
@@ -727,6 +729,66 @@ public final class IdinResourceTest {
             createIssueJWT.setAccessible(true);
             final String jwt = (String) createIssueJWT.invoke(idinResource, attributes);
             assertEquals("signed.jwt.token", jwt);
+        }
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void createIssueJWT_emitsSeparateStreetAndHouseNumberAttributes() throws Exception {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.getInitialsAttribute()).thenReturn("initialsAttr");
+        when(idinConfiguration.getLastnameAttribute()).thenReturn("lastnameAttr");
+        when(idinConfiguration.getBirthdateAttribute()).thenReturn("birthdateAttr");
+        when(idinConfiguration.getGenderAttribute()).thenReturn("genderAttr");
+        when(idinConfiguration.getStreetAttribute()).thenReturn("streetAttr");
+        when(idinConfiguration.getHouseNumberAttribute()).thenReturn("houseNumberAttr");
+        when(idinConfiguration.getCityAttribute()).thenReturn("cityAttr");
+        when(idinConfiguration.getPostalcodeAttribute()).thenReturn("postalAttr");
+        when(idinConfiguration.getCountryAttribute()).thenReturn("countryAttr");
+        when(idinConfiguration.getSchemeManager()).thenReturn("scheme");
+        when(idinConfiguration.getIdinIssuer()).thenReturn("issuer");
+        when(idinConfiguration.getIdinCredential()).thenReturn("cred");
+        when(idinConfiguration.isAgeLimitsCredentialEnabled()).thenReturn(false);
+        when(idinConfiguration.getServerName()).thenReturn("server");
+        when(idinConfiguration.getHumanReadableName()).thenReturn("Server");
+        final io.jsonwebtoken.SignatureAlgorithm sig = io.jsonwebtoken.SignatureAlgorithm.RS256;
+        when(idinConfiguration.getJwtAlgorithm()).thenReturn(sig);
+        final java.security.PrivateKey pk = mock(java.security.PrivateKey.class);
+        when(idinConfiguration.getJwtPrivateKey()).thenReturn(pk);
+
+        // attributes including a house number suffix and an extra address line
+        final Map<String, String> attributes = getAttributesMap();
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.housenosuf", "a");
+        attributes.put("urn:nl:bvn:bankid:1.0:consumer.addressextra", "2nd floor");
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class)) {
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+
+            final org.irmacard.api.common.issuing.IdentityProviderRequest dummyIpRequest = mock(org.irmacard.api.common.issuing.IdentityProviderRequest.class);
+            apiClientMockedStatic.when(() -> ApiClient.getIdentityProviderRequest(any(), anyLong())).thenReturn(dummyIpRequest);
+            apiClientMockedStatic.when(() -> ApiClient.getSignedIssuingJWT(eq(dummyIpRequest), anyString(), anyString(), eq(sig), eq(pk)))
+                    .thenReturn("signed.jwt.token");
+
+            final IdinResource idinResource = new IdinResource();
+            final Method createIssueJWT = IdinResource.class.getDeclaredMethod("createIssueJWT", Map.class);
+            createIssueJWT.setAccessible(true);
+            createIssueJWT.invoke(idinResource, attributes);
+
+            final org.mockito.ArgumentCaptor<HashMap> captor = org.mockito.ArgumentCaptor.forClass(HashMap.class);
+            apiClientMockedStatic.verify(() -> ApiClient.getIdentityProviderRequest(captor.capture(), anyLong()));
+
+            final Map<CredentialIdentifier, Map<String, String>> credentials = captor.getValue();
+            assertEquals(1, credentials.size());
+            final Map<String, String> attrs = credentials.values().iterator().next();
+
+            // street and house number are emitted as separate attributes, not a single line
+            assertEquals("Main", attrs.get("streetAttr"));
+            assertEquals("12a; 2nd floor", attrs.get("houseNumberAttr"));
+            assertEquals("City", attrs.get("cityAttr"));
+            assertEquals("1234AB", attrs.get("postalAttr"));
+            // no combined address line should be present
+            assertFalse(attrs.containsValue("Main 12a; 2nd floor"));
         }
     }
 

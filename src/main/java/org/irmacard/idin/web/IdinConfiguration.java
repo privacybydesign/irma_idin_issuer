@@ -51,7 +51,8 @@ public class IdinConfiguration extends BaseConfiguration {
 
     private String initials_attribute = "";
     private String lastname_attribute = "";
-    private String address_attribute = "";
+    private String street_attribute = "";
+    private String housenumber_attribute = "";
     private String city_attribute = "";
     private String postalcode_attribute = "";
     private String birthdate_attribute = "";
@@ -222,8 +223,12 @@ public class IdinConfiguration extends BaseConfiguration {
         return lastname_attribute;
     }
 
-    public String getAddressAttribute() {
-        return address_attribute;
+    public String getStreetAttribute() {
+        return street_attribute;
+    }
+
+    public String getHouseNumberAttribute() {
+        return housenumber_attribute;
     }
 
     public String getCityAttribute() {
