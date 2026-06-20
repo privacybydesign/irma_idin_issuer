@@ -7,9 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 
-import java.lang.reflect.Field;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -23,12 +20,9 @@ public class OpenTransactionsTest {
     public static final IdinTransaction IDIN_TRANSACTION_2 = new IdinTransaction(TRANSACTION_ID_2, ENTRANCE_CODE);
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
-    public void resetOpenSet() throws Exception {
-        final Field openOrPendingTransactions = OpenTransactions.class.getDeclaredField("OPEN_OR_PENDING_TRANSACTIONS");
-        openOrPendingTransactions.setAccessible(true);
-        final Set<IdinTransaction> idinTransactionSet = (Set<IdinTransaction>) openOrPendingTransactions.get(null);
-        idinTransactionSet.clear();
+    public void resetStore() {
+        // Use a fresh in-memory store for each test so they remain isolated.
+        OpenTransactions.setStore(new InMemoryTransactionStore());
     }
 
     @Test

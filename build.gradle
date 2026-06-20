@@ -36,6 +36,7 @@ dependencies {
     implementation files('libs/net.bankid.merchant.library.jar')
     implementation 'net.glxn:qrgen:1.4'
     implementation 'mysql:mysql-connector-java:5.1.27'
+    implementation 'redis.clients:jedis:5.2.0'
 
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
