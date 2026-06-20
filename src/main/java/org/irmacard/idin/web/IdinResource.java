@@ -321,12 +321,19 @@ public class IdinResource {
         final HashMap<CredentialIdentifier, HashMap<String, String>> credentials = new HashMap<>();
         final Date dob = getDobObject(attributes.get(IDIN_SAML_BIRTHDATE_KEY));
 
-        String addressLine = attributes.get(IDIN_SAML_STREET_KEY) + " " + attributes.get(IDIN_SAML_HOUSE_NO_KEY);
+        // Emit the address as separate attributes (street, house number, postal code, city),
+        // matching the pbdf `gemeente` address scheme, instead of a single concatenated line
+        // that verifiers would otherwise have to deconstruct.
+        final String street = attributes.get(IDIN_SAML_STREET_KEY);
+
+        String houseNumber = attributes.get(IDIN_SAML_HOUSE_NO_KEY);
         if (attributes.get(IDIN_SAML_HOUSE_NO_SUF_KEY) != null) {
-            addressLine += attributes.get(IDIN_SAML_HOUSE_NO_SUF_KEY);
+            houseNumber += attributes.get(IDIN_SAML_HOUSE_NO_SUF_KEY);
         }
+        // iDIN may supply an additional free-form address line; keep it with the house number
+        // rather than dropping it, since the gemeente scheme has no separate field for it.
         if (attributes.get(IDIN_SAML_ADDRESS_EXTRA_KEY) != null) {
-            addressLine += "; " + attributes.get(IDIN_SAML_ADDRESS_EXTRA_KEY);
+            houseNumber += "; " + attributes.get(IDIN_SAML_ADDRESS_EXTRA_KEY);
         }
 
         final int[] ages = {12, 16, 18, 21, 65};
@@ -338,7 +345,8 @@ public class IdinResource {
         attrs.put(IdinConfiguration.getInstance().getLastnameAttribute(), (attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) == null ? "" : attributes.get(IDIN_SAML_LASTNAME_PREFIX_KEY) + " ") + attributes.get(IDIN_SAML_LAST_NAME_KEY));
         attrs.put(IdinConfiguration.getInstance().getBirthdateAttribute(), getDobString(dob));
         attrs.put(IdinConfiguration.getInstance().getGenderAttribute(), getGenderString(attributes.get(IDIN_SAML_GENDER_KEY)));
-        attrs.put(IdinConfiguration.getInstance().getAddressAttribute(), addressLine);
+        attrs.put(IdinConfiguration.getInstance().getStreetAttribute(), street);
+        attrs.put(IdinConfiguration.getInstance().getHouseNumberAttribute(), houseNumber);
         attrs.put(IdinConfiguration.getInstance().getCityAttribute(), attributes.get(IDIN_SAML_CITY_KEY));
         attrs.put(IdinConfiguration.getInstance().getPostalcodeAttribute(), attributes.get(IDIN_SAML_POSTAL_CODE_KEY));
         attrs.put(IdinConfiguration.getInstance().getCountryAttribute(), attributes.get(IDIN_SAML_COUNTRY_KEY));

@@ -32,7 +32,8 @@ public class IdinConfigurationTest {
     public static final String AGE_LIMITS_CREDENTIAL = "MyAgeLimitsCredential";
     public static final String INITIALS = "initials";
     public static final String LASTNAME = "lastname";
-    public static final String ADDRESS = "address";
+    public static final String STREET = "street";
+    public static final String HOUSENUMBER = "houseNumber";
     public static final String CITY = "city";
     public static final String POSTALCODE = "postalcode";
     public static final String BIRTHDATE = "birthdate";
@@ -67,7 +68,8 @@ public class IdinConfigurationTest {
         setField(idinConfiguration, "age_limits_credential", AGE_LIMITS_CREDENTIAL);
         setField(idinConfiguration, "initials_attribute", INITIALS);
         setField(idinConfiguration, "lastname_attribute", LASTNAME);
-        setField(idinConfiguration, "address_attribute", ADDRESS);
+        setField(idinConfiguration, "street_attribute", STREET);
+        setField(idinConfiguration, "housenumber_attribute", HOUSENUMBER);
         setField(idinConfiguration, "city_attribute", CITY);
         setField(idinConfiguration, "postalcode_attribute", POSTALCODE);
         setField(idinConfiguration, "birthdate_attribute", BIRTHDATE);
@@ -87,7 +89,8 @@ public class IdinConfigurationTest {
         assertEquals(AGE_LIMITS_CREDENTIAL, idinConfiguration.getAgeLimitsCredential());
         assertEquals(INITIALS, idinConfiguration.getInitialsAttribute());
         assertEquals(LASTNAME, idinConfiguration.getLastnameAttribute());
-        assertEquals(ADDRESS, idinConfiguration.getAddressAttribute());
+        assertEquals(STREET, idinConfiguration.getStreetAttribute());
+        assertEquals(HOUSENUMBER, idinConfiguration.getHouseNumberAttribute());
         assertEquals(CITY, idinConfiguration.getCityAttribute());
         assertEquals(POSTALCODE, idinConfiguration.getPostalcodeAttribute());
         assertEquals(BIRTHDATE, idinConfiguration.getBirthdateAttribute());
