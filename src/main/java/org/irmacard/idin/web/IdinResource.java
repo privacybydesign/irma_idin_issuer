@@ -201,6 +201,9 @@ public class IdinResource {
                         cookies[0] = new NewCookie.Builder("error").value("Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
                         break;
                 }
+                // Persist the mutations made above (handled timestamp / finished flag) so they
+                // survive a restart when a persistent transaction store (e.g. Redis) is used.
+                OpenTransactions.update(transaction);
             }
         }
         try {

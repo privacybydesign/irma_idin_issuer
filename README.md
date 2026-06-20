@@ -10,6 +10,39 @@ Please check the documentation of this library how the JAR can be re-generated i
 you want to update this library.
 
 
+## Transaction storage
+Open (pending) iDIN transactions are tracked by the server so that the return URL can be matched to
+the originating session. By default these are kept **in memory**, which means they are lost when the
+server restarts and cannot be shared between multiple server instances.
+
+To make open transactions survive a restart (and to allow running multiple instances), configure a
+**Redis** backend in `config.json`. When no Redis host (and no Redis Sentinel) is configured, the
+server transparently falls back to the in-memory store, so this is fully optional and backwards
+compatible. If Redis is configured but unreachable at startup, the server logs an error and falls
+back to the in-memory store as well.
+
+Plain Redis:
+```json
+"redis_host": "redis",
+"redis_port": 6379,
+"redis_password": "",
+"redis_transaction_ttl_seconds": 604800
+```
+
+Redis Sentinel (takes precedence over the plain Redis settings when enabled):
+```json
+"redis_sentinel_enabled": true,
+"redis_sentinel_host": "sentinel",
+"redis_sentinel_port": 26379,
+"redis_master_name": "mymaster",
+"redis_sentinel_username": "",
+"redis_password": ""
+```
+
+`redis_transaction_ttl_seconds` is a safety-net expiry on stored transactions (default 7 days);
+transactions are normally removed explicitly once they resolve. See `config.EXAMPLE.json` for the
+full list of options.
+
 ## Docker secrets
 To run this issuer in a Docker container, you need to specify some secrets.
 - `config.json` needs to contain the settings for this issuer (see `config.EXAMPLE.json` for options).

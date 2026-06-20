@@ -370,6 +370,63 @@ public class IdinConfigurationTest {
         }
     }
 
+    @Test
+    public void redisDisabledByDefault() {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        assertFalse(idinConfiguration.isRedisEnabled());
+        assertFalse(idinConfiguration.isRedisSentinelEnabled());
+        // sensible defaults
+        assertEquals(6379, idinConfiguration.getRedisPort());
+        assertEquals(60L * 60L * 24L * 7L, idinConfiguration.getRedisTransactionTtlSeconds());
+    }
+
+    @Test
+    public void redisEnabledWhenHostConfigured() throws Exception {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        setField(idinConfiguration, "redis_host", "redis.example.org");
+        setField(idinConfiguration, "redis_port", 6380);
+        setField(idinConfiguration, "redis_password", "secret");
+
+        assertTrue(idinConfiguration.isRedisEnabled());
+        assertFalse(idinConfiguration.isRedisSentinelEnabled());
+        assertEquals("redis.example.org", idinConfiguration.getRedisHost());
+        assertEquals(6380, idinConfiguration.getRedisPort());
+        assertEquals("secret", idinConfiguration.getRedisPassword());
+    }
+
+    @Test
+    public void blankRedisHostKeepsRedisDisabled() throws Exception {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        setField(idinConfiguration, "redis_host", "   ");
+        assertFalse(idinConfiguration.isRedisEnabled());
+    }
+
+    @Test
+    public void redisSentinelEnablesRedis() throws Exception {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        setField(idinConfiguration, "redis_sentinel_enabled", true);
+        setField(idinConfiguration, "redis_sentinel_host", "sentinel.example.org");
+        setField(idinConfiguration, "redis_sentinel_port", 26380);
+        setField(idinConfiguration, "redis_master_name", "idinmaster");
+        setField(idinConfiguration, "redis_sentinel_username", "sentineluser");
+
+        assertTrue(idinConfiguration.isRedisSentinelEnabled());
+        assertTrue(idinConfiguration.isRedisEnabled());
+        assertEquals("sentinel.example.org", idinConfiguration.getRedisSentinelHost());
+        assertEquals(26380, idinConfiguration.getRedisSentinelPort());
+        assertEquals("idinmaster", idinConfiguration.getRedisMasterName());
+        assertEquals("sentineluser", idinConfiguration.getRedisSentinelUsername());
+    }
+
+    @Test
+    public void redisSentinelDisabledWhenFlagOffEvenWithHost() throws Exception {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        setField(idinConfiguration, "redis_sentinel_enabled", false);
+        setField(idinConfiguration, "redis_sentinel_host", "sentinel.example.org");
+        assertFalse(idinConfiguration.isRedisSentinelEnabled());
+        assertFalse(idinConfiguration.isRedisEnabled());
+    }
+
     private static void setInstance(final IdinConfiguration idinConfiguration) throws Exception {
         final Field instanceField = IdinConfiguration.class.getDeclaredField("instance");
         instanceField.setAccessible(true);

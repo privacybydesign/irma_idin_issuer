@@ -63,6 +63,21 @@ public class IdinConfiguration extends BaseConfiguration {
     private String idin_issuers_path = "banks.json";
     private transient IdinIssuers issuers;
 
+    // Optional Redis configuration for persistent transaction storage. When no Redis host (and no
+    // Redis Sentinel) is configured, the issuer falls back to the historic in-memory store.
+    private String redis_host = "";
+    private int redis_port = 6379;
+    private String redis_password = "";
+    // Safety-net TTL (seconds) on stored transactions; defaults to 7 days. Transactions are normally
+    // removed explicitly once resolved, so this only guards against abandoned ones piling up.
+    private long redis_transaction_ttl_seconds = 60L * 60L * 24L * 7L;
+
+    private boolean redis_sentinel_enabled = false;
+    private String redis_sentinel_host = "";
+    private int redis_sentinel_port = 26379;
+    private String redis_master_name = "mymaster";
+    private String redis_sentinel_username = "";
+
     private String jwt_privatekey = "sk.der";
     private String jwt_publickey = "pk.der";
     private transient PrivateKey jwtPrivateKey;
@@ -297,5 +312,52 @@ public class IdinConfiguration extends BaseConfiguration {
 
     public boolean isAgeLimitsCredentialEnabled() {
         return age_limits_credential_enabled;
+    }
+
+    /**
+     * @return whether a persistent Redis-backed transaction store should be used. True when either a
+     * plain Redis host or a Redis Sentinel setup is configured.
+     */
+    public boolean isRedisEnabled() {
+        return isRedisSentinelEnabled() || (redis_host != null && !redis_host.isBlank());
+    }
+
+    /**
+     * @return whether Redis Sentinel should be used (takes precedence over a plain Redis host).
+     */
+    public boolean isRedisSentinelEnabled() {
+        return redis_sentinel_enabled && redis_sentinel_host != null && !redis_sentinel_host.isBlank();
+    }
+
+    public String getRedisHost() {
+        return redis_host;
+    }
+
+    public int getRedisPort() {
+        return redis_port;
+    }
+
+    public String getRedisPassword() {
+        return redis_password;
+    }
+
+    public long getRedisTransactionTtlSeconds() {
+        return redis_transaction_ttl_seconds;
+    }
+
+    public String getRedisSentinelHost() {
+        return redis_sentinel_host;
+    }
+
+    public int getRedisSentinelPort() {
+        return redis_sentinel_port;
+    }
+
+    public String getRedisMasterName() {
+        return redis_master_name;
+    }
+
+    public String getRedisSentinelUsername() {
+        return redis_sentinel_username;
     }
 }

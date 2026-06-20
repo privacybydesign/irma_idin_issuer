@@ -22,6 +22,22 @@
     "tel_attribute": "telephone",
     "email_attribute": "email",
 
-    "iDinLibConfigLocation": "config.xml"
+    "iDinLibConfigLocation": "config.xml",
+
+    // Optional: persistent (Redis-backed) storage for open iDIN transactions.
+    // When omitted (or with an empty "redis_host" and "redis_sentinel_enabled": false),
+    // the issuer keeps transactions in memory, which are lost on restart (the historic behaviour).
+    // Plain Redis:
+    "redis_host": "",
+    "redis_port": 6379,
+    "redis_password": "",
+    // Safety-net TTL (seconds) on stored transactions; defaults to 7 days when omitted.
+    "redis_transaction_ttl_seconds": 604800,
+    // Redis Sentinel (takes precedence over the plain Redis settings when enabled):
+    "redis_sentinel_enabled": false,
+    "redis_sentinel_host": "",
+    "redis_sentinel_port": 26379,
+    "redis_master_name": "mymaster",
+    "redis_sentinel_username": ""
 
 }
