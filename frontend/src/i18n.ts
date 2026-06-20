@@ -56,7 +56,8 @@ i18n
                     done_return: "Return to the attribute issuance page",
 
                     attribute_zipcode: "Postal code",
-                    attribute_address: "Address",
+                    attribute_street: "Street",
+                    attribute_houseNumber: "House number",
                     attribute_city: "City",
                     attribute_initials: "Initials",
                     attribute_familyname: "Last name",
@@ -119,7 +120,8 @@ i18n
                     done_return: "Keer terug naar de attribuut-uitgifte pagina",
 
                     attribute_zipcode: "Postcode",
-                    attribute_address: "Adres",
+                    attribute_street: "Straat",
+                    attribute_houseNumber: "Huisnummer",
                     attribute_city: "Stad",
                     attribute_initials: "Initialen",
                     attribute_familyname: "Achternaam",
