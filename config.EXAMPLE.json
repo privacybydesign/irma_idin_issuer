@@ -7,6 +7,10 @@
     "server_url": "http://localhost:8080/",
     "enroll_url": "http://localhost:8080/enroll.html",
 
+    // Whether this issuer is served over HTTPS. Controls the Secure flag on cookies.
+    // Set this explicitly; when omitted it is inferred from the return_url scheme (deprecated).
+    "https_enabled": false,
+
     "scheme_manager": "irma-demo",
     "idin_issuer": "RU",
     "idin_credential": "idinData",
