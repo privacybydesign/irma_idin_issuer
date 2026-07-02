@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Config, Strings } from './types';
+import { Config } from './types';
 
 export function useConfig(): Config | null {
   const [config, setConfig] = useState<Config | null>(null);

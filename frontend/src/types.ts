@@ -4,7 +4,3 @@ export interface Config {
   language: string;
   idin_credential_id: string;
 }
-
-export interface Strings {
-  [key: string]: string;
-}
