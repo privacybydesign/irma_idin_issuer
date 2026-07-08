@@ -27,8 +27,10 @@ jobs:
             java-version: '21'
             cache: gradle
 
-        # The Docker build compiles the app but does not run the JUnit suite;
-        # run it explicitly so unit tests gate every PR.
+        # The Dockerfile's javabuild stage already runs the JUnit suite as part
+        # of the build-docker job, so tests are gated either way. This dedicated
+        # job runs them decoupled from the image build for faster feedback,
+        # test reporting, and Gradle dependency caching.
         - name: Run unit tests
           run: ./gradlew --no-daemon clean test
 
