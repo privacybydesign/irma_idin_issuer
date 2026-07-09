@@ -153,8 +153,17 @@ public class IdinResource {
             final StatusRequest sr = new StatusRequest(trxID);
             final StatusResponse response = new Communicator().getResponse(sr);
             if (response.getIsError()) {
+                // The user may have closed/cancelled the bank page without completing the
+                // transaction (e.g. no banking app installed for the selected bank). In that
+                // case the iDIN status request comes back as an error. Rather than letting the
+                // exception bubble up to the browser as a raw Java stack trace (this is a
+                // browser-facing redirect endpoint), handle it gracefully by redirecting to the
+                // error page with a user-friendly message.
                 logError(response.getErrorResponse());
-                throw new IdinException(response.getErrorResponse());
+                transaction.handled();
+                transaction.finished();
+                cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie is niet afgerond. Mogelijk heeft u de transactie geannuleerd of is er een probleem opgetreden bij uw bank. Keer terug naar de iDIN issue pagina om het nog eens te proberen.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                followupURL = ERROR_URL;
             } else {
                 // Defence in depth: independently re-verify the XML-DSIG signature of the acquirer
                 // status response before trusting (or even inspecting the status of) any identity

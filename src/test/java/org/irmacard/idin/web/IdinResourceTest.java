@@ -264,7 +264,7 @@ public final class IdinResourceTest {
     }
 
     @Test
-    public void authenticated_throwsIdinExceptionOnErrorResponse() {
+    public void authenticated_errorResponse_setsErrorCookie_and_redirectsToError() {
         final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
         when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
         when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
@@ -287,7 +287,19 @@ public final class IdinResourceTest {
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
-            assertThrows(IdinException.class, () -> idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE));
+            // A status request that comes back as an error (e.g. the user closed the bank page
+            // without completing the transaction) must not surface as a raw Java stack trace.
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+
+            assertNotNull(response);
+            assertEquals(303, response.getStatus());
+            assertEquals(URI.create(ERROR_PAGE), response.getHeaders().getFirst(LOCATION));
+            final Map<String, NewCookie> cookies = response.getCookies();
+            assertTrue(cookies.containsKey("error"));
+            assertTrue(cookies.get("error").getValue().toLowerCase().contains("niet afgerond"));
+
+            verify(idinTransaction).handled();
+            verify(idinTransaction).finished();
         }
     }
 
