@@ -7,6 +7,11 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
     ],
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/setupTests.ts',
+    },
     server: mode === 'development' ? {
       port: 3000,
       host: "0.0.0.0",
@@ -23,11 +28,6 @@ export default defineConfig(({ mode }) => {
     } : undefined,
     build: {
       outDir: "build",
-    },
-    test: {
-      environment: 'jsdom',
-      globals: true,
-      setupFiles: './src/setupTests.ts',
     },
   }
 });

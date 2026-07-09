@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import { useConfig } from '../hooks';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
@@ -55,7 +55,7 @@ export default function EnrollPage() {
 
     import("@privacybydesign/yivi-frontend").then((yivi) => {
       yivi.newPopup({
-        language: config.language,
+        language: config.language === 'nl' ? 'nl' : 'en',
         session: {
           url: config.irma_server_url,
           start: {
@@ -68,7 +68,7 @@ export default function EnrollPage() {
       })
       .start()
       .then(() => {
-        navigate("/");
+        navigate("/success");
       });
     });
   };
