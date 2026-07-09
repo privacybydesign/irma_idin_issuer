@@ -55,6 +55,11 @@ i18n
                     done_show_button: "Show date-of-birth attribute",
                     done_return: "Return to the attribute issuance page",
 
+                    success_title: "Attributes added to Yivi",
+                    success_message:
+                        "Your data has been added to your Yivi wallet. You can now close this window.",
+                    success_close_button: "Close",
+
                     attribute_zipcode: "Postal code",
                     attribute_address: "Address",
                     attribute_city: "City",
@@ -117,6 +122,11 @@ i18n
                         "Door op de knop hieronder te klikken kunt u dit testen; u toont dan uw geboortedatum-attribuut.",
                     done_show_button: "Toon geboortedatum-attribuut",
                     done_return: "Keer terug naar de attribuut-uitgifte pagina",
+
+                    success_title: "Attributen toegevoegd aan Yivi",
+                    success_message:
+                        "Uw gegevens zijn toegevoegd aan uw Yivi wallet. U kunt dit venster nu sluiten.",
+                    success_close_button: "Sluiten",
 
                     attribute_zipcode: "Postcode",
                     attribute_address: "Adres",

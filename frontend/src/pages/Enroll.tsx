@@ -55,7 +55,7 @@ export default function EnrollPage() {
       })
       .start()
       .then(() => {
-        navigate("/");
+        navigate("/success");
       });
     });
   };
