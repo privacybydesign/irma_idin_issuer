@@ -156,6 +156,16 @@ public class IdinResource {
                 logError(response.getErrorResponse());
                 throw new IdinException(response.getErrorResponse());
             } else {
+                // Defence in depth: independently re-verify the XML-DSIG signature of the acquirer
+                // status response before trusting (or even inspecting the status of) any identity
+                // claims it carries. This guards against ever acting on an unsigned or tampered
+                // response, without relying solely on the merchant library's internal error flag.
+                if (!AcquirerResponseVerifier.isSignatureValid(response.getRawMessage())) {
+                    LOGGER.error("trxid {}: acquirer response signature verification failed, rejecting", trxID);
+                    transaction.handled();
+                    throw new SecurityException("iDIN acquirer response signature is missing or invalid");
+                }
+
                 LOGGER.info("trxid {}: response status {}", trxID, response.getStatus());
                 transaction.handled();
                 switch (response.getStatus()) {

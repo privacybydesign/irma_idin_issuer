@@ -333,11 +333,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final org.irmacard.api.common.issuing.IdentityProviderRequest dummyIpRequest = mock(org.irmacard.api.common.issuing.IdentityProviderRequest.class);
@@ -381,11 +383,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
@@ -423,11 +427,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
@@ -465,11 +471,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
@@ -503,11 +511,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
@@ -557,11 +567,13 @@ public final class IdinResourceTest {
         try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
              final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
              final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
              final MockedConstruction<Communicator> ignored =
                      mockConstruction(Communicator.class, (communicator, context) ->
                              when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
 
             idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(true);
             openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
 
             final IdinResource idinResource = new IdinResource();
@@ -578,6 +590,47 @@ public final class IdinResourceTest {
             verify(idinTransaction).finished();
 
             // ensure no issuing JWT created
+            apiClientMockedStatic.verify(() -> ApiClient.getSignedIssuingJWT((HashMap<CredentialIdentifier, HashMap<String, String>>) any(), anyString(), anyString(), any(), any()), times(0));
+        }
+    }
+
+    @Test
+    public void authenticated_rejectsResponseWithInvalidSignature_beforeReadingAttributes() {
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getEnrollUrl()).thenReturn(ENROLL_URL);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(ENTRANCE_CODE);
+
+        // A response that the merchant library did not flag as an error, but whose signature
+        // does not verify (e.g. a tampered or unsigned acquirer response).
+        final StatusResponse statusResponse = mock(StatusResponse.class);
+        when(statusResponse.getIsError()).thenReturn(false);
+        when(statusResponse.getRawMessage()).thenReturn("<tampered/>");
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<ApiClient> apiClientMockedStatic = mockStatic(ApiClient.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class);
+             final MockedStatic<AcquirerResponseVerifier> sigVerifierMockedStatic = mockStatic(AcquirerResponseVerifier.class);
+             final MockedConstruction<Communicator> ignored =
+                     mockConstruction(Communicator.class, (communicator, context) ->
+                             when(communicator.getResponse(any(StatusRequest.class))).thenReturn(statusResponse))) {
+
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            sigVerifierMockedStatic.when(() -> AcquirerResponseVerifier.isSignatureValid(any())).thenReturn(false);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            assertThrows(SecurityException.class, () -> idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE));
+
+            // The signature was verified against the raw message...
+            sigVerifierMockedStatic.verify(() -> AcquirerResponseVerifier.isSignatureValid("<tampered/>"));
+            // ...and because it was invalid, no identity attributes were ever read and no
+            // issuing JWT was created.
+            verify(statusResponse, never()).getStatus();
+            verify(statusResponse, never()).getSamlResponse();
             apiClientMockedStatic.verify(() -> ApiClient.getSignedIssuingJWT((HashMap<CredentialIdentifier, HashMap<String, String>>) any(), anyString(), anyString(), any(), any()), times(0));
         }
     }
