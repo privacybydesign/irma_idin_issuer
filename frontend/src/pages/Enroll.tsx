@@ -9,6 +9,19 @@ interface CredAttr {
   [key: string]: string;
 }
 
+interface Credential {
+  credential: string;
+  attributes: CredAttr;
+}
+
+interface IdinJwt {
+  iprequest: {
+    request: {
+      credentials: Credential[];
+    };
+  };
+}
+
 export default function EnrollPage() {
   const config = useConfig();
   const navigate = useNavigate();
@@ -19,8 +32,8 @@ export default function EnrollPage() {
   useEffect(() => {
     const token = Cookies.get('jwt');
     if (token) {
-      const decoded: any = jwtDecode(token);
-      decoded.iprequest.request.credentials.forEach((cred: any) => {
+      const decoded = jwtDecode<IdinJwt>(token);
+      decoded.iprequest.request.credentials.forEach((cred) => {
         if (cred.credential === config?.idin_credential_id) {
           const idin: CredAttr = {};
           const age: CredAttr = {};
