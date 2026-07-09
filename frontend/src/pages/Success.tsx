@@ -1,21 +1,17 @@
 import { useEffect } from 'react';
-import { useConfig } from '../hooks';
 import { useTranslation } from 'react-i18next';
 
 export default function SuccessPage() {
-  const config = useConfig();
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
     document.title = t('success_title');
   }, [i18n.language, t]);
 
-  if (!config) return <p>Loading...</p>;
-
   return (
     <div id="container">
       <header>
-        <img className="logo-img" src="images/idin-logo.svg" />
+        <img className="logo-img" src="images/idin-logo.svg" alt="iDIN" />
         <h1>
           {t('index_header')}{' '}
           <a href="https://www.idin.nl/" target="_blank" rel="noreferrer">

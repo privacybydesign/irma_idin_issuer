@@ -96,16 +96,6 @@ public final class IdinResourceTest {
     }
 
     @Test
-    public void openTransactions_delegatesToStatic() {
-        try (final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class)) {
-            openTransactionsMockedStatic.when(OpenTransactions::getOpenTransactions).thenReturn("a, b, ");
-            final IdinResource idinResource = new IdinResource();
-            final String openTransactions = idinResource.openTransactions();
-            assertEquals("a, b, ", openTransactions);
-        }
-    }
-
-    @Test
     public void start_returns400WhenBankCodeInvalid() {
         final IdinIssuers idinIssuers = mock(IdinIssuers.class);
         when(idinIssuers.containsBankCode(BANK_CODE_INVALID)).thenReturn(false);
@@ -364,6 +354,8 @@ public final class IdinResourceTest {
             final Map<String, NewCookie> cookies = response.getCookies();
             assertTrue(cookies.containsKey("jwt"));
             assertEquals("created.jwt", cookies.get("jwt").getValue());
+            // Security hardening (GHSA-gcg4-3f7m-6q34): the jwt cookie must be SameSite=Strict.
+            assertEquals(NewCookie.SameSite.STRICT, cookies.get("jwt").getSameSite());
 
             verify(idinTransaction).handled();
             verify(idinTransaction).finished();

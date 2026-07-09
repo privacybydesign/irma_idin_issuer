@@ -1,7 +1,13 @@
 package org.irmacard.idin.web;
 
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
 import net.bankid.merchant.library.ErrorResponse;
 import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.lang.annotation.Annotation;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,11 +34,6 @@ public final class IdinErrorMessageTest {
         assertEquals(STATUS_UPSTREAM, idinErrorMessage.getStatus());
         assertEquals(CONSUMER_MESSAGE, idinErrorMessage.getDescription());
         assertEquals(ERROR_MESSAGE, idinErrorMessage.getMessage());
-
-        final String stacktrace = idinErrorMessage.getStacktrace();
-        assertNotNull(stacktrace);
-        assertFalse(stacktrace.isEmpty());
-        assertTrue(stacktrace.contains(IdinException.class.getName()));
     }
 
     @Test
@@ -44,12 +45,6 @@ public final class IdinErrorMessageTest {
         assertEquals(STATUS_SERVER, idinErrorMessage.getStatus());
         assertEquals(DEFAULT_DESCRIPTION, idinErrorMessage.getDescription());
         assertEquals(runtimeException.toString(), idinErrorMessage.getMessage());
-
-        final String stacktrace = idinErrorMessage.getStacktrace();
-        assertNotNull(stacktrace);
-        assertFalse(stacktrace.isEmpty());
-        assertTrue(stacktrace.contains(RuntimeException.class.getName()));
-        assertTrue(stacktrace.contains(RUNTIME_EXCEPTION_TEXT));
     }
 
     @Test
@@ -61,5 +56,31 @@ public final class IdinErrorMessageTest {
         assertNotNull(stacktrace);
         assertFalse(stacktrace.isEmpty());
         assertTrue(stacktrace.contains(IllegalArgumentException.class.getName()));
+    }
+
+    @Test
+    public void serializedBody_doesNotContainStacktrace() throws Exception {
+        // Reproduce how the exception mapper serializes the error to the client (GsonJerseyProvider).
+        final RuntimeException runtimeException = new RuntimeException(RUNTIME_EXCEPTION_TEXT);
+        final IdinErrorMessage idinErrorMessage = new IdinErrorMessage(runtimeException);
+
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        new GsonJerseyProvider().writeTo(
+                idinErrorMessage,
+                IdinErrorMessage.class,
+                IdinErrorMessage.class,
+                new Annotation[0],
+                MediaType.APPLICATION_JSON_TYPE,
+                new MultivaluedHashMap<>(),
+                out
+        );
+
+        final String json = out.toString(StandardCharsets.UTF_8);
+        // The stack trace must never be serialized into a client-facing response.
+        assertFalse(json.contains("stacktrace"), "error body must not expose a stacktrace field");
+        assertFalse(json.contains("printStackTrace"), "error body must not contain stack trace frames");
+        // sanity: the sanitized fields are still present.
+        assertTrue(json.contains("\"status\""));
+        assertTrue(json.contains("\"description\""));
     }
 }
