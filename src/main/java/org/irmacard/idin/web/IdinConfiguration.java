@@ -42,6 +42,13 @@ public class IdinConfiguration extends BaseConfiguration {
 
     private String return_url = "";
 
+    /**
+     * Whether this issuer is served over HTTPS. Controls the {@code Secure} flag on cookies.
+     * When set explicitly in config.json it takes precedence; when left unset (null) it falls
+     * back to inferring from the {@code return_url} scheme for backwards compatibility.
+     */
+    private Boolean https_enabled = null;
+
     private String scheme_manager = "";
     private String idin_issuer = "";
     private String idin_credential = "";
@@ -186,6 +193,12 @@ public class IdinConfiguration extends BaseConfiguration {
     }
 
     public boolean isHttpsEnabled() {
+        if (https_enabled != null) {
+            return https_enabled;
+        }
+        // Backwards-compatible fallback for configurations that predate the explicit https_enabled flag.
+        LOGGER.warn("Config option 'https_enabled' is not set; inferring it from the return_url scheme. "
+                + "Please set 'https_enabled' explicitly in config.json.");
         return return_url.startsWith("https://");
     }
 

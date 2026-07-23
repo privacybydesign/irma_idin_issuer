@@ -42,7 +42,6 @@ public class IdinResource {
     private static final String IDIN_SAML_POSTAL_CODE_KEY = "urn:nl:bvn:bankid:1.0:consumer.postalcode";
 
 
-    private static final Random RANDOM = new Random();
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final Logger LOGGER = LoggerFactory.getLogger(IdinResource.class);
 
@@ -67,13 +66,6 @@ public class IdinResource {
         return ApiClient.getDisclosureJWT(list, IdinConfiguration.getInstance().getServerName(), IdinConfiguration.getInstance().getHumanReadableName(), IdinConfiguration.getInstance().getJwtAlgorithm(), IdinConfiguration.getInstance().getJwtPrivateKey());
     }
 
-    @GET
-    @Path("/openTransactions")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String openTransactions() {
-        return OpenTransactions.getOpenTransactions();
-    }
-
     private AttributeIdentifier getIdinBdAttributeIdentifier() {
         final IdinConfiguration conf = IdinConfiguration.getInstance();
         return new AttributeIdentifier(new CredentialIdentifier(conf.getSchemeManager(), conf.getIdinIssuer(), conf.getIdinCredential()), conf.getBirthdateAttribute());
@@ -91,7 +83,7 @@ public class IdinResource {
                 return upstreamError("Bad Request", 400);
             }
 
-            final String merchantReference = "a" + new BigInteger(130, RANDOM).toString(32); // iDIN: moet met letter beginnen
+            final String merchantReference = "a" + new BigInteger(130, SECURE_RANDOM).toString(32); // iDIN: moet met letter beginnen
             final String entranceCode = new RandomString(40, SECURE_RANDOM).nextString();
             final AuthenticationRequest request =
                     new AuthenticationRequest(entranceCode, IDIN_ATTRIBUTES, bank, AssuranceLevel.Loa3, "nl", merchantReference);
@@ -143,7 +135,7 @@ public class IdinResource {
         final boolean isHttpsEnabled = IdinConfiguration.getInstance().isHttpsEnabled();
         if (trxID.equals("error")) {
             //landing on the return page without a trxid. Something is wrong
-            cookies[0] = new NewCookie.Builder("error").value("Something unexpected went wrong").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+            cookies[0] = new NewCookie.Builder("error").value("Something unexpected went wrong").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
             followupURL = ERROR_URL;
         } else {
             LOGGER.info("trxid {}: return url called", trxID);
@@ -161,9 +153,28 @@ public class IdinResource {
             final StatusRequest sr = new StatusRequest(trxID);
             final StatusResponse response = new Communicator().getResponse(sr);
             if (response.getIsError()) {
+                // The user may have closed/cancelled the bank page without completing the
+                // transaction (e.g. no banking app installed for the selected bank). In that
+                // case the iDIN status request comes back as an error. Rather than letting the
+                // exception bubble up to the browser as a raw Java stack trace (this is a
+                // browser-facing redirect endpoint), handle it gracefully by redirecting to the
+                // error page with a user-friendly message.
                 logError(response.getErrorResponse());
-                throw new IdinException(response.getErrorResponse());
+                transaction.handled();
+                transaction.finished();
+                cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie is niet afgerond. Mogelijk heeft u de transactie geannuleerd of is er een probleem opgetreden bij uw bank. Keer terug naar de iDIN issue pagina om het nog eens te proberen.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                followupURL = ERROR_URL;
             } else {
+                // Defence in depth: independently re-verify the XML-DSIG signature of the acquirer
+                // status response before trusting (or even inspecting the status of) any identity
+                // claims it carries. This guards against ever acting on an unsigned or tampered
+                // response, without relying solely on the merchant library's internal error flag.
+                if (!AcquirerResponseVerifier.isSignatureValid(response.getRawMessage())) {
+                    LOGGER.error("trxid {}: acquirer response signature verification failed, rejecting", trxID);
+                    transaction.handled();
+                    throw new SecurityException("iDIN acquirer response signature is missing or invalid");
+                }
+
                 LOGGER.info("trxid {}: response status {}", trxID, response.getStatus());
                 transaction.handled();
                 switch (response.getStatus()) {
@@ -171,24 +182,28 @@ public class IdinResource {
                         final Map<String, String> attributes = response.getSamlResponse().getAttributes();
                         LOGGER.info("trxid {}: BIN {}", trxID, attributes.get(IDIN_SAML_BIN_KEY));
                         if (nullOrEmptyAttributes(attributes, trxID)) {
-                            cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                            cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie leverde niet voldoende attributen op. Helaas kunnen wij hierdoor niet overgaan tot uitgifte van attributen").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
                             followupURL = ERROR_URL;
                         } else {
                             //redirect to issuing page
                             followupURL = SUCCESS_URL;
                             final String jwt = createIssueJWT(attributes);
-                            cookies[0] = new NewCookie.Builder("jwt").value(jwt).path("/").domain(null).comment(null).maxAge(600).secure(isHttpsEnabled).build();
+                            // NB: HttpOnly is intentionally NOT set on the jwt cookie: the enrollment
+                            // frontend reads it via JavaScript to decode the attributes and to start the
+                            // Yivi issuance session. Fully isolating it (HttpOnly) requires moving the JWT
+                            // into a server-side session, tracked as a follow-up in GHSA-gcg4-3f7m-6q34.
+                            cookies[0] = new NewCookie.Builder("jwt").value(jwt).path("/").domain(null).comment(null).maxAge(600).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
                         }
                         transaction.finished();
                         break;
                     case StatusResponse.Cancelled:
                         followupURL = ERROR_URL;
-                        cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        cookies[0] = new NewCookie.Builder("error").value("De iDIN transactie is geannuleerd. Keer terug naar de iDIN issue pagina om het nog eens te proberen.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
                         transaction.finished();
                         break;
                     case StatusResponse.Expired:
                         followupURL = ERROR_URL;
-                        cookies[0] = new NewCookie.Builder("error").value("De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        cookies[0] = new NewCookie.Builder("error").value("De iDIN sessie is verlopen. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
                         transaction.finished();
                         break;
                     case StatusResponse.Open:
@@ -198,7 +213,7 @@ public class IdinResource {
                     default:
                         transaction.finished();
                         followupURL = ERROR_URL;
-                        cookies[0] = new NewCookie.Builder("error").value("Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).build();
+                        cookies[0] = new NewCookie.Builder("error").value("Er is iets onverwachts misgegaan. Keer terug naar de iDIN issue pagina om het nog eens te proberen. Als dit probleem zich blijft voordoen, neem dan contact op met uw bank.").path("/").domain(null).comment(null).maxAge(60).secure(isHttpsEnabled).sameSite(NewCookie.SameSite.STRICT).build();
                         break;
                 }
             }

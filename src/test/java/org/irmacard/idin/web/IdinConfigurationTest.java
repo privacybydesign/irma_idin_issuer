@@ -121,6 +121,21 @@ public class IdinConfigurationTest {
     }
 
     @Test
+    public void isHttpsEnabled_explicitFlagTakesPrecedenceOverUrl() throws Exception {
+        final IdinConfiguration idinConfiguration = new IdinConfiguration();
+        // return_url would infer HTTPS, but the explicit flag says otherwise and must win.
+        setField(idinConfiguration, "return_url", RETURN_URL);
+        setField(idinConfiguration, "https_enabled", Boolean.FALSE);
+        setInstance(idinConfiguration);
+        assertFalse(IdinConfiguration.getInstance().isHttpsEnabled());
+
+        // and the inverse: http return_url but explicit flag enables HTTPS.
+        setField(idinConfiguration, "return_url", "http://example.org/return");
+        setField(idinConfiguration, "https_enabled", Boolean.TRUE);
+        assertTrue(IdinConfiguration.getInstance().isHttpsEnabled());
+    }
+
+    @Test
     public void getIdinIssuersPath_resolvesConfiguredPath() throws Exception {
         final IdinConfiguration idinConfiguration = new IdinConfiguration();
         setField(idinConfiguration, "idin_issuers_path", "some/path/banks.json");

@@ -7,6 +7,10 @@ interface Bank {
   issuerName: string;
 }
 
+interface ApiError extends Error {
+  status?: number;
+}
+
 export default function IndexPage() {
   const config = useConfig();
   const { t, i18n } = useTranslation();
@@ -26,12 +30,8 @@ export default function IndexPage() {
         if (!response.ok) throw new Error(`banks fetch failed: ${response.status}`);
         return response.json();
       })
-      .then((data) => {
-        const list: Bank[] = [];
-        Object.values(data).forEach((arr: any) => {
-          (arr as any[]).forEach((b: any) => list.push(b));
-        });
-        setBanks(list);
+      .then((data: Record<string, Bank[]>) => {
+        setBanks(Object.values(data).flat());
       })
       .catch((e) => setError(e.message));
   }, [config]);
@@ -54,8 +54,8 @@ export default function IndexPage() {
         const data = await r.json().catch(() => ({}));
         if (!r.ok) {
           const msg = data?.message || `Request failed: ${r.status}`;
-          const error = new Error(msg);
-          (error as any).status = r.status;
+          const error: ApiError = new Error(msg);
+          error.status = r.status;
           throw error;
         }
         if (data?.redirectUrl && /^https?:\/\//i.test(data.redirectUrl)) {
@@ -63,13 +63,13 @@ export default function IndexPage() {
           window.location.assign(data.redirectUrl);
           return;
         }
-        const error = new Error(
+        const error: ApiError = new Error(
           data?.message || 'Ontvangen response bevat geen geldige redirectUrl.'
         );
-        (error as any).status = 502;
+        error.status = 502;
         throw error;
       })
-      .catch((e: any) => {
+      .catch((e: ApiError) => {
         switch (e.status) {
           case 400:
             setError(t('error_invalidbankcode'));

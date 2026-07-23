@@ -13,11 +13,15 @@ public class IdinErrorMessage {
     private final int status;
     private final String description;
     private final String message;
-    private final String stacktrace;
 
 
     /**
      * Construct a new error message.
+     *
+     * Note: the stack trace of {@code ex} is deliberately NOT retained on this object, so that it
+     * can never be serialized into a response body sent to clients. Stack traces are logged
+     * server-side only (see {@link IdinExceptionMapper}).
+     *
      * @param ex cause of the problem
      */
     public IdinErrorMessage(final Throwable ex) {
@@ -32,7 +36,6 @@ public class IdinErrorMessage {
             this.message = ex.toString(); // Include exception classname
             this.description = "Something unexpected went wrong";
         }
-        this.stacktrace = getExceptionStacktrace(ex);
     }
 
     /** The HTTP status. */
@@ -51,11 +54,11 @@ public class IdinErrorMessage {
         return message;
     }
 
-    /** Stacktrace of the problem */
-    public String getStacktrace() {
-        return stacktrace;
-    }
-
+    /**
+     * Renders the stack trace of a throwable as a string, for server-side logging only.
+     * This is intentionally not exposed as an instance field/getter so it is never serialized
+     * into a client-facing error response.
+     */
     public static String getExceptionStacktrace(final Throwable ex) {
         final StringWriter errorStackTrace = new StringWriter();
         ex.printStackTrace(new PrintWriter(errorStackTrace));

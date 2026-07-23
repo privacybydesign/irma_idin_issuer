@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import jwtDecode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import { useConfig } from '../hooks';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from "react-router-dom";
 
 interface CredAttr {
   [key: string]: string;
+}
+
+interface Credential {
+  credential: string;
+  attributes: CredAttr;
+}
+
+interface IdinJwt {
+  iprequest: {
+    request: {
+      credentials: Credential[];
+    };
+  };
 }
 
 export default function EnrollPage() {
@@ -19,8 +32,8 @@ export default function EnrollPage() {
   useEffect(() => {
     const token = Cookies.get('jwt');
     if (token) {
-      const decoded: any = jwtDecode(token);
-      decoded.iprequest.request.credentials.forEach((cred: any) => {
+      const decoded = jwtDecode<IdinJwt>(token);
+      decoded.iprequest.request.credentials.forEach((cred) => {
         if (cred.credential === config?.idin_credential_id) {
           const idin: CredAttr = {};
           const age: CredAttr = {};
@@ -42,7 +55,7 @@ export default function EnrollPage() {
 
     import("@privacybydesign/yivi-frontend").then((yivi) => {
       yivi.newPopup({
-        language: config.language,
+        language: config.language === 'nl' ? 'nl' : 'en',
         session: {
           url: config.irma_server_url,
           start: {
@@ -55,7 +68,7 @@ export default function EnrollPage() {
       })
       .start()
       .then(() => {
-        navigate("/");
+        navigate("/success");
       });
     });
   };
