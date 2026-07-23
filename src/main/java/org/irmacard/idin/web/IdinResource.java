@@ -146,7 +146,7 @@ public class IdinResource {
                 return null;
             } else if (!transaction.getEntranceCode().equals(ec)) {
                 // Wrong entrance code is used
-                LOGGER.info("ec {} of trxid {} does not match with actual ec {}", ec, trxID, transaction.getEntranceCode());
+                LOGGER.info("entrance code of trxid {} does not match", trxID);
                 return null;
             }
 

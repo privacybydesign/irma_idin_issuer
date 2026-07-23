@@ -134,8 +134,7 @@ public class IdinConfiguration extends BaseConfiguration {
             instance = new IdinConfiguration();
         }
 
-        System.out.println("Configuration:");
-        System.out.println(instance.toString());
+        LOGGER.info("iDIN configuration loaded");
     }
 
     public IdinConfiguration() {

@@ -1,6 +1,10 @@
 package org.irmacard.idin.web;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.slf4j.LoggerFactory;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import net.bankid.merchant.library.*;
@@ -260,6 +264,45 @@ public final class IdinResourceTest {
             final IdinResource idinResource = new IdinResource();
             final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
             assertNull(response);
+        }
+    }
+
+    @Test
+    public void authenticated_entranceCodeMismatch_doesNotLogEntranceCodes() {
+        final String correctEntranceCode = "correct-secret-ec";
+
+        final IdinConfiguration idinConfiguration = mock(IdinConfiguration.class);
+        when(idinConfiguration.isHttpsEnabled()).thenReturn(false);
+        when(idinConfiguration.getReturnUrl()).thenReturn(RETURN_URL);
+
+        final IdinTransaction idinTransaction = mock(IdinTransaction.class);
+        when(idinTransaction.getEntranceCode()).thenReturn(correctEntranceCode);
+
+        final Logger idinResourceLogger = (Logger) LoggerFactory.getLogger(IdinResource.class);
+        final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        idinResourceLogger.addAppender(appender);
+
+        try (final MockedStatic<IdinConfiguration> idinConfigurationMockedStatic = mockStatic(IdinConfiguration.class);
+             final MockedStatic<OpenTransactions> openTransactionsMockedStatic = mockStatic(OpenTransactions.class)) {
+            idinConfigurationMockedStatic.when(IdinConfiguration::getInstance).thenReturn(idinConfiguration);
+            openTransactionsMockedStatic.when(() -> OpenTransactions.findTransaction(TRANSACTION_ID)).thenReturn(idinTransaction);
+
+            final IdinResource idinResource = new IdinResource();
+            final Response response = idinResource.authenticated(TRANSACTION_ID, ENTRANCE_CODE);
+            assertNull(response);
+
+            final String loggedOutput = appender.list.stream()
+                    .map(ILoggingEvent::getFormattedMessage)
+                    .reduce("", (a, b) -> a + "\n" + b);
+            // The session-binding secret must never end up in the logs, and neither should
+            // the attacker-supplied value that would allow log injection.
+            assertFalse(loggedOutput.contains(correctEntranceCode),
+                    "The correct entrance code must not be logged on mismatch");
+            assertFalse(loggedOutput.contains(ENTRANCE_CODE),
+                    "The submitted entrance code must not be logged on mismatch");
+        } finally {
+            idinResourceLogger.detachAppender(appender);
         }
     }
 
