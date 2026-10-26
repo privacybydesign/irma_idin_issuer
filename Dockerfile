@@ -1,4 +1,4 @@
-FROM node:20 AS webappbuild
+FROM node:25 AS webappbuild
 
 WORKDIR /app
 COPY . .
@@ -15,7 +15,7 @@ RUN chown -R root:www-data /var/www/
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM gradle:8.10-jdk21 AS javabuild
+FROM gradle:9.7-jdk21 AS javabuild
 WORKDIR /app
 
 # Layer build files for dependency caching
@@ -33,7 +33,7 @@ RUN mkdir -p artifacts && gradle --no-daemon build
 # -------------------------------------------------------------------------------
 # Step for hosting the server
 
-FROM tomcat:10.1-jre21-temurin-jammy
+FROM tomcat:11.0-jre21-temurin-jammy
 
 RUN apt-get update && apt-get install -y gettext-base unzip curl && apt-get clean
 
