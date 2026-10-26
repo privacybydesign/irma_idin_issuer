@@ -1,60 +1,85 @@
-# Workflow to check whether changes to master fulfill all requirements.
+# Status checks, using the shared workflows from privacybydesign/github-workflows.
+# The gate job "Status checks passed" is the one check to require.
 name: Status checks
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
+  merge_group:
   schedule:
-    # Run every monday on 9:00 in the morning (UTC).
-    - cron: "0 9 * * 1"
-  # Make it possible to trigger the checks manually.
+    - cron: "17 6 * * 1" # Mondays 06:17 UTC
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
-    unit-tests:
-      name: Gradle tests
-      runs-on: ubuntu-latest
+  # There is no shared Java workflow yet, so the Gradle test job stays local.
+  java:
+    name: Gradle tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
 
-        - name: Set up JDK 21
-          uses: actions/setup-java@v4
-          with:
-            distribution: temurin
-            java-version: '21'
-            cache: gradle
+      - name: Run unit tests
+        run: ./gradlew --no-daemon clean test
 
-        # The Dockerfile's javabuild stage already runs the JUnit suite as part
-        # of the build-docker job, so tests are gated either way. This dedicated
-        # job runs them decoupled from the image build for faster feedback,
-        # test reporting, and Gradle dependency caching.
-        - name: Run unit tests
-          run: ./gradlew --no-daemon clean test
+  frontend:
+    uses: privacybydesign/github-workflows/.github/workflows/node-checks.yml@v1
+    permissions:
+      contents: read
+    with:
+      working-directory: frontend
+      scripts: lint test build
+      ignore-scripts: true
 
-    build-docker:
-      runs-on: ubuntu-latest
+  # Builds and scans the image without pushing it; Delivery pushes from master.
+  docker:
+    if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+    uses: privacybydesign/github-workflows/.github/workflows/docker-publish.yml@v1
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+      attestations: write
+    with:
+      push-image: false
 
-      steps:
-        # Step 1: Checkout repository
-        - name: Checkout code
-          uses: actions/checkout@v4
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    uses: privacybydesign/github-workflows/.github/workflows/dependency-review.yml@v1
+    permissions:
+      contents: read
+      pull-requests: write
 
-        # Step 2: Build the Docker image for Java/Gradle (stop at javabuild step)
-        - name: Build Docker image
-          run: docker build -t idin-issuer .
+  workflow-lint:
+    uses: privacybydesign/github-workflows/.github/workflows/workflow-lint.yml@v1
+    permissions:
+      contents: read
 
-        - name: Use Node.js
-          uses: actions/setup-node@v3
-          with:
-            node-version: '20'
-
-        - name: Install dependencies
-          working-directory: frontend
-          run: npm install
-
-        - name: Build project
-          working-directory: frontend
-          run: npm run build
+  passed:
+    name: Status checks passed
+    if: always()
+    needs: [java, frontend, docker, dependency-review, workflow-lint]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: All required jobs succeeded
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          if grep -qE '"(failure|cancelled)"' <<< "$RESULTS"; then exit 1; fi
