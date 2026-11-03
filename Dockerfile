@@ -1,4 +1,4 @@
-FROM node:20 AS webappbuild
+FROM node:25 AS webappbuild
 
 WORKDIR /app
 COPY . .
@@ -15,7 +15,7 @@ RUN chown -R root:www-data /var/www/
 # -------------------------------------------------------------------------------
 # Step for building the java library
 
-FROM gradle:8.10-jdk21 AS javabuild
+FROM gradle:9.7-jdk21 AS javabuild
 WORKDIR /app
 
 # Layer build files for dependency caching
