@@ -35,7 +35,7 @@ dependencies {
     implementation 'foundation.privacybydesign.common:irma_server_common:0.3.2'
     implementation files('libs/net.bankid.merchant.library.jar')
     implementation 'net.glxn:qrgen:1.4'
-    implementation 'mysql:mysql-connector-java:5.1.27'
+    implementation 'mysql:mysql-connector-java:8.0.33'
 
     // Patched versions of transitive dependencies with critical CVEs.
     constraints {
